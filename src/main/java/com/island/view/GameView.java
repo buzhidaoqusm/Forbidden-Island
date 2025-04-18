@@ -7,7 +7,6 @@ import view.IslandView;
 import view.PlayerView;
 import view.CardView;
 import view.ActionBarView;
-import view.ActionLogView;
 // Assuming GameController exists
 // import controller.GameController;
 
@@ -22,7 +21,7 @@ public class GameView {
     private Pane playerViewPane; // Placeholder for PlayerView's root node
     private Pane cardViewPane;   // Placeholder for CardView's root node
     private Pane actionBarViewPane; // Placeholder for ActionBarView's root node
-    private Pane actionLogViewPane; // Placeholder for ActionLogView's root node
+    // ActionLogView functionality is now part of ActionBarView
 
     // Placeholder for GameController
     // private GameController gameController;
@@ -42,14 +41,14 @@ public class GameView {
         IslandView islandView = new IslandView(gameController);
         PlayerView playerView = new PlayerView(gameController);
         CardView cardView = new CardView(gameController);
-        ActionBarView actionBarView = new ActionBarView(gameController);
-        ActionLogView actionLogView = new ActionLogView(); 
+        ActionBarView actionBarView = new ActionBarView(/* gameController */); // Pass controller if needed
+        // ActionLogView is removed
 
         islandViewPane = islandView.getView();
         playerViewPane = playerView.getView();
         cardViewPane = cardView.getView();
         actionBarViewPane = actionBarView.getView();
-        actionLogViewPane = actionLogView.getView();
+        // actionLogViewPane is removed
 
         // --- Example Layout --- 
         // Center: Island View (Main Game Board)
@@ -60,11 +59,12 @@ public class GameView {
         // rootLayout.setLeft(playerViewPane);
         rootLayout.setLeft(new Pane(new javafx.scene.control.Label("Player View Area"))); // Placeholder
 
-        // Right: Card View & Action Log
+        // Right: Card View
+        // If Action Log was here, it's now part of ActionBarView at the bottom
         javafx.scene.layout.VBox rightPanel = new javafx.scene.layout.VBox(10);
-        // rightPanel.getChildren().addAll(cardViewPane, actionLogViewPane);
+        // rightPanel.getChildren().add(cardViewPane); // Only CardView here now
         // rootLayout.setRight(rightPanel);
-        rootLayout.setRight(new Pane(new javafx.scene.control.Label("Card & Log Area"))); // Placeholder
+        rootLayout.setRight(new Pane(new javafx.scene.control.Label("Card View Area"))); // Placeholder updated
 
         // Bottom: Action Bar View
         // rootLayout.setBottom(actionBarViewPane);
@@ -99,7 +99,7 @@ public class GameView {
     public PlayerView getPlayerView() { return playerView; }
     public CardView getCardView() { return cardView; }
     public ActionBarView getActionBarView() { return actionBarView; }
-    public ActionLogView getActionLogView() { return actionLogView; }
+    // ActionLogView getter removed
     */
 
     // Example: Method to update a specific part, delegated to the sub-view
