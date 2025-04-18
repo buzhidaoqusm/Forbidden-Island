@@ -6,19 +6,10 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-// Assuming Player class exists in a model package
 // import model.Player;
-// Assuming CreateRoomView and JoinRoomView exist
 // import view.CreateRoomView;
 // import view.JoinRoomView;
 
-/**
- * MenuView: Implements the game main menu interface, providing option buttons such as
- * "Create Room", "Join Room", and "Exit Game". Responsible for registering button
- * event listeners, navigating to the corresponding interface (create room interface or
- * join room interface) according to the user's selection, and handling interface style
- * and animation transition effects.
- */
 public class MenuView {
 
     private Stage primaryStage;
@@ -38,12 +29,6 @@ public class MenuView {
     }
     */
 
-    /**
-     * Creates the main menu scene.
-     * This method corresponds to the loadMainMenu(Stage, Player) logic mentioned
-     * in the class diagram, adapted for a view-centric approach.
-     * @return The main menu scene.
-     */
     public Scene createScene() {
         VBox root = new VBox(15); // Spacing between buttons
         root.setAlignment(Pos.CENTER);
