@@ -66,6 +66,10 @@ public class GameController {
         actionBarController.setGameController(this);
     }
 
+    /**
+     * Handle game start logic. Initialize island, players and cards. And deal cards for players
+     * @param seed Random seed for game initialization
+     * */
     public void startGame(long seed) {
         gameStart = true;
         currentPlayer = room.getPlayers().getFirst();
@@ -81,6 +85,10 @@ public class GameController {
         gameView.setPrimaryStage();
     }
 
+    /**
+     * Handle turn start logic. Reset player state and action bar
+     * @param player The player whose turn will start
+     * */
     public void startTurn(Player player) {
         currentPlayer = player;
         currentPlayer.resetState();
