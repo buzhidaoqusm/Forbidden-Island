@@ -2,42 +2,61 @@ package com.island.controller;
 
 import java.util.*;
 
+/**
+ * The GameController class is responsible for managing the core logic and state of the game.
+ * It interacts with multiple other controllers (such as RoomController and PlayerController) to coordinate different aspects of the game.
+ * This class maintains objects such as the game view, players, rooms, islands, etc., and manages the flow of the game, such as action rounds, game starts and ends, etc.
+ */
 public class GameController {
+    // Main controller of game views
     private GameView gameView;
+
+    // Controller of room
     private RoomController roomController;
+
+    // Current game room
     private Room room;
-    private Island island;
+
+    // Island object
+    private Island island = new Island();
+
+    // Controller of island
     private IslandController islandController;
 
+    // Controller of players
     private PlayerController playerController;
+
+    // Controller of cards
     private CardController cardController;
+
+    // Controller of action bar
     private ActionBarController actionBarController;
+
+    // Current player in turn
     private Player currentPlayer;
 
-    private List<Player> helicopterPlayers; // 要使用直升机移动的玩家
+    // Players that will be moved by helicopter
+    private List<Player> helicopterPlayers;
+
+    // Special cards currently in use
     private Card activeSpecialCard; // 当前正在使用的特殊卡
 
+    // Reaming actions of current player
     private int remainingActions = 3;
-    private boolean gameStart = false;
-    private boolean gameOver = false;
 
-    public boolean receiveMessage = true;
-    // Observer pattern implementation
-    private GameSubjectImpl gameSubject;
+    // Game start flag
+    private boolean gameStart = false;
+
+    // Game over flag
+    private boolean gameOver = false;
 
     public GameController(RoomController roomController) {
         this.roomController = roomController;
         roomController.setGameController(this);
         room = roomController.getRoom();
 
-        gameSubject = new GameSubjectImpl();
-
-        islandController = new IslandController();
+        islandController = new IslandController(island);
         islandController.setGameController(this);
-        island = islandController.getIsland();
-
-        // 设置岛屿引用到RoomController
-        roomController.setIsland(island);
 
         playerController = new PlayerController();
         playerController.setGameController(this);
@@ -45,6 +64,25 @@ public class GameController {
         cardController.setGameController(this);
         actionBarController = new ActionBarController();
         actionBarController.setGameController(this);
+    }
+
+    public void startGame(long seed) {
+        gameStart = true;
+        currentPlayer = room.getPlayers().getFirst();
+
+        islandController.initIsland(seed);
+        playerController.initPlayers(seed);
+        cardController.initCards(seed);
+
+        // Deal cards for players
+        playerController.dealCards(cardController.getTreasureDeck());
+
+        gameView.initGame();
+        gameView.setPrimaryStage();
+    }
+
+    public void startTurn(Player player) {
+
     }
 
     public void handlePlayerJoin(Message message) throws Exception {
@@ -56,14 +94,6 @@ public class GameController {
     }
 
     public void shutdown() {
-
-    }
-
-    public void startGame(long seed) {
-
-    }
-
-    public void startTurn(Player player) {
 
     }
 

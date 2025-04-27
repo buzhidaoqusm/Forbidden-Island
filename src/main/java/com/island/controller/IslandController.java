@@ -10,8 +10,8 @@ public class IslandController {
     private Tile chosenTile;
     private String[] treasures = new String[] { "Earth", "Wind", "Fire", "Ocean" };
 
-    public IslandController() {
-        this.island = new Island();
+    public IslandController(Island island) {
+        this.island = island;
         chosenTile = null;
         waterLevel = 1;
     }
