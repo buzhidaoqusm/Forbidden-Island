@@ -80,7 +80,7 @@ public class IslandController {
     }
 
     private void addTile(String name, Position position, TreasureType type) {
-
+        island.getTiles().put(position, new Tile(name, position, type));
     }
 
     public Island getIsland() {
