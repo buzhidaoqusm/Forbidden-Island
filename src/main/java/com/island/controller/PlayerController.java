@@ -66,8 +66,22 @@ public class PlayerController {
         }
     }
 
+    /**
+     * Deal the initial cards to each player
+     * @param treasureDeck The deck of treasure cards
+     * */
     public void dealCards(Deque<Card> treasureDeck) {
-
+        for (Player player : room.getPlayers()) {
+            while (player.getCards().size() < 2) {
+                Card card = treasureDeck.poll();
+                // Ensure the card is not WATER_RISE, otherwise put it back into the deck
+                if (card != null && card.getType() != CardType.WATER_RISE) {
+                    player.addCard(card);
+                } else {
+                    treasureDeck.add(card);
+                }
+            }
+        }
     }
 
     public Room getRoom() {
