@@ -90,8 +90,41 @@ public class CardController {
         floodDeck.addAll(tempFlood);
     }
 
+    /**
+     * Draws a specified number of flood cards and floods the corresponding island positions.
+     * If the flood deck is empty, it reshuffles the discard pile and adds it back to the deck.
+     * @param count The number of flood cards to draw
+     * @return A list of island positions that got flooded
+     * */
     public List<Position> drawFloodCards(int count) {
+        List<Position> floodedPositions = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            if (floodDeck.isEmpty()) {
+                // If the deck is empty, reshuffle the discard pile
+                if (!floodDiscardPile.isEmpty()) {
+                    floodDeck.addAll(floodDiscardPile);
+                    floodDiscardPile.clear();
+                    shuffleDecks();
+                } else {
+                    break; // If there are no cards left, return
+                }
+            }
 
+            Card card = floodDeck.poll();
+            if (card != null) {
+                floodedPositions.add(card.getFloodPosition());
+                island.floodTile(card.getFloodPosition());
+                floodDiscardPile.add(card);
+            }
+        }
+
+        // Notify observers after drawing flood cards
+        if (gameController != null) {
+            gameController.updateCardView();
+            gameController.updateBoard();
+        }
+
+        return floodedPositions;
     }
 
     public void drawTreasureCard(int count, Player player) {
