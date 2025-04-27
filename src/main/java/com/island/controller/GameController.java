@@ -82,7 +82,11 @@ public class GameController {
     }
 
     public void startTurn(Player player) {
-
+        currentPlayer = player;
+        currentPlayer.resetState();
+        actionBarController.setCurrentPlayer(player);
+        remainingActions = 3;
+        playerController.resetPlayerState();
     }
 
     public void handlePlayerJoin(Message message) throws Exception {
