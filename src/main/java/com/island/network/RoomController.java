@@ -1,6 +1,11 @@
 package com.island.network;
 
 import com.island.controller.GameController;
+import com.island.model.Player;
+import com.island.model.Room;
+import com.island.model.Position;
+import com.island.model.Tile;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
