@@ -1,0 +1,23 @@
+package com.island.network;
+
+public enum MessageType {
+    MOVE_PLAYER;
+    SHORE_UP;
+    GIVE_CARD;
+    CAPTURE_TREASURE;
+    DRAW_TREASURE_CARD;
+    DRAW_FLOOD_CARD;
+    GAME_START;
+    TURN_START;
+    PLAYER_JOIN;
+    PLAYER_LEAVE;
+    UPDATE_ROOM;
+    END_TURN;
+    DISCARD_CARD;
+    MOVE_PLAYER_BY_NAVIGATOR;
+    HELICOPTER_MOVE;
+    SANDBAGS_USE;
+    GAME_OVER;
+    LEAVE_ROOM;
+    MESSAGE_ACK;
+}
