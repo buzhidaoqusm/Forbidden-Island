@@ -4,28 +4,38 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 // import model.Player;
-// import controller.GameController;
+import com.island.controller.GameController;
 
 public class CreateRoomView {
 
     private Stage primaryStage;
     // Placeholder for Player object (host)
     // private Player hostPlayer;
-    // Placeholder for GameController
-    // private GameController gameController;
+    // GameController reference
+    private GameController gameController;
 
     private ListView<String> playerListView;
     private ComboBox<String> difficultyComboBox;
 
     // Constructor (potentially needs Player and GameController)
-    public CreateRoomView(Stage primaryStage /*, Player hostPlayer, GameController gameController */) {
+    public CreateRoomView(Stage primaryStage /*, Player hostPlayer */) {
         this.primaryStage = primaryStage;
         // this.hostPlayer = hostPlayer;
-        // this.gameController = gameController;
+        this.gameController = null;
+        this.playerListView = new ListView<>();
+        this.difficultyComboBox = new ComboBox<>();
+    }
+    
+    // Constructor with GameController
+    public CreateRoomView(Stage primaryStage, GameController gameController /*, Player hostPlayer */) {
+        this.primaryStage = primaryStage;
+        this.gameController = gameController;
+        // this.hostPlayer = hostPlayer;
         this.playerListView = new ListView<>();
         this.difficultyComboBox = new ComboBox<>();
     }
@@ -60,13 +70,14 @@ public class CreateRoomView {
         returnButton.setOnAction(event -> {
             System.out.println("Return button clicked.");
             // Transition back to MenuView
-            // MenuView menuView = new MenuView(primaryStage, hostPlayer);
-            // primaryStage.setScene(menuView.createScene());
-            // primaryStage.setTitle("Forbidden Island - Main Menu");
-            // Placeholder action:
-            System.out.println("Returning to Main Menu...");
-            // Replace with actual transition logic, potentially involving a controller
-            // e.g., gameController.showMainMenu();
+            if (gameController != null) {
+                gameController.showMainMenu();
+            } else {
+                System.out.println("Returning to Main Menu...");
+                MenuView menuView = new MenuView(primaryStage);
+                primaryStage.setScene(menuView.createScene());
+                primaryStage.setTitle("Forbidden Island - Main Menu");
+            }
         });
 
         Button startGameButton = new Button("Start Game");
@@ -75,13 +86,14 @@ public class CreateRoomView {
             System.out.println("Start Game button clicked. Difficulty: " + selectedDifficulty);
             // Validate if enough players have joined (usually handled by controller)
             // Notify the controller to start the game
-            // if (gameController != null) {
-            //     gameController.startGame(selectedDifficulty, playerListView.getItems());
-            // }
-            // Placeholder action:
-            System.out.println("Starting game setup...");
+            if (gameController != null) {
+                gameController.startGame(selectedDifficulty);
+            } else {
+                System.out.println("Starting game setup...");
+                // Fallback when controller is not available
+            }
             // Transition to GameView (handled by controller after setup)
-        });
+        });}
 
         bottomBox.getChildren().addAll(returnButton, startGameButton);
         root.setBottom(bottomBox);
@@ -122,5 +134,85 @@ public class CreateRoomView {
 
     public ComboBox<String> getDifficultyComboBox() {
         return difficultyComboBox;
+    }
+    
+    /**
+     * Get the root node of the view
+     * @return The root node of the view
+     */
+    public Pane getView() {
+        BorderPane root = new BorderPane();
+        root.setPadding(new Insets(20));
+        
+        // Center: Player List and Settings
+        VBox centerBox = new VBox(15);
+        centerBox.setAlignment(Pos.CENTER);
+
+        Label playerListLabel = new Label("Players in Room:");
+        playerListView.setPrefHeight(150);
+
+        Label difficultyLabel = new Label("Select Difficulty:");
+        difficultyComboBox.getItems().addAll("Novice", "Normal", "Elite", "Legendary");
+        difficultyComboBox.setValue("Normal"); // Default difficulty
+
+        centerBox.getChildren().addAll(playerListLabel, playerListView, difficultyLabel, difficultyComboBox);
+        root.setCenter(centerBox);
+
+        // Bottom: Buttons
+        HBox bottomBox = new HBox(10);
+        bottomBox.setAlignment(Pos.CENTER_RIGHT);
+
+        Button returnButton = new Button("Return");
+        returnButton.setOnAction(event -> {
+            System.out.println("Return button clicked.");
+            if (gameController != null) {
+                gameController.showMainMenu();
+            } else {
+                System.out.println("Returning to Main Menu...");
+                MenuView menuView = new MenuView(primaryStage);
+                primaryStage.setScene(menuView.createScene());
+                primaryStage.setTitle("Forbidden Island - Main Menu");
+            }
+        });
+
+        Button startGameButton = new Button("Start Game");
+        startGameButton.setOnAction(event -> {
+            String selectedDifficulty = difficultyComboBox.getValue();
+            System.out.println("Start Game button clicked. Difficulty: " + selectedDifficulty);
+            if (gameController != null) {
+                gameController.startGame(selectedDifficulty);
+            } else {
+                System.out.println("Starting game setup...");
+                // Fallback when controller is not available
+            }
+        });
+
+        bottomBox.getChildren().addAll(returnButton, startGameButton);
+        root.setBottom(bottomBox);
+        BorderPane.setMargin(bottomBox, new Insets(15, 0, 0, 0));
+        
+        return root;
+    }
+    
+    /**
+     * Update the view
+     * Implements Observer pattern, updates the interface when game state changes
+     */
+    public void update() {
+        if (gameController != null) {
+            // Update room information
+            // For example: update player list, room status, etc.
+            System.out.println("CreateRoomView updated");
+            
+            // Get current players in room
+            java.util.List<String> players = gameController.getPlayersInRoom();
+            if (players != null) {
+                javafx.application.Platform.runLater(() -> {
+                    playerListView.getItems().setAll(players);
+                });
+            }
+            
+            // Update other UI elements
+        }
     }
 }
