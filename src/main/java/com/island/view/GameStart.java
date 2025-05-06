@@ -42,12 +42,9 @@ public class GameStart {
             String username = nameInput.getText().trim();
             if (!username.isEmpty()) {
                 // Create Player object (assuming Player constructor takes username)
-                // player = new Player(username);
+                player = new Player(username);
                 System.out.println("Player created: " + username);
-
-                // Transition to the main menu
-                // This typically involves calling a method in the main application or a controller
-                // For example: MainApplication.showMenuView(primaryStage, player);
+                MainApplication.showMenuView(primaryStage, player);
                 // Or: gameController.showMainMenu(player);
 
                 // Placeholder transition - replace with actual logic
@@ -67,8 +64,6 @@ public class GameStart {
         return new Scene(root, 300, 200);
     }
 
-    // Example of how this might be launched from the main application
-    /*
     public static class MainApplication extends Application {
         @Override
         public void start(Stage primaryStage) {
@@ -89,5 +84,5 @@ public class GameStart {
              stage.setTitle("Forbidden Island - Main Menu");
         }
     }
-    */
+    
 }
