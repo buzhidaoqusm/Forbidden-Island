@@ -5,19 +5,20 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.control.Label;
 import javafx.geometry.Pos;
 
-// Assuming Tile, Player, Position classes exist in a model package
-// import model.Tile;
-// import model.Player;
-// import model.Position;
-// Assuming GameController exists
-// import controller.GameController;
+import com.island.controller.GameController;
+import com.island.controller.PlayerController;
+import com.island.controller.IslandController;
+import com.island.model.Tile;
+import com.island.model.Player;
+import com.island.model.Position;
+ import com.island.model.Island;
 
 public class IslandView {
 
     private GridPane gridPane; // The main layout for the island tiles
     private Pane viewPane; // The root pane for this view component
-    // Placeholder for GameController
-    // private GameController gameController;
+    // GameController reference
+    private GameController gameController;
 
     // Constants for tile display (example)
     private static final double TILE_SIZE = 80.0;
@@ -28,8 +29,8 @@ public class IslandView {
     private static final double SHORED_UP_BORDER_WIDTH = 3.0;
 
     // Constructor
-    public IslandView(/* GameController gameController */) {
-        // this.gameController = gameController;
+    public IslandView(GameController gameController) {
+        this.gameController = gameController;
         initialize();
     }
 
@@ -67,9 +68,9 @@ public class IslandView {
         tilePane.setOnMouseClicked(event -> {
             System.out.println("Clicked on tile at (" + row + ", " + col + ")");
             // Pass interaction to the controller
-            // if (gameController != null) {
-            //     gameController.handleTileClick(row, col);
-            // }
+            if (gameController != null) {
+                gameController.getIslandController().handleTileClick(new Position(row, col));
+            }
         });
 
         tilePane.getChildren().addAll(background, nameLabel);
@@ -80,7 +81,7 @@ public class IslandView {
         return tilePane;
     }
 
-    public void updateTileView(int row, int col, Object tile) {
+    public void updateTileView(int row, int col, Tile tile) {
         // Find the corresponding Pane in the gridPane
         // This requires a way to map row/col back to the Node in the grid
         javafx.application.Platform.runLater(() -> {
@@ -91,33 +92,31 @@ public class IslandView {
                 Rectangle background = (Rectangle) tilePane.getChildren().get(0); // Assuming rect is first
                 Label nameLabel = (Label) tilePane.getChildren().get(1); // Assuming label is second
 
-                // Update appearance based on the actual Tile object's state
-                // String tileName = tile.getName();
-                // Tile.State state = tile.getState();
-                // boolean isShoredUp = tile.isShoredUp();
+                String tileName = tile.getName();
+                Tile.State state = tile.getState();
+                boolean isShoredUp = tile.isShoredUp();
 
-                // nameLabel.setText(tileName);
-                // switch (state) {
-                //     case NORMAL:
-                //         background.setFill(NORMAL_TILE_COLOR);
-                //         break;
-                //     case FLOODED:
-                //         background.setFill(FLOODED_TILE_COLOR);
-                //         break;
-                //     case SUNK:
-                //         background.setFill(SUNK_TILE_COLOR);
-                //         nameLabel.setText("SUNK"); // Indicate sunk state
-                //         break;
-                // }
+                nameLabel.setText(tileName);
+                switch (state) {
+                    case NORMAL:
+                        background.setFill(NORMAL_TILE_COLOR);
+                        break;
+                    case FLOODED:
+                        background.setFill(FLOODED_TILE_COLOR);
+                        break;
+                    case SUNK:
+                        background.setFill(SUNK_TILE_COLOR);
+                        nameLabel.setText("SUNK"); // Indicate sunk state
+                        break;
+                }
 
-                // // Apply shored-up visual cue
-                // if (isShoredUp && state != Tile.State.SUNK) {
-                //     background.setStroke(SHORED_UP_BORDER_COLOR);
-                //     background.setStrokeWidth(SHORED_UP_BORDER_WIDTH);
-                // } else {
-                //     background.setStroke(Color.BLACK);
-                //     background.setStrokeWidth(1.0);
-                // }
+                if (isShoredUp && state != Tile.State.SUNK) {
+                    background.setStroke(SHORED_UP_BORDER_COLOR);
+                    background.setStrokeWidth(SHORED_UP_BORDER_WIDTH);
+                } else {
+                    background.setStroke(Color.BLACK);
+                    background.setStrokeWidth(1.0);
+                }
 
                 // Placeholder update:
                 background.setFill(Color.rgb((int)(Math.random()*255), (int)(Math.random()*255), (int)(Math.random()*255)));
@@ -131,23 +130,20 @@ public class IslandView {
 
     public void updatePlayerMarker(Object player, Object newPosition) {
         javafx.application.Platform.runLater(() -> {
-            // 1. Remove old marker (if exists)
-            // 2. Create new marker (e.g., a Circle or an Image)
-            // 3. Add new marker to the Pane corresponding to newPosition
-            System.out.println("Updating player marker for " /* + player.getName() */ + " at " /* + newPosition */);
-            // Placeholder: Find the tile pane and add a temporary indicator
-            // int row = newPosition.getRow();
-            // int col = newPosition.getCol();
-            // Node node = getNodeByRowColumnIndex(row, col, gridPane);
-            // if (node instanceof Pane) {
-            //     Pane tilePane = (Pane) node;
-            //     javafx.scene.shape.Circle playerMarker = new javafx.scene.shape.Circle(TILE_SIZE / 4, player.getColor());
-            //     // Remove previous markers of this player before adding
-            //     tilePane.getChildren().add(playerMarker);
-            //     // Position the marker within the tile pane
-            //     playerMarker.setCenterX(TILE_SIZE / 2);
-            //     playerMarker.setCenterY(TILE_SIZE / 2);
-            // }
+            System.out.println("Updating player marker for "  + player.getName()  + " at "  + newPosition );
+            
+            int row = newPosition.getRow();
+            int col = newPosition.getCol();
+            Node node = getNodeByRowColumnIndex(row, col, gridPane);
+            if (node instanceof Pane) {
+                 Pane tilePane = (Pane) node;
+                 javafx.scene.shape.Circle playerMarker = new javafx.scene.shape.Circle(TILE_SIZE / 4, player.getColor());
+                 Remove previous markers of this player before adding
+                 tilePane.getChildren().add(playerMarker);
+                 Position the marker within the tile pane
+                 playerMarker.setCenterX(TILE_SIZE / 2);
+                 playerMarker.setCenterY(TILE_SIZE / 2);
+            }
         });
     }
 
@@ -158,19 +154,17 @@ public class IslandView {
             if ("shore_up".equals(highlightType)) {
                 highlightColor = Color.LIGHTGREEN;
             }
-            // Add more highlight types as needed
-
-            // for (Position pos : positions) {
-            //     Node node = getNodeByRowColumnIndex(pos.getRow(), pos.getCol(), gridPane);
-            //     if (node instanceof Pane) {
-            //         Pane tilePane = (Pane) node;
-            //         Rectangle background = (Rectangle) tilePane.getChildren().get(0);
-            //         // Apply highlight (e.g., change border)
-            //         background.setStroke(highlightColor);
-            //         background.setStrokeWidth(3.0);
-            //         System.out.println("Highlighting tile at " + pos + " for " + highlightType);
-            //     }
-            // }
+            for (Position pos : positions) {
+                Node node = getNodeByRowColumnIndex(pos.getRow(), pos.getCol(), gridPane);
+                if (node instanceof Pane) {
+                    Pane tilePane = (Pane) node;
+                    Rectangle background = (Rectangle) tilePane.getChildren().get(0);
+                    Apply highlight (e.g., change border)
+                    background.setStroke(highlightColor);
+                    background.setStrokeWidth(3.0);
+                    System.out.println("Highlighting tile at " + pos + " for " + highlightType);
+                }
+            }
             System.out.println("Highlighting tiles (placeholder). Count: " + positions.size());
         });
     }
@@ -193,6 +187,46 @@ public class IslandView {
 
     public Pane getView() {
         return viewPane;
+    }
+    
+    /**
+     * Update the island view, get the latest island status information from GameController
+     */
+    public void update() {
+        if (gameController != null) {
+            try {
+                IslandController islandController = gameController.getIslandController();
+                
+                // Get island object
+                Island island = islandController.getIsland();
+                if (island == null) return;
+                
+                // Update all tile states
+                for (int row = 0; row < island.getSize(); row++) {
+                    for (int col = 0; col < island.getSize(); col++) {
+                        Tile tile = island.getTile(new Position(row, col));
+                        if (tile != null) {
+                            updateTileView(row, col, tile);
+                        }
+                    }
+                }
+                
+                // Update player position markers
+                PlayerController playerController = gameController.getPlayerController();
+                if (playerController != null) {
+                    List<Player> players = playerController.getRoom().getPlayers();
+                    for (Player player : players) {
+                        // Ensure player position is updated correctly
+                        if (player.getCurrentTile() != null) {
+                            System.out.println("Updating position for player: " + player.getName());
+                            updatePlayerMarker(player, player.getPosition());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Error updating island view: " + e.getMessage());
+            }
+        }
     }
 
     private javafx.scene.Node getNodeByRowColumnIndex(final int row, final int column, GridPane gridPane) {
