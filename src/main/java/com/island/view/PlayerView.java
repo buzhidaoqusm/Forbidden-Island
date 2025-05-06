@@ -23,12 +23,11 @@ public class PlayerView {
 
     private VBox viewPane; // The root pane for this view component
     private Map<String, VBox> playerInfoBoxes; // Map playerName to their display VBox
-    // Placeholder for GameController
-    // private GameController gameController;
+    private GameController gameController;
 
     // Constructor
-    public PlayerView(/* GameController gameController */) {
-        // this.gameController = gameController;
+    public PlayerView(GameController gameController) {
+        this.gameController = gameController;
         initialize();
     }
 
@@ -44,19 +43,20 @@ public class PlayerView {
         viewPane.getChildren().add(title);
     }
 
-    public void updatePlayerInfo(Object player, boolean isCurrentPlayer) {
-        // String playerName = player.getName();
-        // String playerRole = player.getRole().getName();
-        // int handSize = player.getHand().size();
-        // String position = player.getCurrentTile().getName(); // Or getPosition().toString()
-        // Color playerColor = player.getColor(); // Assuming Player has a color
-
-        // Placeholder data:
-        String playerName = "Player " + player.hashCode() % 100; // Example name
-        String playerRole = "Pilot"; // Example role
-        int handSize = (int)(Math.random() * 5) + 1;
-        String position = "Tile (" + (int)(Math.random()*6) + "," + (int)(Math.random()*6) + ")";
-        Color playerColor = Color.rgb((int)(Math.random()*200), (int)(Math.random()*200), (int)(Math.random()*200));
+    public void updatePlayerInfo(Player player, boolean isCurrentPlayer) {
+        String playerName = player.getName();
+        String playerRole = player.getRole().getName();
+        int handSize = player.getHand().size();
+        String position = "";
+        if (player.getCurrentTile() != null) {
+            position = player.getCurrentTile().getName();
+        } else if (player.getPosition() != null) {
+            position = player.getPosition().toString();
+        } else {
+            position = "Unknown position";
+        }
+        
+        Color playerColor = getRoleColor(player.getRole());
 
         javafx.application.Platform.runLater(() -> {
             VBox playerBox = playerInfoBoxes.get(playerName);
@@ -96,18 +96,15 @@ public class PlayerView {
         });
     }
 
-    public void updateAllPlayers(List<Object> players, Object currentPlayer) {
+    public void updateAllPlayers(List<Player> players, Player currentPlayer) {
         javafx.application.Platform.runLater(() -> {
-            // Optional: Clear existing boxes if players can leave
-            // viewPane.getChildren().retainAll(viewPane.getChildren().get(0)); // Keep title
-            // playerInfoBoxes.clear();
+            viewPane.getChildren().retainAll(viewPane.getChildren().get(0)); // Keep title
+            playerInfoBoxes.clear();
 
-            // String currentPlayerName = (currentPlayer != null) ? currentPlayer.getName() : null;
-            String currentPlayerName = (currentPlayer != null) ? "Player " + currentPlayer.hashCode() % 100 : null;
+            String currentPlayerName = (currentPlayer != null) ? currentPlayer.getName() : null;
 
-            for (Object player : players) {
-                // String playerName = player.getName();
-                String playerName = "Player " + player.hashCode() % 100;
+            for (Player player : players) {
+                String playerName = player.getName();
                 updatePlayerInfo(player, playerName.equals(currentPlayerName));
             }
         });
@@ -124,5 +121,42 @@ public class PlayerView {
 
     public VBox getView() {
         return viewPane;
+    }
+    
+    /**
+     * Returns the color corresponding to the player's role
+     * @param role Player role
+     * @return Corresponding color
+     */
+    private Color getRoleColor(Role role) {
+        if (role == null) return Color.GRAY;
+        
+        switch (role.getName()) {
+            case "ENGINEER": return Color.RED;
+            case "EXPLORER": return Color.GREEN;
+            case "PILOT": return Color.BLUE;
+            case "MESSENGER": return Color.GRAY;
+            case "NAVIGATOR": return Color.YELLOW;
+            case "DIVER": return Color.BLACK;
+            default: return Color.PURPLE;
+        }
+    }
+    
+    /**
+     * Update the view, get the latest player information from GameController
+     */
+    public void update() {
+        if (gameController != null) {
+            // Use GameController methods to get player information
+            try {
+                PlayerController playerController = gameController.getPlayerController();
+                List<Player> players = playerController.getRoom().getPlayers();
+                Player currentPlayer = gameController.getCurrentPlayer();
+                
+                updateAllPlayers(players, currentPlayer);
+            } catch (Exception e) {
+                System.err.println("Error updating player view: " + e.getMessage());
+            }
+        }
     }
 }
