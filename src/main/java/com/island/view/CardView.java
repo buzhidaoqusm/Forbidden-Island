@@ -10,13 +10,12 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import java.util.List;
 
-// Assuming Card class exists in a model package
-// import model.Card;
-// import model.TreasureCard;
-// import model.FloodCard;
-// Assuming GameController exists
-// import controller.GameController;
+import com.island.controller.GameController;
+import com.island.controller.CardController;
+import com.island.model.Card;
+// Note: Actual card class is needed here, if not exists, use Object instead
 
 public class CardView {
 
@@ -29,20 +28,24 @@ public class CardView {
     private Label floodDeckCountLabel;
     private StackPane floodDiscardPilePane;
 
-    // Placeholder for GameController
-    // private GameController gameController;
+    // GameController reference
+    private GameController gameController;
 
     // Placeholder for card back images
     private Image treasureCardBack;
     private Image floodCardBack;
+    
+    // Note: Actual card image resources are needed here, currently using placeholders
 
     // Constructor
-    public CardView(/* GameController gameController */) {
-        // this.gameController = gameController;
+    public CardView(GameController gameController) {
+        this.gameController = gameController;
         // Load card back images (replace with actual paths)
         try {
+            // Note: Actual image resources are needed here
             // treasureCardBack = new Image(getClass().getResourceAsStream("/images/treasure_card_back.png"));
             // floodCardBack = new Image(getClass().getResourceAsStream("/images/flood_card_back.png"));
+            System.out.println("Note: Need to add actual card back image resources");
         } catch (Exception e) {
             System.err.println("Error loading card back images: " + e.getMessage());
             treasureCardBack = null; // Handle missing image
@@ -145,27 +148,75 @@ public class CardView {
             floodDeckCountLabel.setText("Count: " + count);
         });
     }
+    
+    /**
+     * Update the card view, get the latest card information from GameController
+     */
+    public void update() {
+        if (gameController != null) {
+            try {
+                CardController cardController = gameController.getCardController();
+                if (cardController != null) {
+                    // Update card counts
+                    try {
+                        updateTreasureDeckCount(cardController.getTreasureDeck().size());
+                        updateFloodDeckCount(cardController.getFloodDeck().size());
+                    } catch (Exception e) {
+                        System.err.println("Error getting card counts: " + e.getMessage());
+                    }
+                    
+                    // Update discard pile top cards
+                    try {
+                        List<Card> treasureDiscardPile = cardController.getTreasureDiscardPile();
+                        if (treasureDiscardPile != null && !treasureDiscardPile.isEmpty()) {
+                            updateTreasureDiscardPile(treasureDiscardPile.get(treasureDiscardPile.size() - 1));
+                        } else {
+                            updateTreasureDiscardPile(null);
+                        }
+                        
+                        List<Card> floodDiscardPile = cardController.getFloodDiscardPile();
+                        if (floodDiscardPile != null && !floodDiscardPile.isEmpty()) {
+                            updateFloodDiscardPile(floodDiscardPile.get(floodDiscardPile.size() - 1));
+                        } else {
+                            updateFloodDiscardPile(null);
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Error updating discard piles: " + e.getMessage());
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Error updating card view: " + e.getMessage());
+            }
+        }
+    }
 
-    public void updateTreasureDiscardPile(Object topCard) {
+    public void updateTreasureDiscardPile(Card topCard) {
         javafx.application.Platform.runLater(() -> {
             updateDiscardPilePane(treasureDiscardPilePane, topCard, "Discard");
         });
     }
 
-    public void updateFloodDiscardPile(Object topCard) {
+    public void updateFloodDiscardPile(Card topCard) {
         javafx.application.Platform.runLater(() -> {
             updateDiscardPilePane(floodDiscardPilePane, topCard, "Discard");
         });
     }
 
-    private void updateDiscardPilePane(StackPane pilePane, Object card, String defaultText) {
+    private void updateDiscardPilePane(StackPane pilePane, Card card, String defaultText) {
         pilePane.getChildren().removeIf(node -> node instanceof ImageView || node instanceof Label);
 
         if (card != null) {
-            // Assume card has a method to get its image
-            // Image cardImage = card.getImage();
-            // Placeholder image generation
-            Image cardImage = createPlaceholderCardImage(card);
+            // Try to get card image if the method exists
+            Image cardImage = null;
+            try {
+                // Attempt to use card.getImage() if it exists
+                // cardImage = card.getImage();
+                // For now, use placeholder image
+                cardImage = createPlaceholderCardImage(card);
+            } catch (Exception e) {
+                // Fallback to placeholder
+                cardImage = createPlaceholderCardImage(card);
+            }
 
             if (cardImage != null) {
                 ImageView imageView = new ImageView(cardImage);
@@ -174,9 +225,16 @@ public class CardView {
                 imageView.setPreserveRatio(true);
                 pilePane.getChildren().add(imageView);
             } else {
-                // Fallback if image loading fails or card has no image
-                // Label cardNameLabel = new Label(card.getName());
-                Label cardNameLabel = new Label("Card " + card.hashCode()%100);
+                // Fallback if image loading fails
+                String cardName = "Unknown Card";
+                try {
+                    // Try to get card name if method exists
+                    // cardName = card.getName();
+                    cardName = "Card " + card.hashCode()%100;
+                } catch (Exception e) {
+                    cardName = "Card " + card.hashCode()%100;
+                }
+                Label cardNameLabel = new Label(cardName);
                 pilePane.getChildren().add(cardNameLabel);
             }
         } else {
@@ -186,7 +244,7 @@ public class CardView {
     }
 
     // Placeholder for generating a card image (replace with actual image loading)
-    private Image createPlaceholderCardImage(Object card) {
+    private Image createPlaceholderCardImage(Card card) {
         javafx.scene.canvas.Canvas canvas = new javafx.scene.canvas.Canvas(65, 95);
         javafx.scene.canvas.GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setFill(Color.WHITE);
@@ -194,8 +252,17 @@ public class CardView {
         gc.setStroke(Color.BLACK);
         gc.strokeRect(0, 0, 65, 95);
         gc.setFill(Color.BLACK);
-        // gc.fillText(card.getName(), 5, 20);
-        gc.fillText("Card "+ card.hashCode()%100, 5, 20);
+        
+        // Try to get card name if available
+        String cardText = "Card "+ card.hashCode()%100;
+        try {
+            // Uncomment when Card class has getName() method
+            // cardText = card.getName();
+        } catch (Exception e) {
+            // Use default text if getName() is not available
+        }
+        
+        gc.fillText(cardText, 5, 20);
         return canvas.snapshot(null, null);
     }
 
