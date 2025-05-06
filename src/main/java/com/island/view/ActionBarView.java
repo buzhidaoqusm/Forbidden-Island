@@ -6,19 +6,18 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.control.ListView;
 import javafx.application.Platform;
-import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
 import java.util.ArrayList;
 import java.util.List;
 
-// Assuming ActionType enum or similar exists
-// enum ActionType { MOVE, SHORE_UP, GIVE_CARD, CAPTURE_TREASURE, USE_ABILITY, END_TURN }
-// Assuming GameController exists
-// import controller.GameController;
-// Assuming Player class exists
-// import model.Player;
+import com.island.controller.GameController;
+import com.island.controller.ActionBarController;
+import com.island.model.Player;
+
+// ActionType enum for action types
+enum ActionType { MOVE, SHORE_UP, GIVE_CARD, CAPTURE_TREASURE, USE_ABILITY, END_TURN }
 
 
 public class ActionBarView {
@@ -35,12 +34,12 @@ public class ActionBarView {
     private Button useAbilityButton;
     private Button endTurnButton;
 
-    // Placeholder for GameController
-    // private GameController gameController;
+    // GameController reference
+    private GameController gameController;
 
     // Constructor
-    public ActionBarView(/* GameController gameController */) {
-        // this.gameController = gameController;
+    public ActionBarView(GameController gameController) {
+        this.gameController = gameController;
         initialize();
     }
 
@@ -64,27 +63,27 @@ public class ActionBarView {
         // --- Button Actions (Send requests to Controller) ---
         moveButton.setOnAction(event -> {
             System.out.println("Move button clicked");
-            // if (gameController != null) gameController.handleAction(ActionType.MOVE);
+            if (gameController != null) gameController.getActionBarController().handleMoveAction();
         });
         shoreUpButton.setOnAction(event -> {
             System.out.println("Shore Up button clicked");
-            // if (gameController != null) gameController.handleAction(ActionType.SHORE_UP);
+            if (gameController != null) gameController.getActionBarController().handleShoreUpAction();
         });
         giveCardButton.setOnAction(event -> {
             System.out.println("Give Card button clicked");
-            // if (gameController != null) gameController.handleAction(ActionType.GIVE_CARD);
+            if (gameController != null) gameController.getActionBarController().handleGiveCardAction();
         });
         captureTreasureButton.setOnAction(event -> {
             System.out.println("Capture Treasure button clicked");
-            // if (gameController != null) gameController.handleAction(ActionType.CAPTURE_TREASURE);
+            if (gameController != null) gameController.getActionBarController().handleCaptureTreasureAction();
         });
         useAbilityButton.setOnAction(event -> {
             System.out.println("Use Ability button clicked");
-            // if (gameController != null) gameController.handleAction(ActionType.USE_ABILITY);
+            if (gameController != null) gameController.getActionBarController().handlePlaySpecialAction();
         });
         endTurnButton.setOnAction(event -> {
             System.out.println("End Turn button clicked");
-            // if (gameController != null) gameController.handleAction(ActionType.END_TURN);
+            if (gameController != null) gameController.getActionBarController().handleEndTurnAction();
         });
 
         actionBarControls.getChildren().addAll(
@@ -131,29 +130,32 @@ public class ActionBarView {
 
     private void setAvailableActions(List<Object> availableActions, int actionsRemaining) {
         boolean canAct = actionsRemaining > 0;
-
-        // Example logic: Enable button if the action type is in the list AND actions remain
-        // moveButton.setDisable(!(availableActions.contains(ActionType.MOVE) && canAct));
-        // shoreUpButton.setDisable(!(availableActions.contains(ActionType.SHORE_UP) && canAct));
-        // giveCardButton.setDisable(!(availableActions.contains(ActionType.GIVE_CARD) && canAct));
-        // captureTreasureButton.setDisable(!(availableActions.contains(ActionType.CAPTURE_TREASURE) && canAct));
-        // useAbilityButton.setDisable(!(availableActions.contains(ActionType.USE_ABILITY) && canAct)); // Abilities might cost 0 actions
-
-        // Placeholder: Enable/disable based on simple rules
-        moveButton.setDisable(!canAct);
-        shoreUpButton.setDisable(!canAct);
-        giveCardButton.setDisable(!canAct);
-        captureTreasureButton.setDisable(!canAct);
-        useAbilityButton.setDisable(!canAct); // Assuming ability costs an action for now
-
-        // End Turn is always available (unless game state prevents it)
-        endTurnButton.setDisable(false);
+        
+        if (gameController != null) {
+            ActionBarController actionBarController = gameController.getActionBarController();
+            Player currentPlayer = actionBarController.getCurrentPlayer();
+            
+            // Enable/disable buttons based on game state and player abilities
+            moveButton.setDisable(!(canAct));
+            shoreUpButton.setDisable(!(canAct && actionBarController.canShoreUpTile(currentPlayer)));
+            giveCardButton.setDisable(!(canAct && actionBarController.canGiveCard(currentPlayer)));
+            captureTreasureButton.setDisable(!(canAct && actionBarController.canCaptureTreasure(currentPlayer)));
+            useAbilityButton.setDisable(!actionBarController.canPlaySpecialCard(currentPlayer)); // Special abilities may have different rules
+            
+            // End Turn is always available after drawing treasure cards
+            endTurnButton.setDisable(!actionBarController.hasDrawnTreasureCards());
+        } else {
+            // Fallback if controller is not available
+            moveButton.setDisable(!canAct);
+            shoreUpButton.setDisable(!canAct);
+            giveCardButton.setDisable(!canAct);
+            captureTreasureButton.setDisable(!canAct);
+            useAbilityButton.setDisable(!canAct);
+            endTurnButton.setDisable(false);
+        }
 
         // Highlight active button (optional visual feedback)
         clearHighlights();
-        // Example: if (gameController.isActionSelected(ActionType.MOVE)) {
-        //     moveButton.setStyle("-fx-border-color: blue; -fx-border-width: 2;");
-        // }
     }
 
     public void clearHighlights() {
@@ -186,5 +188,47 @@ public class ActionBarView {
                 logListView.getItems().clear();
             }
         });
+    }
+    
+    /**
+     * Update the action bar view, get the latest action status information from GameController
+     */
+    public void update() {
+        if (gameController != null) {
+            try {
+                // Get the current player's remaining action points
+                int actionsRemaining = gameController.getRemainingActions();
+                
+                // Get available actions list
+                // Since getAvailableActions method might not exist, use an empty list
+                List<Object> availableActions = new ArrayList<>(); 
+                
+                // Update action button states
+                updateActions(availableActions, actionsRemaining);
+                
+                // Update water level indicator if the method exists
+                try {
+                    int waterLevel = gameController.getIslandController().getWaterLevel();
+                    updateWaterLevelIndicator(waterLevel);
+                } catch (Exception e) {
+                    System.err.println("Error updating water level: " + e.getMessage());
+                }
+                
+                System.out.println("Action bar view updated");
+            } catch (Exception e) {
+                System.err.println("Error updating action bar view: " + e.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Update water level indicator
+     * @param waterLevel Current water level
+     */
+    private void updateWaterLevelIndicator(int waterLevel) {
+        // Implement water level indicator update logic
+        // For example: update water level label or progress bar
+        System.out.println("Current water level: " + waterLevel);
+        // In actual implementation, UI elements should be updated
     }
 }
