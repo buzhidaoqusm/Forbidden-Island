@@ -20,7 +20,7 @@ public enum PlayerRole {
         }
     }
 
-    public String getColor(PlayerRole role) {
+    public static String getColor(PlayerRole role) {
         switch (role) {
             case EXPLORER: return "#00FF00";  // Green
             case PILOT: return "#0000FF";     // Blue

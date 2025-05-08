@@ -1,5 +1,8 @@
 package com.island.controller;
 
+import com.island.model.Island;
+import com.island.model.Player;
+
 public class ActionBarController {
     private GameController gameController;
     private Player currentPlayer;

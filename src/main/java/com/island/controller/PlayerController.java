@@ -2,6 +2,8 @@ package com.island.controller;
 
 import java.util.*;
 
+import com.island.model.*;
+
 /**
  * PlayerController is responsible for managing player-related operations in the game, including player character initialization, card distribution, player status check, etc.
  * As a component of the game controller, this class coordinates the interaction between the game logic and the player.
@@ -54,7 +56,7 @@ public class PlayerController {
                 gameController.setCurrentPlayer(player);
             }
             // set initial position according to the player role
-            player.setPosition(island.findTile(PlayerRole.getColor(player.getRole())));
+            player.setPosition(island.findTile(PlayerRole.getColor(player.getRole())).getPosition());
             room.addPlayer(player);
         }
         // Remove the characters of the first playerCount players from the room

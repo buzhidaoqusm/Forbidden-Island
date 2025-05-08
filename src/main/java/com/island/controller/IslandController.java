@@ -1,5 +1,7 @@
 package com.island.controller;
 
+import com.island.model.Island;
+
 import java.util.*;
 
 import static com.island.util.Constant.tilesNames;
