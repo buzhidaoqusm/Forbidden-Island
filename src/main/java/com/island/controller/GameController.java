@@ -126,6 +126,16 @@ public class GameController {
         cardController.handleWaterRise();
     }
 
+
+    /**
+     * Handle the logic of drawing treasure cards.
+     * @param count The number of cards to draw
+     * @param player The player who is drawing the cards
+     * */
+    public void handleDrawTreasureCard(int count, Player player) {
+        cardController.drawTreasureCard(count, player);
+    }
+
     public IslandController getIslandController() {
         return islandController;
     }
@@ -182,9 +192,6 @@ public class GameController {
         return roomController.getMessageHandler();
     }
 
-    public void handleDrawTreasureCard(int count, Player player) {
-
-    }
 
     public Tile getChosenTile() {
         return islandController.getChosenTile();

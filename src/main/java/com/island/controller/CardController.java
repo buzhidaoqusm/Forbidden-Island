@@ -129,8 +129,40 @@ public class CardController {
         return floodedPositions;
     }
 
+    /**
+     * Draws a specified number of treasure cards for a player.
+     * If the treasure deck is empty, it reshuffles the discard pile and adds it back to the deck.
+     * @param count The number of treasure cards to draw
+     * @param player The player who is drawing the cards
+     * */
     public void drawTreasureCard(int count, Player player) {
+        for (int i = 0; i < count; i++) {
+            if (treasureDeck.isEmpty()) {
+                // if the deck is empty, reshuffle the discard pile
+                if (!treasureDiscardPile.isEmpty()) {
+                    treasureDeck.addAll(treasureDiscardPile);
+                    treasureDiscardPile.clear();
+                    shuffleDecks();
+                } else {
+                    return; // if there are no cards left, return
+                }
+            }
 
+            Card card = treasureDeck.poll();
+            if (card != null) {
+                if (card.getType() == CardType.WATER_RISE) {
+                    gameController.handleWaterRise();
+                } else {
+                    player.addCard(card);
+                }
+            }
+        }
+
+        // notify observers after drawing treasure cards
+        if (gameController != null) {
+            gameController.updateCardView();
+            gameController.updatePlayersInfo();
+        }
     }
 
     /**
