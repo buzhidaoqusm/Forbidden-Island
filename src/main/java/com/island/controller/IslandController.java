@@ -1,6 +1,7 @@
 package com.island.controller;
 
 import com.island.model.Island;
+import com.island.model.Room;
 
 import java.util.*;
 
@@ -102,8 +103,14 @@ public class IslandController {
         return waterLevel;
     }
 
+    /**
+     * Increases the water level of the island and notifies the game controller to update the view.
+     */
     public void increaseWaterLevel() {
-
+        waterLevel++;
+        if (gameController != null) {
+            gameController.updateWaterLevel();
+        }
     }
 
     public void handleTileClick(Tile tile) {

@@ -1,7 +1,9 @@
 package com.island.controller;
 
 import com.island.model.*;
+import com.island.network.Message;
 import com.island.network.MessageHandler;
+import com.island.network.RoomController;
 
 import java.util.*;
 
@@ -101,7 +103,7 @@ public class GameController {
     }
 
     public void handlePlayerJoin(Message message) throws Exception {
-
+        roomController.handleJoinRequest(message);
     }
 
     public RoomController getRoomController() {
@@ -110,6 +112,18 @@ public class GameController {
 
     public void shutdown() {
 
+    }
+
+    /**
+     * Handle the logic of drawing the water rise card.
+     * */
+    public void handleWaterRise() {
+        islandController.increaseWaterLevel();
+        if (islandController.getWaterLevel() == 10 ) {
+            gameOver = true;
+            roomController.sendGameOverMessage("Water level has reached the maximum!");
+        }
+        cardController.handleWaterRise();
     }
 
     public IslandController getIslandController() {
@@ -162,10 +176,6 @@ public class GameController {
 
     public Player getCurrentProgramPlayer() {
         return room.getCurrentProgramPlayer();
-    }
-
-    public void handleWaterRise() {
-
     }
 
     public MessageHandler getMessageHandler() {

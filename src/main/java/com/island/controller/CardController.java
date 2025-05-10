@@ -133,6 +133,23 @@ public class CardController {
 
     }
 
+    /**
+     * Shuffles the flood discard pile and adds a water rise card to the treasure discard pile.
+     * */
+    public void handleWaterRise() {
+        // shuffle the flood discard pile
+        if (!floodDiscardPile.isEmpty()) {
+            Collections.shuffle(floodDiscardPile, new Random(seed));
+            // add the shuffled cards back to the flood deck
+            for (Card card : floodDiscardPile) {
+                floodDeck.addFirst(card);
+            }
+            floodDiscardPile.clear();
+        }
+        // add a water rise card to the treasure discard pile
+        treasureDiscardPile.add(Card.createSpecialCard(CardType.WATER_RISE));
+    }
+
     public Deque<Card> getTreasureDeck() {
         return treasureDeck;
     }
@@ -153,8 +170,7 @@ public class CardController {
         treasureDiscardPile.add(card);
     }
 
-    public void handleWaterRise() {
-    }
+
 
     public void shutdown() {
     }
