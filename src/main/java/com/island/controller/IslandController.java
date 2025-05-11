@@ -1,7 +1,6 @@
 package com.island.controller;
 
-import com.island.model.Island;
-import com.island.model.Room;
+import com.island.model.*;
 
 import java.util.*;
 
@@ -113,8 +112,47 @@ public class IslandController {
         }
     }
 
+    /**
+     * Handle tile click events.
+     * This method checks if the clicked tile is valid for the current player and performs the necessary actions.
+     * @param tile The clicked tile.
+     * */
     public void handleTileClick(Tile tile) {
+        if (chosenTile != null && chosenTile.equals(tile)) {
+            chosenTile = null;
+            gameController.resetTileBorders();
+            return;
+        }
+        // set the chosen tile
+        chosenTile = tile;
 
+        // Check if the navigator uses the special ability
+        if (gameController.getCurrentPlayer() instanceof Navigator navigator && navigator.getNavigatorTarget() != null) {
+            Player navigatorTarget = navigator.getNavigatorTarget();
+            Position fromPosition = navigatorTarget.getPosition();
+            Position toPosition = tile.getPosition();
+
+            // Check if the move is valid (adjacent and not sunk)
+            int dx = Math.abs(toPosition.getX() - fromPosition.getX());
+            int dy = Math.abs(toPosition.getY() - fromPosition.getY());
+            boolean isAdjacent = false;
+            if (navigator.getNavigatorMoves() == 2) {
+                isAdjacent = (dx + dy == 2);
+            } else if (navigator.getNavigatorMoves() == 1) {
+                isAdjacent = (dx + dy == 1);
+            }
+
+            if (!isAdjacent || island.getTile(toPosition).isSunk()) {
+                gameController.showWarningToast("Invalid move! You can only move to one or two adjacent tiles that is not sunk.");
+                return;
+            }
+
+            gameController.getRoomController().sendMoveByNavigatorMessage(gameController.getCurrentPlayer(), navigatorTarget, tile);
+            return;
+        }
+
+        // Handle special card usage
+        gameController.handleUseSpecialCard(tile.getPosition());
     }
 
     public Tile getChosenTile() {
