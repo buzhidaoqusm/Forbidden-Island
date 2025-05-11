@@ -198,6 +198,45 @@ public class GameController {
         }
     }
 
+    /**
+     * Handle the logic of the case when a player is sunk.
+     * @param currentProgramPlayer The player who is currently in the program
+     * */
+    public void handlePlayerSunk(Player currentProgramPlayer) {
+        List<Position> validPositions = currentProgramPlayer.getMovePositions(island.getTiles());
+        if (validPositions.isEmpty()) {
+            gameOver = true;
+            roomController.sendGameOverMessage("One player has no valid moves to a non-sunk tile!");
+        }
+        List<Tile> validTiles = getValidTilesOnSunk(currentProgramPlayer);
+
+    }
+
+    /**
+     * Get the valid tiles for a player when they are sunk.
+     * @param player The player who is sunk
+     * */
+    public List<Tile> getValidTilesOnSunk(Player player) {
+        List<Position> validPositions = player.getMovePositions(island.getTiles());
+        List<Tile> validTiles = new ArrayList<>();
+
+        double minDistance = Double.MAX_VALUE;
+        for (Position position : validPositions) {
+            if (player instanceof Diver) {
+                double distance = Math.sqrt(Math.pow(position.getX() - player.getPosition().getX(), 2) +
+                        Math.pow(position.getY() - player.getPosition().getY(), 2));
+                if (distance <= minDistance) {
+                    if (distance < minDistance) validTiles = new ArrayList<>();
+                    minDistance = distance;
+                    validTiles.add(island.getTile(position));
+                }
+            } else {
+                validTiles.add(island.getTile(position));
+            }
+        }
+        return validTiles;
+    }
+
     public IslandController getIslandController() {
         return islandController;
     }
@@ -285,20 +324,6 @@ public class GameController {
 
     }
 
-
-
-
-
-
-
-    public void handlePlayerSunk(Player currentProgramPlayer) {
-
-    }
-
-    // 获取玩家可移动的板块
-    public List<Tile> getValidTilesOnSunk(Player player) {
-        return null;
-    }
 
     public void showToast(String message) {
 
