@@ -99,8 +99,20 @@ public class ActionBarController {
         }
     }
 
+    /**
+     * Handles the action of shoring up a tile.
+     * This method checks if the chosen tile is valid for shoring up and sends a shore up message to the room controller.
+     */
     public void handleShoreUpAction() {
-
+        if (getRemainingActions() > 0) {
+            Tile chosenTile = gameController.getChosenTile();
+            List<Position> validPositions = currentPlayer.getShorePositions(getIsland().getTiles());
+            if (chosenTile != null && chosenTile.getState() == Tile.TileState.FLOODED && validPositions.contains(chosenTile.getPosition())) {
+                gameController.getRoomController().sendShoreUpMessage(currentPlayer, chosenTile.getPosition());
+            } else {
+                gameController.showErrorToast("Invalid Tile!");
+            }
+        }
     }
 
     public void handleGiveCardAction() {
