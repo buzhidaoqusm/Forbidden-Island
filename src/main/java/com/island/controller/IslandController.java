@@ -194,8 +194,32 @@ public class IslandController {
         this.waterLevel = waterLevel;
     }
 
+    /**
+     * Handles the action of shoring up a tile.
+     * This method checks if the tile is valid for shoring up and updates the game state accordingly.
+     * @param player The player shoring up the tile.
+     * @param position The position of the tile to be shored up.
+     * */
     public void shoreUpTile(Player player, Position position) {
+        Tile tile = island.getTile(position);
+        tile.shoreUp();
+        chosenTile = null;
+        gameController.resetTileBorders();
+        if (player instanceof Engineer e) {
+            if (e.isFirstShoreUp() && gameController.getPlayerController().canShoreUpTile(e)) {
+                e.setFirstShoreUp(false);
+                gameController.showToast("You can shore up one more tile.");
+            } else {
+                gameController.decreaseRemainingActions();
+                e.setFirstShoreUp(true);
+            }
+        } else {
+            gameController.decreaseRemainingActions();
+        }
 
+        if (gameController != null) {
+            gameController.updateBoard();
+        }
     }
 
     /**
@@ -216,13 +240,5 @@ public class IslandController {
         player.addCapturedTreasure(treasureType);
         removeTreasure(treasureType.getDisplayName());
         gameController.decreaseRemainingActions();
-    }
-
-    public void floodTile(Position position) {
-
-    }
-
-    public void shoreUp(Position position) {
-
     }
 }
