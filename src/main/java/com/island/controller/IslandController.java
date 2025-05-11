@@ -180,8 +180,23 @@ public class IslandController {
         }
     }
 
+    /**
+     * Checks if all treasure tiles are still available.
+     * This method iterates through the island's tiles and checks if any treasure tile is sunk.
+     * @return true if all treasure tiles are available, false otherwise.
+     * */
     public boolean checkTreasureTiles() {
-
+        for (String treasureName : treasures) {
+            int count = 2;
+            for (Tile tile : island.getTiles().values()) {
+                if (tile.getTreasureType() != null && tile.getTreasureType().getDisplayName().equals(treasureName) && tile.isSunk()) {
+                    count--;
+                }
+            }
+            if (count == 0) {
+                return false;
+            }
+        }
         return true;
     }
 
