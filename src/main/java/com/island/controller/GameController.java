@@ -174,6 +174,30 @@ public class GameController {
         }
     }
 
+    /**
+     * Handle the logic of pushing the next turn.
+     * */
+    public void nextTurn() {
+        List<Player> players = room.getPlayers();
+        int nextIndex = (players.indexOf(currentPlayer) + 1) % players.size();
+        Player nextPlayer = players.get(nextIndex);
+        roomController.sendStartTurnMessage(nextPlayer);
+
+        // If the next player is the first player, draw flood cards
+        if (nextIndex == 0) {
+            int waterLevel = islandController.getWaterLevel();
+            int cardsToDraw;
+
+            // determine the number of flood cards to draw based on the water level
+            if (waterLevel <= 2) cardsToDraw = 2;
+            else if (waterLevel <= 5) cardsToDraw = 3;
+            else if (waterLevel <= 7) cardsToDraw = 4;
+            else cardsToDraw = 5;
+
+            roomController.sendDrawFloodMessage(cardsToDraw, "system");
+        }
+    }
+
     public IslandController getIslandController() {
         return islandController;
     }
@@ -265,9 +289,7 @@ public class GameController {
 
 
 
-    public void nextTurn() {
 
-    }
 
     public void handlePlayerSunk(Player currentProgramPlayer) {
 
