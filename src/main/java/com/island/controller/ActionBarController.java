@@ -292,7 +292,51 @@ public class ActionBarController {
         }
     }
 
+    /**
+     * Handles the action of capturing a treasure.
+     * This method checks if the current player is on a treasure tile and has enough matching treasure cards.
+     * If valid, it shows a confirmation dialog to discard the cards and capture the treasure.
+     */
     public void handleCaptureTreasureAction() {
+        if (getRemainingActions() > 0) {
+            Player currentPlayer = gameController.getCurrentPlayer();
+
+            // getting the current player's position and tile
+            Position playerPosition = currentPlayer.getPosition();
+            Tile currentTile = getIsland().getTile(playerPosition);
+
+            if (currentTile == null || currentTile.getTreasureType() == null) {
+                showMessage("No Treasure", "You are not on a treasure tile.");
+                return;
+            }
+
+            TreasureType treasureType = currentTile.getTreasureType();
+
+            // checking if the player has enough matching treasure cards
+            int treasureCardCount = 0;
+            for (Card card : currentPlayer.getCards()) {
+                if (card.getType() == CardType.TREASURE && card.getTreasureType() == treasureType) {
+                    treasureCardCount++;
+                }
+            }
+
+            if (treasureCardCount < 4) {
+                showMessage("Not Enough Cards", "You need 4 matching treasure cards to capture this treasure. You have " + treasureCardCount + " " + treasureType.getDisplayName() + " cards.");
+                return;
+            }
+
+            // confirmation dialog
+            Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmDialog.setTitle("Capture Treasure");
+            confirmDialog.setHeaderText("Capture " + treasureType.getDisplayName());
+            confirmDialog.setContentText("Do you want to discard 4 " + treasureType.getDisplayName() + " cards to capture this treasure?");
+
+            confirmDialog.showAndWait().ifPresent(result -> {
+                if (result == ButtonType.OK) {
+                    gameController.getRoomController().sendCaptureTreasureMessage(currentPlayer, treasureType);
+                }
+            });
+        }
     }
 
     public void handleEndTurnAction() {
