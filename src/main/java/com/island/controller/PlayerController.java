@@ -86,6 +86,21 @@ public class PlayerController {
         }
     }
 
+    /**
+     * Check if the player can play a special card (HELICOPTER or SANDBAGS)
+     * @param player The player to check
+     * @return true if the player can play a special card, false otherwise
+     * */
+    public boolean canPlaySpecialCard(Player player) {
+        if (player == null) return false;
+        for (Card card : player.getCards()) {
+            if (card.getType() == CardType.HELICOPTER || card.getType() == CardType.SANDBAGS) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public Room getRoom() {
         return room;
     }
@@ -98,10 +113,6 @@ public class PlayerController {
         return chosenCard;
     }
 
-    public boolean canPlaySpecialCard(Player player) {
-
-        return false;
-    }
 
     public boolean canShoreUpTile(Player player) {
         return false;
