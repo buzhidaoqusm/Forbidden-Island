@@ -111,8 +111,24 @@ public class PlayerController {
         return !validPositions.isEmpty();
     }
 
+    /**
+     * Check if the player can give a card to another player
+     * @param player The player to check
+     * @return true if the player can give a card, false otherwise
+     * */
     public boolean canGiveCard(Player player) {
+        if (player.getCards().isEmpty()) return false;
+        if (player.getRole() == PlayerRole.MESSENGER) return true;
 
+        // Other roles must be on the same tile
+        Position playerPos = player.getPosition();
+        if (playerPos == null) return false;
+        for (Player tempPlayer : room.getPlayers()) {
+            if (tempPlayer.equals(player)) continue;
+            if (tempPlayer.getPosition().equals(playerPos)) {
+                return true;
+            }
+        }
         return false;
     }
 
