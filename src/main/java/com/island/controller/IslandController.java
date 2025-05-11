@@ -167,8 +167,17 @@ public class IslandController {
         return treasures;
     }
 
+    /**
+     * Removes a treasure from the island.
+     * @param treasureName The name of the treasure to be removed.
+     * */
     public void removeTreasure(String treasureName) {
-
+        for (int i = 0; i < treasures.length; i++) {
+            if (treasures[i].equals(treasureName)) {
+                treasures[i] = null;
+                break;
+            }
+        }
     }
 
     public boolean checkTreasureTiles() {
@@ -189,8 +198,24 @@ public class IslandController {
 
     }
 
+    /**
+     * Handles the action of capturing a treasure.
+     * This method checks if the player has the required cards and updates the game state accordingly.
+     * @param player The player capturing the treasure.
+     * @param treasureType The type of treasure to be captured.
+     * */
     public void captureTreasure(Player player, TreasureType treasureType) {
-
+        List<Card> cards = new ArrayList<>(player.getCards());
+        for (Card card : cards) {
+            if (card.getType() == CardType.TREASURE && card.getTreasureType() == treasureType) {
+                gameController.getCurrentPlayer().removeCard(card.getName());
+                card.setBelongingPlayer("");
+                gameController.addTreasureDiscardPile(card);
+            }
+        }
+        player.addCapturedTreasure(treasureType);
+        removeTreasure(treasureType.getDisplayName());
+        gameController.decreaseRemainingActions();
     }
 
     public void floodTile(Position position) {
