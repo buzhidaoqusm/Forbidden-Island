@@ -132,8 +132,29 @@ public class PlayerController {
         return false;
     }
 
+    /**
+     * Check if the player can capture a treasure
+     * @param player The player to check
+     * @return true if the player can capture a treasure, false otherwise
+     * */
     public boolean canCaptureTreasure(Player player) {
+        Position playerPos = player.getPosition();
+        Island island = gameController.getIsland();
+        if (playerPos == null) return false;
+        Tile currentTile = island.getTile(playerPos);
+        if (currentTile == null) return false;
 
+        // check if the player is on a treasure tile
+        if (currentTile.getTreasureType() != null) {
+            // check if the player has enough treasure cards
+            int treasureCardCount = 0;
+            for (Card card : player.getCards()) {
+                if (card.getType() == CardType.TREASURE && card.getTreasureType() == currentTile.getTreasureType()) {
+                    treasureCardCount++;
+                }
+            }
+            return treasureCardCount >= 4;
+        }
         return false;
     }
 
