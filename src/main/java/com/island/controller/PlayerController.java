@@ -101,6 +101,26 @@ public class PlayerController {
         return false;
     }
 
+    /**
+     * Check if the player can shore up a tile
+     * @param player The player to check
+     * @return true if the player can shore up a tile, false otherwise
+     * */
+    public boolean canShoreUpTile(Player player) {
+        List<Position> validPositions = player.getShorePositions(gameController.getIsland().getTiles());
+        return !validPositions.isEmpty();
+    }
+
+    public boolean canGiveCard(Player player) {
+
+        return false;
+    }
+
+    public boolean canCaptureTreasure(Player player) {
+
+        return false;
+    }
+
     public Room getRoom() {
         return room;
     }
@@ -114,19 +134,6 @@ public class PlayerController {
     }
 
 
-    public boolean canShoreUpTile(Player player) {
-        return false;
-    }
-
-    public boolean canGiveCard(Player player) {
-
-        return false;
-    }
-
-    public boolean canCaptureTreasure(Player player) {
-
-        return false;
-    }
 
     public boolean hasDrawnTreasureCards() {
     }
