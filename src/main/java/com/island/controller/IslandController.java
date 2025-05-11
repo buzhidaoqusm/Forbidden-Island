@@ -85,22 +85,6 @@ public class IslandController {
         island.getTiles().put(position, new Tile(name, position, type));
     }
 
-    public Island getIsland() {
-        return island;
-    }
-
-    public void setGameController(GameController gameController) {
-        this.gameController = gameController;
-        this.room = gameController.getRoomController().getRoom();
-    }
-
-    public Room getRoom() {
-        return room;
-    }
-
-    public int getWaterLevel() {
-        return waterLevel;
-    }
 
     /**
      * Increases the water level of the island and notifies the game controller to update the view.
@@ -153,18 +137,6 @@ public class IslandController {
 
         // Handle special card usage
         gameController.handleUseSpecialCard(tile.getPosition());
-    }
-
-    public Tile getChosenTile() {
-        return chosenTile;
-    }
-
-    public GameController getGameController() {
-        return gameController;
-    }
-
-    public String[] getTreasures() {
-        return treasures;
     }
 
     /**
@@ -255,5 +227,35 @@ public class IslandController {
         player.addCapturedTreasure(treasureType);
         removeTreasure(treasureType.getDisplayName());
         gameController.decreaseRemainingActions();
+    }
+
+
+    public Tile getChosenTile() {
+        return chosenTile;
+    }
+
+    public GameController getGameController() {
+        return gameController;
+    }
+
+    public String[] getTreasures() {
+        return treasures;
+    }
+
+    public Island getIsland() {
+        return island;
+    }
+
+    public void setGameController(GameController gameController) {
+        this.gameController = gameController;
+        this.room = gameController.getRoomController().getRoom();
+    }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public int getWaterLevel() {
+        return waterLevel;
     }
 }
