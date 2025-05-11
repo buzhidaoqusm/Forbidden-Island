@@ -340,6 +340,7 @@ public class ActionBarController {
     }
 
     public void handleEndTurnAction() {
+        gameController.getRoomController().sendEndTurnMessage(currentPlayer);
     }
 
     public void handlePlaySpecialAction() {
@@ -347,6 +348,8 @@ public class ActionBarController {
     }
 
     public void handleDrawFloodAction() {
+        gameController.getPlayerController().addDrawnFloodCards(1);
+        gameController.getRoomController().sendDrawFloodMessage(1, currentPlayer.getName());
     }
 
     public void setHasDrawnTreasureCards(boolean b) {
@@ -361,14 +364,29 @@ public class ActionBarController {
         gameController.nextTurn();
     }
 
+    /**
+     * Checks if any player has sunk.
+     * */
     public boolean isAnyPlayerSunk() {
+        Room room = gameController.getRoom();
+        for (Player player : room.getPlayers()) {
+            if (player.getPosition() != null) {
+                Tile tile = getIsland().getTile(player.getPosition());
+                if (tile.isSunk()) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
     public void handlePlayerSunk(Player currentProgramPlayer) {
+        gameController.handlePlayerSunk(currentProgramPlayer);
     }
 
     public void shutdown() {
+        currentPlayer = null;
+        gameController = null;
     }
 
 }
