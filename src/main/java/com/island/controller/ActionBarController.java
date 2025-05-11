@@ -222,7 +222,6 @@ public class ActionBarController {
 
             // check if the current player is a Navigator
             if (currentPlayer.getRole() != PlayerRole.NAVIGATOR) {
-                // 使用Toast通知替代对话框
                 gameController.showErrorToast("Only Navigator can move other players");
                 return;
             }
