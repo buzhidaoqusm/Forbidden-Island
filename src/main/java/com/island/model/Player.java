@@ -17,6 +17,11 @@ public abstract class Player {
     private int actions;
     private GameController gameController;
     private static final int MAX_ACTIONS = 3;
+    
+    // 添加新的字段
+    private boolean isReady;      // 玩家是否准备就绪
+    private boolean inGame;       // 玩家是否在游戏中
+    private boolean isHost;       // 玩家是否是房主
 
     protected Player(String name, PlayerRole role) {
         this.id = UUID.randomUUID().toString();
@@ -27,6 +32,9 @@ public abstract class Player {
         this.hasDrawnTreasureCards = false;
         this.drawFloodCards = 0;
         this.actions = MAX_ACTIONS;
+        this.isReady = false;     // 初始化时未准备
+        this.inGame = false;      // 初始化时不在游戏中
+        this.isHost = false;      // 初始化时不是房主
     }
 
     public abstract List<Position> getMovePositions(Map<Position, Tile> tiles);
@@ -170,4 +178,37 @@ public abstract class Player {
     }
     public GameController getGameController() { return gameController; }
     public void setGameController(GameController gameController) { this.gameController = gameController; }
+
+    // 添加新的方法
+    public boolean isReady() {
+        return isReady;
+    }
+
+    public void setReady(boolean ready) {
+        this.isReady = ready;
+    }
+
+    public boolean isInGame() {
+        return inGame;
+    }
+
+    public void setInGame(boolean inGame) {
+        this.inGame = inGame;
+    }
+
+    public boolean isHost() {
+        return isHost;
+    }
+
+    public void setHost(boolean host) {
+        this.isHost = host;
+    }
+
+    // 修改 resetState 方法
+    public void resetState() {
+        this.actions = MAX_ACTIONS;
+        this.hasDrawnTreasureCards = false;
+        this.drawFloodCards = 0;
+        // 不重置 isReady 和 inGame 状态，因为这些是游戏会话级别的状态
+    }
 }

@@ -13,6 +13,9 @@ public class GameStateManager {
     private GameState gameState;
     private Position foolsLandingPosition;
     private static final int MAX_WATER_LEVEL = 10;
+    private Player currentPlayer;
+    private int remainingActions;
+    private static final int MAX_ACTIONS = 3;
 
     private GameStateManager() {
         this.waterLevel = 1;
@@ -22,6 +25,7 @@ public class GameStateManager {
         this.gameMap = new HashMap<>();
         this.players = new ArrayList<>();
         this.gameState = GameState.ONGOING;
+        this.remainingActions = MAX_ACTIONS;
     }
 
     public static GameStateManager getInstance() {
@@ -146,6 +150,11 @@ public class GameStateManager {
         if (isFoolsLandingSunk()) {
             gameState = GameState.DEFEAT_FOOLS_LANDING_SUNK;
         }
+
+        // 检查玩家是否被困
+        if (arePlayersTrapped()) {
+            gameState = GameState.DEFEAT_PLAYERS_TRAPPED;
+        }
     }
 
     private boolean checkVictoryCondition() {
@@ -186,6 +195,196 @@ public class GameStateManager {
     private boolean isFoolsLandingSunk() {
         Tile foolsLanding = gameMap.get(foolsLandingPosition);
         return foolsLanding != null && foolsLanding.isSunk();
+    }
+
+    // 检查玩家是否被困
+    private boolean arePlayersTrapped() {
+        for (Player player : players) {
+            if (!canPlayerMove(player)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // 检查玩家是否可以移动
+    private boolean canPlayerMove(Player player) {
+        Position pos = player.getPosition();
+        return getAdjacentTiles(pos).stream()
+                .anyMatch(tile -> !tile.isSunk());
+    }
+
+    // 获取有效的直升机目标位置
+    public List<Position> getValidHelicopterDestinations() {
+        List<Position> validPositions = new ArrayList<>();
+        for (Map.Entry<Position, Tile> entry : gameMap.entrySet()) {
+            if (!entry.getValue().isSunk()) {
+                validPositions.add(entry.getKey());
+            }
+        }
+        return validPositions;
+    }
+
+    // 获取当前游戏状态
+    public GameState getGameState() {
+        return gameState;
+    }
+
+    // 获取当前水位
+    public int getWaterLevel() {
+        return waterLevel;
+    }
+
+    // 获取当前玩家
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
+
+    // 获取剩余行动点数
+    public int getRemainingActions() {
+        return remainingActions;
+    }
+
+    // 获取岛屿地图
+    public Map<Position, Tile> getGameMap() {
+        return Collections.unmodifiableMap(gameMap);
+    }
+
+    // 获取玩家列表
+    public List<Player> getPlayers() {
+        return Collections.unmodifiableList(players);
+    }
+
+    // 获取 Fool's Landing 位置
+    public Position getFoolsLandingPosition() {
+        return foolsLandingPosition;
+    }
+
+    // 游戏初始化
+    public void initializeGame(List<Player> players, long seed) {
+        this.players = new ArrayList<>(players);
+        this.currentPlayer = players.get(0);
+        initializeIsland(seed);
+        initializeDecks(seed);
+        distributeInitialCards();
+    }
+
+    // 初始化岛屿
+    private void initializeIsland(long seed) {
+        // 创建岛屿布局
+        createIslandLayout();
+        // 设置初始水位
+        setWaterLevel(1);
+        // 记录 Fool's Landing 位置
+        for (Map.Entry<Position, Tile> entry : gameMap.entrySet()) {
+            if (entry.getValue().getName().equals("Fool's Landing")) {
+                foolsLandingPosition = entry.getKey();
+                break;
+            }
+        }
+    }
+
+    // 初始化牌组
+    private void initializeDecks(long seed) {
+        // 初始化洪水牌组
+        initializeFloodDeck(seed);
+        // 初始化宝藏牌组
+        initializeTreasureDeck(seed);
+    }
+
+    // 分发初始卡牌
+    private void distributeInitialCards() {
+        for (Player player : players) {
+            for (int i = 0; i < 2; i++) {
+                if (!treasureDeck.isEmpty()) {
+                    Card card = treasureDeck.remove(0);
+                    if (card.getType() != CardType.WATER_RISE) {
+                        player.addCard(card);
+                    } else {
+                        treasureDeck.add(card);
+                    }
+                }
+            }
+        }
+    }
+
+    // 处理玩家回合
+    public void handlePlayerTurn(Player player) {
+        currentPlayer = player;
+        remainingActions = MAX_ACTIONS;
+        player.startTurn();
+    }
+
+    // 处理玩家移动
+    public boolean handlePlayerMove(Player player, Position newPosition) {
+        if (remainingActions <= 0) {
+            return false;
+        }
+
+        if (isValidMove(player, newPosition)) {
+            player.setPosition(newPosition);
+            remainingActions--;
+            return true;
+        }
+        return false;
+    }
+
+    // 处理加固板块
+    public boolean handleShoreUp(Player player, Position position) {
+        if (remainingActions <= 0) {
+            return false;
+        }
+
+        Tile tile = gameMap.get(position);
+        if (tile != null && tile.isFlooded() && isAdjacent(player.getPosition(), position)) {
+            tile.shoreUp();
+            remainingActions--;
+            return true;
+        }
+        return false;
+    }
+
+    // 处理收集宝藏
+    public boolean handleTreasureCapture(Player player, TreasureType treasureType) {
+        if (remainingActions <= 0) {
+            return false;
+        }
+
+        if (canCaptureTreasure(player, treasureType)) {
+            player.addCaptureTreasure(treasureType);
+            remainingActions--;
+            return true;
+        }
+        return false;
+    }
+
+    // 处理抽牌
+    public void handleDrawCards(Player player, int count) {
+        for (int i = 0; i < count; i++) {
+            if (!treasureDeck.isEmpty()) {
+                Card card = treasureDeck.remove(0);
+                if (card.getType() == CardType.WATER_RISE) {
+                    handleWaterRise();
+                    treasureDeck.add(card);
+                } else {
+                    player.addCard(card);
+                }
+            }
+        }
+    }
+
+    // 增加水位
+    private void increaseWaterLevel() {
+        if (waterLevel < MAX_WATER_LEVEL) {
+            waterLevel++;
+        }
+    }
+
+    // 重新洗牌洪水弃牌堆
+    private void reshuffleFloodDiscardPile() {
+        floodDeck.addAll(floodDiscardPile);
+        floodDiscardPile.clear();
+        Collections.shuffle(floodDeck);
     }
 
     // 其他必要的 getter 和 setter 方法
