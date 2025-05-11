@@ -147,6 +147,20 @@ public class GameController {
         decreaseRemainingActions();
     }
 
+    public void addTreasureDiscardPile(Card card) {
+        cardController.addTreasureDiscardPile(card);
+    }
+
+    /**
+     * Handle the logic of drawing flood cards.
+     * @param count The number of flood cards to draw
+     * */
+    public List<Position> drawFloodCards(int count) {
+        List<Position> floodedPositions = cardController.drawFloodCards(count);
+        // TODO: Check if the game is over
+        return floodedPositions;
+    }
+
     public IslandController getIslandController() {
         return islandController;
     }
@@ -234,13 +248,7 @@ public class GameController {
 
     }
 
-    public void addTreasureDiscardPile(Card card) {
-        cardController.addTreasureDiscardPile(card);
-    }
 
-    public List<Position> drawFloodCards(int count) {
-        return null;
-    }
 
     public void handleDiscardAction() {
 
