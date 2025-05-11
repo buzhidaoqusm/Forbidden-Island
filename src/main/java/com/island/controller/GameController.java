@@ -161,6 +161,19 @@ public class GameController {
         return floodedPositions;
     }
 
+
+    /**
+     * Handle the logic of discarding a card.
+     * */
+    public void handleDiscardAction() {
+        Card chosenCard = playerController.getChosenCard();
+        if (chosenCard != null) {
+            int cardIndex = room.getCurrentProgramPlayer().getCards().indexOf(chosenCard);
+            roomController.sendDiscardMessage(room.getCurrentProgramPlayer(), cardIndex);
+            playerController.setChosenCard(null);
+        }
+    }
+
     public IslandController getIslandController() {
         return islandController;
     }
@@ -250,9 +263,7 @@ public class GameController {
 
 
 
-    public void handleDiscardAction() {
 
-    }
 
     public void nextTurn() {
 
