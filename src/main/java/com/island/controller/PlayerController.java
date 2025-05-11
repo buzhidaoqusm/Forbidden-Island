@@ -170,37 +170,27 @@ public class PlayerController {
         return chosenCard;
     }
 
-
-
     public boolean hasDrawnTreasureCards() {
+        return room.getCurrentProgramPlayer().isHasDrawnTreasureCards();
     }
 
     public int getDrawnFloodCards() {
+        return room.getCurrentProgramPlayer().getDrawnFloodCards();
     }
 
     public void setHasDrawnTreasureCards(boolean hasDrawnTreasureCards) {
-
+        room.getCurrentProgramPlayer().setHasDrawnTreasureCards(hasDrawnTreasureCards);
     }
 
     public void addDrawnFloodCards(int count) {
+        room.getCurrentProgramPlayer().addDrawnFloodCards(count);
     }
 
     public void resetPlayerState() {
+        room.getCurrentProgramPlayer().resetState();
     }
 
     public void shutdown() {
-
-    }
-
-    public void movePlayer(Player player, Position position) {
-
-    }
-
-    public void addCard(Player player, Card card) {
-
-    }
-
-    public void removeCard(Player player, Card card) {
 
     }
 }
