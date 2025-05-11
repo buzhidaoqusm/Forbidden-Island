@@ -8,6 +8,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ActionBarController {
@@ -209,7 +210,87 @@ public class ActionBarController {
         }
     }
 
+    /**
+     * Handles the action of moving another player.
+     * This method checks if the current player is a Navigator and if there are eligible players to move.
+     * If valid, it shows a dialog for the user to select a player and the number of moves.
+     */
     public void handleMoveOtherPlayerAction() {
+        if (getRemainingActions() > 0) {
+            Player currentPlayer = gameController.getCurrentPlayer();
+            Room room = gameController.getRoom();
+
+            // check if the current player is a Navigator
+            if (currentPlayer.getRole() != PlayerRole.NAVIGATOR) {
+                // 使用Toast通知替代对话框
+                gameController.showErrorToast("Only Navigator can move other players");
+                return;
+            }
+            Navigator navigator = (Navigator) currentPlayer;
+
+            // getting the eligible players to move
+            List<Player> movablePlayers = new ArrayList<>();
+            for (Player player : room.getPlayers()) {
+                if (!player.getName().equals(navigator.getName())) {
+                    movablePlayers.add(player);
+                }
+            }
+
+            if (movablePlayers.isEmpty()) {
+                gameController.showWarningToast("No other players to move");
+                return;
+            }
+
+            // creating the components for the dialog
+            VBox dialogContent = new VBox(10);
+            dialogContent.setPadding(new Insets(20));
+
+            Label selectPlayerLabel = new Label("Select a player to move:");
+            ComboBox<String> playerComboBox = new ComboBox<>();
+            for (Player player : movablePlayers) {
+                playerComboBox.getItems().add(player.getName());
+            }
+            playerComboBox.getSelectionModel().selectFirst();
+
+            Label movesLabel = new Label("Number of moves (1 or 2):");
+            ComboBox<Integer> movesComboBox = new ComboBox<>();
+            movesComboBox.getItems().addAll(1, 2);
+            movesComboBox.getSelectionModel().select(0);
+
+            dialogContent.getChildren().addAll(
+                    selectPlayerLabel, playerComboBox,
+                    movesLabel, movesComboBox
+            );
+
+            // creating the dialog
+            Alert dialog = new Alert(Alert.AlertType.CONFIRMATION);
+            dialog.setTitle("Move Other Player");
+            dialog.setHeaderText("Move another player up to 2 adjacent tiles");
+            dialog.getDialogPane().setContent(dialogContent);
+
+            // showing the dialog
+            dialog.showAndWait().ifPresent(result -> {
+                if (result == ButtonType.OK) {
+                    String selectedPlayerName = playerComboBox.getValue();
+                    Integer selectedMoves = movesComboBox.getValue();
+
+                    if (selectedPlayerName != null && selectedMoves != null) {
+                        // find the selected player
+                        Player selectedPlayer = room.getPlayerByUsername(selectedPlayerName);
+
+                        if (selectedPlayer != null) {
+                            // set the navigator target
+                            navigator.setNavigatorTarget(selectedPlayer, selectedMoves);
+
+                            // show the message to select the destination
+                            showMessage("Select Destination",
+                                    "Now click on a tile to move " + selectedPlayer.getName() +
+                                            " there. You can move them up to " + selectedMoves + " adjacent tiles.");
+                        }
+                    }
+                }
+            });
+        }
     }
 
     public void handleCaptureTreasureAction() {
