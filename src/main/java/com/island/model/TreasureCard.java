@@ -1,14 +1,25 @@
 package com.island.model;
 
+/**
+ * Represents a treasure card in the game.
+ * Treasure cards are used to collect treasures when a player has enough cards of the same type
+ * and is standing on the corresponding treasure tile.
+ */
 public class TreasureCard extends Card {
-    private static final int TREASURE_CARDS_REQUIRED = 4; // Number of cards required to collect treasure
+    private static final int TREASURE_CARDS_REQUIRED = 4; // Number of cards required to collect a treasure
 
+    /**
+     * Creates a new treasure card.
+     * @param treasureType The type of treasure this card represents
+     * @param belongingPlayer The player who owns this card
+     */
     public TreasureCard(TreasureType treasureType, String belongingPlayer) {
         super(CardType.TREASURE, treasureType.getDisplayName(), belongingPlayer, null, treasureType);
     }
 
     @Override
     public void useCard(Player player) {
+        // Check if player has this card
         if (!player.getCards().contains(this)) {
             throw new IllegalStateException("Player does not have this treasure card");
         }
@@ -28,14 +39,18 @@ public class TreasureCard extends Card {
             throw new IllegalStateException("This treasure has already been collected");
         }
 
-        // Collect treasure
+        // Collect the treasure
         player.addCaptureTreasure(this.getTreasureType());
         
-        // Remove all cards used to collect treasure
+        // Remove the cards used to collect the treasure
         removeTreasureCards(player);
     }
 
-    // Check if player is on the correct treasure tile
+    /**
+     * Checks if the player is on the correct treasure tile.
+     * @param player The player to check
+     * @return true if the player is on the correct treasure tile
+     */
     private boolean isOnCorrectTreasureTile(Player player) {
         Position playerPos = player.getPosition();
         Island island = GameStateManager.getInstance().getIsland();
@@ -46,7 +61,11 @@ public class TreasureCard extends Card {
                !currentTile.isSunk();
     }
 
-    // Check if player has enough treasure cards
+    /**
+     * Checks if the player has enough treasure cards of the same type.
+     * @param player The player to check
+     * @return true if the player has enough cards
+     */
     private boolean hasEnoughTreasureCards(Player player) {
         int count = 0;
         for (Card card : player.getCards()) {
@@ -58,7 +77,10 @@ public class TreasureCard extends Card {
         return count >= TREASURE_CARDS_REQUIRED;
     }
 
-    // Remove cards used to collect treasure
+    /**
+     * Removes the treasure cards used to collect the treasure.
+     * @param player The player whose cards will be removed
+     */
     private void removeTreasureCards(Player player) {
         int cardsToRemove = TREASURE_CARDS_REQUIRED;
         for (int i = player.getCards().size() - 1; i >= 0 && cardsToRemove > 0; i--) {

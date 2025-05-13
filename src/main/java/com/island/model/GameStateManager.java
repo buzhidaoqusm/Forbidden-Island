@@ -8,6 +8,7 @@ public class GameStateManager {
     private List<Card> floodDeck;
     private List<Card> floodDiscardPile;
     private List<Card> treasureDiscardPile;
+    private List<Card> treasureDeck;
     private Map<Position, Tile> gameMap;
     private List<Player> players;
     private GameState gameState;
@@ -16,16 +17,19 @@ public class GameStateManager {
     private Player currentPlayer;
     private int remainingActions;
     private static final int MAX_ACTIONS = 3;
+    private Island island;
 
     private GameStateManager() {
         this.waterLevel = 1;
         this.floodDeck = new ArrayList<>();
         this.floodDiscardPile = new ArrayList<>();
         this.treasureDiscardPile = new ArrayList<>();
+        this.treasureDeck = new ArrayList<>();
         this.gameMap = new HashMap<>();
         this.players = new ArrayList<>();
         this.gameState = GameState.ONGOING;
         this.remainingActions = MAX_ACTIONS;
+        this.island = new Island();
     }
 
     public static GameStateManager getInstance() {
@@ -385,6 +389,128 @@ public class GameStateManager {
         floodDeck.addAll(floodDiscardPile);
         floodDiscardPile.clear();
         Collections.shuffle(floodDeck);
+    }
+
+    // 获取当前水位需要抽取的洪水卡牌数量
+    private int getFloodCardsDrawCount() {
+        return waterLevel;
+    }
+
+    // 设置水位
+    private void setWaterLevel(int level) {
+        if (level >= 1 && level <= MAX_WATER_LEVEL) {
+            this.waterLevel = level;
+        }
+    }
+
+    // 创建岛屿布局
+    private void createIslandLayout() {
+        // 创建6x6的岛屿布局
+        for (int x = 0; x < 6; x++) {
+            for (int y = 0; y < 6; y++) {
+                // 跳过角落位置（这些位置是空的）
+                if ((x == 0 || x == 5) && (y == 0 || y == 5)) {
+                    continue;
+                }
+                // 创建板块并添加到地图中
+                Position pos = new Position(x, y);
+                String tileName = getTileName(x, y);
+                TreasureType treasureType = getTileTreasureType(x, y);
+                Tile tile = new Tile(tileName, pos, treasureType);
+                gameMap.put(pos, tile);
+            }
+        }
+    }
+
+    // 根据位置获取板块名称
+    private String getTileName(int x, int y) {
+        // 这里需要根据游戏规则实现具体的板块名称分配
+        // 示例实现
+        if (x == 2 && y == 2) return "Fool's Landing";
+        if (x == 1 && y == 1) return "Bronze Gate";
+        if (x == 1 && y == 4) return "Cave of Shadows";
+        if (x == 2 && y == 1) return "Coral Palace";
+        if (x == 2 && y == 4) return "Tidal Palace";
+        if (x == 3 && y == 1) return "Cave of Embers";
+        if (x == 3 && y == 4) return "Temple of the Moon";
+        if (x == 4 && y == 1) return "Whispering Garden";
+        if (x == 4 && y == 4) return "Howling Garden";
+        return "Unknown Tile";
+    }
+
+    // 根据位置获取宝藏类型
+    private TreasureType getTileTreasureType(int x, int y) {
+        // 根据游戏规则实现具体的宝藏类型分配
+        if ((x == 1 && y == 1) || (x == 1 && y == 4)) return TreasureType.EARTH_STONE;
+        if ((x == 2 && y == 1) || (x == 2 && y == 4)) return TreasureType.OCEAN_CHALICE;
+        if ((x == 3 && y == 1) || (x == 3 && y == 4)) return TreasureType.FIRE_CRYSTAL;
+        if ((x == 4 && y == 1) || (x == 4 && y == 4)) return TreasureType.WIND_STATUE;
+        return TreasureType.NONE;
+    }
+
+    // 初始化洪水牌组
+    private void initializeFloodDeck(long seed) {
+        // 为每个板块创建一张洪水卡牌
+        for (Map.Entry<Position, Tile> entry : gameMap.entrySet()) {
+            Tile tile = entry.getValue();
+            floodDeck.add(Card.createFloodCard(tile.getName(), entry.getKey(), null));  // 使用工厂方法创建洪水卡
+        }
+        // 使用种子洗牌
+        Collections.shuffle(floodDeck, new Random(seed));
+    }
+
+    // 初始化宝藏牌组
+    private void initializeTreasureDeck(long seed) {
+        // 为每种宝藏类型创建对应的卡牌
+        for (TreasureType type : TreasureType.values()) {
+            if (type != TreasureType.NONE) {
+                // 每种宝藏类型创建3张卡牌
+                for (int i = 0; i < 3; i++) {
+                    treasureDeck.add(Card.createTreasureCard(type, null));  // 使用工厂方法创建宝藏卡
+                }
+            }
+        }
+        // 添加水位上升卡牌
+        for (int i = 0; i < 3; i++) {
+            treasureDeck.add(Card.createSpecialCard(CardType.WATER_RISE));  // 使用工厂方法创建水位上升卡
+        }
+        // 使用种子洗牌
+        Collections.shuffle(treasureDeck, new Random(seed));
+    }
+
+    // 检查移动是否有效
+    private boolean isValidMove(Player player, Position newPosition) {
+        // 检查目标位置是否存在且未被淹没
+        Tile targetTile = gameMap.get(newPosition);
+        if (targetTile == null || targetTile.isSunk()) {
+            return false;
+        }
+
+        // 检查是否相邻
+        return isAdjacent(player.getPosition(), newPosition);
+    }
+
+    // 检查是否可以收集宝藏
+    private boolean canCaptureTreasure(Player player, TreasureType treasureType) {
+        // 检查玩家位置是否有对应类型的宝藏
+        Tile currentTile = gameMap.get(player.getPosition());
+        if (currentTile == null || currentTile.getTreasureType() != treasureType) {
+            return false;
+        }
+
+        // 检查玩家是否有足够的对应类型卡牌
+        int requiredCards = 4;
+        int playerCards = (int) player.getCards().stream()
+                .filter(card -> card instanceof TreasureCard && 
+                        ((TreasureCard) card).getTreasureType() == treasureType)
+                .count();
+
+        return playerCards >= requiredCards;
+    }
+
+    // 获取岛屿实例
+    public Island getIsland() {
+        return island;
     }
 
     // 其他必要的 getter 和 setter 方法
