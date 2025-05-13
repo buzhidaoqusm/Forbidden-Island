@@ -8,9 +8,16 @@ import com.island.network.RoomController;
 import java.util.*;
 
 /**
- * The GameController class is responsible for managing the core logic and state of the game.
- * It interacts with multiple other controllers (such as RoomController and PlayerController) to coordinate different aspects of the game.
- * This class maintains objects such as the game view, players, rooms, islands, etc., and manages the flow of the game, such as action rounds, game starts and ends, etc.
+ * The GameController class serves as the central coordinator for the Forbidden Island game.
+ * It manages the overall game state, gameplay flow, and coordinates interactions between different components.
+ * 
+ * This controller:
+ * - Maintains references to all other controllers (IslandController, PlayerController, CardController, ActionBarController)
+ * - Handles game initialization, turn management, and game over conditions
+ * - Coordinates player actions and their effects on the game state
+ * - Manages the network communication through the RoomController
+ * - Tracks game parameters like remaining actions, water level, and active cards
+ * - Provides methods for other controllers to access game state and trigger game events
  */
 public class GameController {
     // Main controller of game views
@@ -44,7 +51,7 @@ public class GameController {
     private List<Player> helicopterPlayers;
 
     // Special cards currently in use
-    private Card activeSpecialCard; // 当前正在使用的特殊卡
+    private Card activeSpecialCard;
 
     // Reaming actions of current player
     private int remainingActions = 3;
@@ -55,6 +62,12 @@ public class GameController {
     // Game over flag
     private boolean gameOver = false;
 
+    /**
+     * Constructs a GameController with the given RoomController.
+     * Initializes all other controllers and establishes bidirectional references.
+     * 
+     * @param roomController The controller managing network communication and room state
+     */
     public GameController(RoomController roomController) {
         this.roomController = roomController;
         roomController.setGameController(this);
@@ -72,9 +85,11 @@ public class GameController {
     }
 
     /**
-     * Handle game start logic. Initialize island, players and cards. And deal cards for players
-     * @param seed Random seed for game initialization
-     * */
+     * Initializes the game with the given random seed.
+     * Sets up the island, players, and cards, and deals initial cards to players.
+     * 
+     * @param seed Random seed for game initialization to ensure deterministic behavior
+     */
     public void startGame(long seed) {
         gameStart = true;
         currentPlayer = room.getPlayers().getFirst();
@@ -91,9 +106,11 @@ public class GameController {
     }
 
     /**
-     * Handle turn start logic. Reset player state and action bar
-     * @param player The player whose turn will start
-     * */
+     * Prepares a player to start their turn.
+     * Resets player state, updates the action bar, and sets the remaining actions to 3.
+     * 
+     * @param player The player whose turn is starting
+     */
     public void startTurn(Player player) {
         currentPlayer = player;
         currentPlayer.resetState();
@@ -102,21 +119,36 @@ public class GameController {
         playerController.resetPlayerState();
     }
 
+    /**
+     * Handles player join requests by delegating to the RoomController.
+     * 
+     * @param message The join request message
+     * @throws Exception If the join process fails
+     */
     public void handlePlayerJoin(Message message) throws Exception {
         roomController.handleJoinRequest(message);
     }
 
+    /**
+     * Returns the RoomController associated with this GameController.
+     * 
+     * @return The RoomController instance
+     */
     public RoomController getRoomController() {
         return roomController;
     }
 
+    /**
+     * Cleans up resources when the game is shutting down.
+     */
     public void shutdown() {
 
     }
 
     /**
-     * Handle the logic of drawing the water rise card.
-     * */
+     * Handles the water rise event when a water rise card is drawn.
+     * Increases the water level and checks for game over conditions.
+     */
     public void handleWaterRise() {
         islandController.increaseWaterLevel();
         if (islandController.getWaterLevel() == 10 ) {
@@ -127,44 +159,61 @@ public class GameController {
     }
 
     /**
-     * Handle the logic of drawing treasure cards.
+     * Handles drawing treasure cards for a player.
+     * Delegates to the CardController to manage the card drawing process.
+     * 
      * @param count The number of cards to draw
      * @param player The player who is drawing the cards
-     * */
+     */
     public void handleDrawTreasureCard(int count, Player player) {
         cardController.drawTreasureCard(count, player);
     }
 
     /**
-     * Handle the logic of giving a card from one player to another.
+     * Transfers a card from one player to another.
+     * Removes the card from the giving player and adds it to the receiving player.
+     * 
      * @param fromPlayer The player giving the card
      * @param toPlayer The player receiving the card
-     * @param card The card to be given
-     * */
+     * @param card The name of the card to be given
+     */
     public void giveCard(Player fromPlayer, Player toPlayer, String card) {
         Card removedCard = fromPlayer.removeCard(card);
         toPlayer.addCard(removedCard);
         decreaseRemainingActions();
     }
 
+    /**
+     * Adds a card to the treasure discard pile.
+     * 
+     * @param card The card to add to the discard pile
+     */
     public void addTreasureDiscardPile(Card card) {
         cardController.addTreasureDiscardPile(card);
     }
 
     /**
-     * Handle the logic of drawing flood cards.
+     * Draws a specified number of flood cards and checks for game over conditions.
+     * 
      * @param count The number of flood cards to draw
-     * */
+     * @return A list of positions that were flooded
+     */
     public List<Position> drawFloodCards(int count) {
         List<Position> floodedPositions = cardController.drawFloodCards(count);
-        // TODO: Check if the game is over
+        if (!islandController.checkTreasureTiles()) {
+            gameOver = true;
+            roomController.sendGameOverMessage("A treasure tile has sunk before the treasure is captured!");
+        } else if (!islandController.checkFoolsLanding()) {
+            gameOver = true;
+            roomController.sendGameOverMessage("Fool's Landing has sunk!");
+        }
         return floodedPositions;
     }
 
-
     /**
-     * Handle the logic of discarding a card.
-     * */
+     * Handles the discard action when a player needs to discard a card.
+     * Identifies the chosen card and sends a discard message to the room.
+     */
     public void handleDiscardAction() {
         Card chosenCard = playerController.getChosenCard();
         if (chosenCard != null) {
@@ -175,8 +224,9 @@ public class GameController {
     }
 
     /**
-     * Handle the logic of pushing the next turn.
-     * */
+     * Advances the game to the next player's turn.
+     * If the next player is the first player, also triggers flood card drawing.
+     */
     public void nextTurn() {
         List<Player> players = room.getPlayers();
         int nextIndex = (players.indexOf(currentPlayer) + 1) % players.size();
@@ -199,9 +249,11 @@ public class GameController {
     }
 
     /**
-     * Handle the logic of the case when a player is sunk.
-     * @param currentProgramPlayer The player who is currently in the program
-     * */
+     * Handles the case when a player is on a sunk tile.
+     * Checks if the player has valid moves, and if not, ends the game.
+     * 
+     * @param currentProgramPlayer The player who is on a sunk tile
+     */
     public void handlePlayerSunk(Player currentProgramPlayer) {
         List<Position> validPositions = currentProgramPlayer.getMovePositions(island.getTiles());
         if (validPositions.isEmpty()) {
@@ -213,9 +265,12 @@ public class GameController {
     }
 
     /**
-     * Get the valid tiles for a player when they are sunk.
-     * @param player The player who is sunk
-     * */
+     * Determines valid tiles a player can move to when they are on a sunk tile.
+     * For the Diver role, considers the minimum distance to valid tiles.
+     * 
+     * @param player The player who is on a sunk tile
+     * @return A list of valid tiles the player can move to
+     */
     public List<Tile> getValidTilesOnSunk(Player player) {
         List<Position> validPositions = player.getMovePositions(island.getTiles());
         List<Tile> validTiles = new ArrayList<>();
@@ -237,10 +292,20 @@ public class GameController {
         return validTiles;
     }
 
+    /**
+     * Returns the IslandController associated with this GameController.
+     * 
+     * @return The IslandController instance
+     */
     public IslandController getIslandController() {
         return islandController;
     }
 
+    /**
+     * Sets the GameView for this GameController.
+     * 
+     * @param gameView The GameView to be set
+     */
     public void setGameView(GameView gameView) {
         this.gameView = gameView;
     }

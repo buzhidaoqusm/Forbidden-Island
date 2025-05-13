@@ -5,32 +5,57 @@ import java.util.*;
 import com.island.model.*;
 
 /**
- * PlayerController is responsible for managing player-related operations in the game, including player character initialization, card distribution, player status check, etc.
- * As a component of the game controller, this class coordinates the interaction between the game logic and the player.
- * */
+ * The PlayerController class manages all player-related operations and states in the Forbidden Island game.
+ * 
+ * This controller:
+ * - Handles player initialization and role assignment
+ * - Manages player card distributions and interactions
+ * - Evaluates player capabilities (what actions they can perform)
+ * - Tracks player state changes during the game
+ * - Coordinates between player models and the game controller
+ * - Implements special role-specific abilities and constraints
+ */
 public class PlayerController {
+    /**
+     * Reference to the main game controller
+     */
     private GameController gameController;
+    
+    /**
+     * Reference to the current game room
+     */
     private Room room;
+    
+    /**
+     * Currently selected card for actions like discarding
+     */
     private Card chosenCard;
 
+    /**
+     * Constructs a new PlayerController with default values
+     */
     public PlayerController() {
 
     }
 
     /**
-     * Set up the game controller and get the room object in the game.
-     * @param gameController the GameController
-     * */
+     * Establishes a bidirectional link with the game controller and retrieves
+     * the room object for player management
+     * 
+     * @param gameController The main controller for the game
+     */
     public void setGameController(GameController gameController) {
         this.gameController = gameController;
         room = gameController.getRoomController().getRoom();
     }
 
     /**
-     * Initialize players and randomly assign roles.
-     * Assign each player a role and set its initial position.
-     * @param seed The seed for randomization.
-     * */
+     * Initializes all players with random roles using the provided seed.
+     * Creates specialized player instances based on assigned roles and
+     * positions each player on their starting tile based on role color.
+     * 
+     * @param seed The random seed for deterministic role assignment
+     */
     public void initPlayers(long seed) {
         Island island = gameController.getIslandController().getIsland();
         ArrayList<PlayerRole> roles = new ArrayList<>(Arrays.asList(PlayerRole.values()));
@@ -69,9 +94,12 @@ public class PlayerController {
     }
 
     /**
-     * Deal the initial cards to each player
-     * @param treasureDeck The deck of treasure cards
-     * */
+     * Distributes initial treasure cards to all players.
+     * Each player receives two non-water-rise cards.
+     * Any water rise cards drawn are returned to the deck.
+     * 
+     * @param treasureDeck The deck of treasure cards to draw from
+     */
     public void dealCards(Deque<Card> treasureDeck) {
         for (Player player : room.getPlayers()) {
             while (player.getCards().size() < 2) {
@@ -87,10 +115,11 @@ public class PlayerController {
     }
 
     /**
-     * Check if the player can play a special card (HELICOPTER or SANDBAGS)
-     * @param player The player to check
-     * @return true if the player can play a special card, false otherwise
-     * */
+     * Determines if a player has a helicopter or sandbags special card that can be played.
+     * 
+     * @param player The player to check for special card availability
+     * @return true if the player has a playable special card, false otherwise
+     */
     public boolean canPlaySpecialCard(Player player) {
         if (player == null) return false;
         for (Card card : player.getCards()) {
@@ -102,20 +131,23 @@ public class PlayerController {
     }
 
     /**
-     * Check if the player can shore up a tile
-     * @param player The player to check
-     * @return true if the player can shore up a tile, false otherwise
-     * */
+     * Determines if a player has at least one flooded tile in range that can be shored up.
+     * 
+     * @param player The player to check for shore-up capability
+     * @return true if the player can shore up at least one tile, false otherwise
+     */
     public boolean canShoreUpTile(Player player) {
         List<Position> validPositions = player.getShorePositions(gameController.getIsland().getTiles());
         return !validPositions.isEmpty();
     }
 
     /**
-     * Check if the player can give a card to another player
-     * @param player The player to check
-     * @return true if the player can give a card, false otherwise
-     * */
+     * Determines if a player can give a card to another player.
+     * Messengers can give cards to any player, while other roles must share a tile with the recipient.
+     * 
+     * @param player The player to check for card-giving capability
+     * @return true if the player can give a card to at least one other player, false otherwise
+     */
     public boolean canGiveCard(Player player) {
         if (player.getCards().isEmpty()) return false;
         if (player.getRole() == PlayerRole.MESSENGER) return true;
@@ -133,10 +165,12 @@ public class PlayerController {
     }
 
     /**
-     * Check if the player can capture a treasure
-     * @param player The player to check
+     * Determines if a player can capture a treasure at their current location.
+     * The player must be on a treasure tile and have four matching treasure cards.
+     * 
+     * @param player The player to check for treasure-capturing capability
      * @return true if the player can capture a treasure, false otherwise
-     * */
+     */
     public boolean canCaptureTreasure(Player player) {
         Position playerPos = player.getPosition();
         Island island = gameController.getIsland();
@@ -158,38 +192,79 @@ public class PlayerController {
         return false;
     }
 
+    /**
+     * Gets the current game room containing all players
+     * 
+     * @return The current Room object
+     */
     public Room getRoom() {
         return room;
     }
 
+    /**
+     * Sets the currently selected card for actions like discarding
+     * 
+     * @param chosenCard The card selected by the player
+     */
     public void setChosenCard(Card chosenCard) {
         this.chosenCard = chosenCard;
     }
 
+    /**
+     * Gets the currently selected card
+     * 
+     * @return The currently selected Card object
+     */
     public Card getChosenCard() {
         return chosenCard;
     }
 
+    /**
+     * Checks if the current player has already drawn treasure cards during their turn
+     * 
+     * @return true if the player has drawn treasure cards, false otherwise
+     */
     public boolean hasDrawnTreasureCards() {
         return room.getCurrentProgramPlayer().isHasDrawnTreasureCards();
     }
 
+    /**
+     * Gets the number of flood cards drawn by the current player
+     * 
+     * @return The number of flood cards drawn
+     */
     public int getDrawnFloodCards() {
         return room.getCurrentProgramPlayer().getDrawnFloodCards();
     }
 
+    /**
+     * Updates the flag indicating whether the current player has drawn treasure cards
+     * 
+     * @param hasDrawnTreasureCards The new status to set
+     */
     public void setHasDrawnTreasureCards(boolean hasDrawnTreasureCards) {
         room.getCurrentProgramPlayer().setHasDrawnTreasureCards(hasDrawnTreasureCards);
     }
 
+    /**
+     * Increases the count of flood cards drawn by the current player
+     * 
+     * @param count The number of additional flood cards drawn
+     */
     public void addDrawnFloodCards(int count) {
         room.getCurrentProgramPlayer().addDrawnFloodCards(count);
     }
 
+    /**
+     * Resets the current player's state at the beginning of a new turn
+     */
     public void resetPlayerState() {
         room.getCurrentProgramPlayer().resetState();
     }
 
+    /**
+     * Cleans up resources when the game is shutting down
+     */
     public void shutdown() {
 
     }

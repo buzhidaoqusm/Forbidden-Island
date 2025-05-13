@@ -7,29 +7,55 @@ import java.util.*;
 import static com.island.util.Constant.tilesNames;
 
 /**
- * The IslandController class is responsible for managing the island's state and interactions.
- * It handles the initialization of the island, tile management, water level control, and treasure collection.
- * This class also interacts with the GameController to update the game state and notify observers.
- * */
+ * The IslandController class manages the island game board and its state in the Forbidden Island game.
+ * 
+ * This controller:
+ * - Creates and initializes the island grid with randomized tile placement
+ * - Tracks and updates the water level throughout the game
+ * - Manages tile states (normal, flooded, sunk)
+ * - Handles player interactions with tiles (moving, shoring up)
+ * - Tracks treasure placement and collection
+ * - Manages special interactions like Navigator movement
+ * - Ensures game board state consistency
+ */
 public class IslandController {
-    // Island object
+    /**
+     * The Island model containing the grid of tiles
+     */
     private Island island;
 
-    // Controller of game
+    /**
+     * Reference to the main game controller
+     */
     private GameController gameController;
 
-    // Room object
+    /**
+     * Reference to the current game room
+     */
     private Room room;
 
-    // Water level of the island
+    /**
+     * Current water level of the island (1-10)
+     * Higher levels cause more flood cards to be drawn each round
+     */
     private int waterLevel;
 
-    // Chosen tile for actions
+    /**
+     * The currently selected tile for actions
+     */
     private Tile chosenTile;
 
-    // Array of treasure names
+    /**
+     * Array of treasure names for tracking captured treasures
+     */
     private String[] treasures = new String[] { "Earth", "Wind", "Fire", "Ocean" };
 
+    /**
+     * Constructs an IslandController with the given Island model
+     * Initializes the water level to 1 (lowest level)
+     * 
+     * @param island The Island model to control
+     */
     public IslandController(Island island) {
         this.island = island;
         chosenTile = null;
@@ -38,8 +64,10 @@ public class IslandController {
 
     /**
      * Initializes the island with a shuffled set of tiles based on the provided seed.
-     * The tiles are placed in a specific pattern and assigned treasure types accordingly.
-     * @param seed The seed for randomization.
+     * Tiles are placed in a specific pattern and assigned treasure types accordingly.
+     * This creates the game board layout with proper treasure tile distribution.
+     * 
+     * @param seed The seed for randomization to ensure deterministic behavior
      */
     public void initIsland(long seed) {
         List<String> tilesList = new ArrayList<>(Arrays.asList(tilesNames));
@@ -81,13 +109,21 @@ public class IslandController {
         }
     }
 
+    /**
+     * Creates a new tile and adds it to the island's tile collection
+     * 
+     * @param name The name of the tile
+     * @param position The position of the tile on the grid
+     * @param type The treasure type associated with the tile, or null for regular tiles
+     */
     private void addTile(String name, Position position, TreasureType type) {
         island.getTiles().put(position, new Tile(name, position, type));
     }
 
-
     /**
-     * Increases the water level of the island and notifies the game controller to update the view.
+     * Increases the water level of the island.
+     * Higher water levels cause more flood cards to be drawn each round.
+     * Updates the UI to reflect the new water level.
      */
     public void increaseWaterLevel() {
         waterLevel++;
@@ -97,10 +133,12 @@ public class IslandController {
     }
 
     /**
-     * Handle tile click events.
-     * This method checks if the clicked tile is valid for the current player and performs the necessary actions.
-     * @param tile The clicked tile.
-     * */
+     * Handles player interactions with tiles on the island.
+     * Processes tile selection, special abilities (like Navigator), and special card usage.
+     * Manages the highlighting of valid tiles for actions.
+     * 
+     * @param tile The tile that was clicked
+     */
     public void handleTileClick(Tile tile) {
         if (chosenTile != null && chosenTile.equals(tile)) {
             chosenTile = null;
@@ -140,9 +178,10 @@ public class IslandController {
     }
 
     /**
-     * Removes a treasure from the island.
-     * @param treasureName The name of the treasure to be removed.
-     * */
+     * Marks a treasure as captured by removing it from the available treasures list.
+     * 
+     * @param treasureName The name of the treasure that was captured
+     */
     public void removeTreasure(String treasureName) {
         for (int i = 0; i < treasures.length; i++) {
             if (treasures[i].equals(treasureName)) {
@@ -153,10 +192,11 @@ public class IslandController {
     }
 
     /**
-     * Checks if all treasure tiles are still available.
-     * This method iterates through the island's tiles and checks if any treasure tile is sunk.
-     * @return true if all treasure tiles are available, false otherwise.
-     * */
+     * Checks if all treasure tiles for uncaptured treasures are still available.
+     * If both tiles for a treasure are sunk before the treasure is captured, the game is lost.
+     * 
+     * @return true if all treasure tiles are still valid, false if any uncaptured treasure's tiles are both sunk
+     */
     public boolean checkTreasureTiles() {
         for (String treasureName : treasures) {
             int count = 2;
@@ -172,21 +212,34 @@ public class IslandController {
         return true;
     }
 
+    /**
+     * Checks if the Fool's Landing tile is still available.
+     * If Fool's Landing sinks, the game is lost as players can't escape the island.
+     * 
+     * @return true if Fool's Landing is still available, false if it has sunk
+     */
     public boolean checkFoolsLanding() {
-
         return true;
     }
 
+    /**
+     * Sets the water level to a specific value.
+     * Used for testing or specific game events.
+     * 
+     * @param waterLevel The new water level value (1-10)
+     */
     public void setWaterLevel(int waterLevel) {
         this.waterLevel = waterLevel;
     }
 
     /**
-     * Handles the action of shoring up a tile.
-     * This method checks if the tile is valid for shoring up and updates the game state accordingly.
-     * @param player The player shoring up the tile.
-     * @param position The position of the tile to be shored up.
-     * */
+     * Executes the shore up action on a tile to restore it from flooded to normal state.
+     * Handles special role abilities like the Engineer's double shore up ability.
+     * Updates the game board to reflect the change.
+     * 
+     * @param player The player performing the shore up action
+     * @param position The position of the tile to shore up
+     */
     public void shoreUpTile(Player player, Position position) {
         Tile tile = island.getTile(position);
         tile.shoreUp();
@@ -210,11 +263,14 @@ public class IslandController {
     }
 
     /**
-     * Handles the action of capturing a treasure.
-     * This method checks if the player has the required cards and updates the game state accordingly.
-     * @param player The player capturing the treasure.
-     * @param treasureType The type of treasure to be captured.
-     * */
+     * Handles the capture of a treasure by a player.
+     * Removes the 4 matching treasure cards from the player's hand,
+     * adds the treasure to the player's captured treasures, and
+     * marks the treasure as captured.
+     * 
+     * @param player The player capturing the treasure
+     * @param treasureType The type of treasure being captured
+     */
     public void captureTreasure(Player player, TreasureType treasureType) {
         List<Card> cards = new ArrayList<>(player.getCards());
         for (Card card : cards) {
@@ -229,32 +285,66 @@ public class IslandController {
         gameController.decreaseRemainingActions();
     }
 
-
+    /**
+     * Gets the currently selected tile for actions
+     * 
+     * @return The currently selected Tile object
+     */
     public Tile getChosenTile() {
         return chosenTile;
     }
 
+    /**
+     * Gets the game controller associated with this controller
+     * 
+     * @return The GameController instance
+     */
     public GameController getGameController() {
         return gameController;
     }
 
+    /**
+     * Gets the array of treasure names for tracking captured treasures
+     * 
+     * @return Array of treasure names, with null values for captured treasures
+     */
     public String[] getTreasures() {
         return treasures;
     }
 
+    /**
+     * Gets the island model containing the game board
+     * 
+     * @return The Island model instance
+     */
     public Island getIsland() {
         return island;
     }
 
+    /**
+     * Sets the game controller for this island controller
+     * Establishes the bidirectional relationship between controllers
+     * 
+     * @param gameController The GameController to associate with this controller
+     */
     public void setGameController(GameController gameController) {
         this.gameController = gameController;
-        this.room = gameController.getRoomController().getRoom();
     }
 
+    /**
+     * Gets the game room associated with this controller
+     * 
+     * @return The Room object containing players and game state
+     */
     public Room getRoom() {
         return room;
     }
 
+    /**
+     * Gets the current water level of the island
+     * 
+     * @return The water level value (1-10)
+     */
     public int getWaterLevel() {
         return waterLevel;
     }
