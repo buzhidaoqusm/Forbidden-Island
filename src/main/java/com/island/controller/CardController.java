@@ -104,7 +104,7 @@ public class CardController {
         treasureDeck.add(Card.createSpecialCard(CardType.WATER_RISE));
 
         // Initialize the flood deck
-        for (Map.Entry<Position, Tile> entry : island.getTiles().entrySet()) {
+        for (Map.Entry<Position, Tile> entry : island.getGameMap().entrySet()) {
             floodDeck.add(Card.createFloodCard(entry.getValue().getName(), entry.getKey(), ""));
         }
 

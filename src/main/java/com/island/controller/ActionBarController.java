@@ -158,7 +158,7 @@ public class ActionBarController {
     /**
      * Sends a message that the player is drawing treasure cards
      * 
-     * @param count The number of cards to draw
+     * @param i The number of cards to draw
      * @param player The player drawing the cards
      */
     public void sendDrawTreasureCardsMessage(int i, Player player) {
@@ -192,7 +192,7 @@ public class ActionBarController {
             }
         }
         if (getRemainingActions() > 0) {
-            List<Position> validPositions = currentPlayer.getMovePositions(getIsland().getTiles());
+            List<Position> validPositions = currentPlayer.getMovePositions(getIsland().getGameMap());
             if (chosenTile != null && validPositions.contains(chosenTile.getPosition())) {
                 gameController.getRoomController().sendMoveMessage(currentPlayer, chosenTile.getPosition());
             } else {
@@ -209,8 +209,8 @@ public class ActionBarController {
     public void handleShoreUpAction() {
         if (getRemainingActions() > 0) {
             Tile chosenTile = gameController.getChosenTile();
-            List<Position> validPositions = currentPlayer.getShorePositions(getIsland().getTiles());
-            if (chosenTile != null && chosenTile.getState() == Tile.TileState.FLOODED && validPositions.contains(chosenTile.getPosition())) {
+            List<Position> validPositions = currentPlayer.getShorePositions(getIsland().getGameMap());
+            if (chosenTile != null && chosenTile.getState() == TileState.FLOODED && validPositions.contains(chosenTile.getPosition())) {
                 gameController.getRoomController().sendShoreUpMessage(currentPlayer, chosenTile.getPosition());
             } else {
                 gameController.showErrorToast("Invalid Tile!");

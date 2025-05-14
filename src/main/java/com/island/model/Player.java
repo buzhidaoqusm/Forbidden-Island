@@ -91,8 +91,15 @@ public abstract class Player {
         cards.add(card);
     }
 
-    public void removeCard(String cardName) {
-        cards.removeIf(card -> card.getName().equals(cardName));
+    public Card removeCard(String cardName) {
+        for (Card card : cards) {
+            if (card.getName().equals(cardName)) {
+                cards.remove(card);
+                card.setBelongingPlayer("");
+                return card;
+            }
+        }
+        return null;
     }
 
     public void removeCard(Card card) {

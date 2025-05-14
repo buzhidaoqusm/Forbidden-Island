@@ -21,14 +21,13 @@ public enum PlayerRole {
     }
 
     public static String getColor(PlayerRole role) {
-        switch (role) {
-            case EXPLORER: return "#00FF00";  // Green
-            case PILOT: return "#0000FF";     // Blue
-            case NAVIGATOR: return "#FFFF00";  // Yellow
-            case DIVER: return "#000000";     // Black
-            case ENGINEER: return "#FF0000";   // Red
-            case MESSENGER: return "#808080";  // Gray
-            default: return "#FFFFFF";        // White
-        }
+        return switch (role) {
+            case EXPLORER -> "Green";
+            case PILOT -> "Blue";
+            case NAVIGATOR -> "Yellow";
+            case DIVER -> "Black";
+            case ENGINEER -> "Red";
+            case MESSENGER -> "White";
+        };
     }
 }

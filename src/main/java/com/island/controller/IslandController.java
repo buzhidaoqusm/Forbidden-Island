@@ -117,7 +117,7 @@ public class IslandController {
      * @param type The treasure type associated with the tile, or null for regular tiles
      */
     private void addTile(String name, Position position, TreasureType type) {
-        island.getTiles().put(position, new Tile(name, position, type));
+        island.getGameMap().put(position, new Tile(name, position, type));
     }
 
     /**
@@ -200,7 +200,7 @@ public class IslandController {
     public boolean checkTreasureTiles() {
         for (String treasureName : treasures) {
             int count = 2;
-            for (Tile tile : island.getTiles().values()) {
+            for (Tile tile : island.getGameMap().values()) {
                 if (tile.getTreasureType() != null && tile.getTreasureType().getDisplayName().equals(treasureName) && tile.isSunk()) {
                     count--;
                 }
@@ -280,7 +280,7 @@ public class IslandController {
                 gameController.addTreasureDiscardPile(card);
             }
         }
-        player.addCapturedTreasure(treasureType);
+        player.addCaptureTreasure(treasureType);
         removeTreasure(treasureType.getDisplayName());
         gameController.decreaseRemainingActions();
     }

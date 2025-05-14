@@ -137,7 +137,7 @@ public class PlayerController {
      * @return true if the player can shore up at least one tile, false otherwise
      */
     public boolean canShoreUpTile(Player player) {
-        List<Position> validPositions = player.getShorePositions(gameController.getIsland().getTiles());
+        List<Position> validPositions = player.getShorePositions(gameController.getIsland().getGameMap());
         return !validPositions.isEmpty();
     }
 

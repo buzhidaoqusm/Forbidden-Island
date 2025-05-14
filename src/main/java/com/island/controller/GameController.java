@@ -255,7 +255,7 @@ public class GameController {
      * @param currentProgramPlayer The player who is on a sunk tile
      */
     public void handlePlayerSunk(Player currentProgramPlayer) {
-        List<Position> validPositions = currentProgramPlayer.getMovePositions(island.getTiles());
+        List<Position> validPositions = currentProgramPlayer.getMovePositions(island.getGameMap());
         if (validPositions.isEmpty()) {
             gameOver = true;
             roomController.sendGameOverMessage("One player has no valid moves to a non-sunk tile!");
@@ -272,7 +272,7 @@ public class GameController {
      * @return A list of valid tiles the player can move to
      */
     public List<Tile> getValidTilesOnSunk(Player player) {
-        List<Position> validPositions = player.getMovePositions(island.getTiles());
+        List<Position> validPositions = player.getMovePositions(island.getGameMap());
         List<Tile> validTiles = new ArrayList<>();
 
         double minDistance = Double.MAX_VALUE;
