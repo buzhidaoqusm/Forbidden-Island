@@ -121,9 +121,10 @@ public class Island {
      * @return true if the positions are adjacent, false otherwise
      */
     public boolean isAdjacent(Position pos1, Position pos2) {
+        if (pos1 == null || pos2 == null) return false;
         int dx = Math.abs(pos1.getX() - pos2.getX());
         int dy = Math.abs(pos1.getY() - pos2.getY());
-        return (dx == 1 && dy == 0) || (dx == 0 && dy == 1);
+        return dx + dy == 1;
     }
 
     /**
@@ -133,25 +134,20 @@ public class Island {
      */
     public List<Position> getValidShoreUpPositions(Player player) {
         List<Position> validPositions = new ArrayList<>();
-        Position playerPos = player.getPosition();
+        if (player == null) return validPositions;
 
-        // If player is an Engineer, they can shore up any flooded tile
-        if (player instanceof Engineer) {
-            for (Map.Entry<Position, Tile> entry : gameMap.entrySet()) {
-                if (entry.getValue().isFlooded() && !entry.getValue().isSunk()) {
-                    validPositions.add(entry.getKey());
-                }
-            }
-        } else {
-            // Other players can only shore up adjacent flooded tiles
-            for (Position pos : getAdjacentPositions(playerPos)) {
-                Tile tile = gameMap.get(pos);
-                if (tile != null && tile.isFlooded() && !tile.isSunk()) {
+        Position playerPos = player.getPosition();
+        if (playerPos == null) return validPositions;
+
+        for (Map.Entry<Position, Tile> entry : gameMap.entrySet()) {
+            Position pos = entry.getKey();
+            Tile tile = entry.getValue();
+            if (tile.isFlooded() && !tile.isSunk()) {
+                if (player instanceof Engineer || isAdjacent(playerPos, pos)) {
                     validPositions.add(pos);
                 }
             }
         }
-
         return validPositions;
     }
 
@@ -189,7 +185,8 @@ public class Island {
      * @return true if the position is Fool's Landing, false otherwise
      */
     public boolean isFoolsLanding(Position position) {
-        return position.equals(foolsLandingPosition);
+        Tile tile = gameMap.get(position);
+        return tile != null && tile.getName().equals("Fool's Landing");
     }
 
     /**
@@ -362,5 +359,18 @@ public class Island {
     public boolean isTreasureTypeAvailable(TreasureType treasureType) {
         return getTilesByTreasureType(treasureType).stream()
                 .anyMatch(pos -> !gameMap.get(pos).isSunk());
+    }
+
+    public void setGameMap(Map<Position, Tile> gameMap) {
+        this.gameMap = gameMap;
+    }
+
+    public Tile findTile(String color) {
+        for (Tile tile : gameMap.values()) {
+            if (tile.getName().contains(color)) {
+                return tile;
+            }
+        }
+        return null;
     }
 }
