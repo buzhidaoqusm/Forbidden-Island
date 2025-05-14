@@ -4,6 +4,8 @@ import com.island.model.*;
 import com.island.network.Message;
 import com.island.network.MessageHandler;
 import com.island.network.RoomController;
+import com.island.util.ui.Dialog;
+import javafx.stage.Stage;
 
 import java.util.*;
 
@@ -390,19 +392,60 @@ public class GameController {
     }
 
 
+    /**
+     * Displays a toast message to the user.
+     *
+     * @param message The message to be displayed
+     */
     public void showToast(String message) {
-
+        if (gameView != null) {
+            Stage primaryStage = gameView.getPrimaryStage();
+            if (primaryStage != null) {
+                Dialog.showToast(primaryStage, message);
+            }
+        }
     }
 
+    /**
+     * Displays a success toast message to the user.
+     *
+     * @param message The success message to be displayed
+     */
     public void showSuccessToast(String message) {
-
+        if (gameView != null) {
+            Stage primaryStage = gameView.getPrimaryStage();
+            if (primaryStage != null) {
+                Dialog.showSuccessToast(primaryStage, message);
+            }
+        }
     }
 
+    /**
+     * Displays a warning toast message to the user.
+     *
+     * @param message The warning message to be displayed
+     */
     public void showWarningToast(String message) {
-
+        if (gameView != null) {
+            Stage primaryStage = gameView.getPrimaryStage();
+            if (primaryStage != null) {
+                Dialog.showWarningToast(primaryStage, message);
+            }
+        }
     }
 
+    /**
+     * Displays an error toast message to the user.
+     *
+     * @param message The error message to be displayed
+     */
     public void showErrorToast(String message) {
+        if (gameView != null) {
+            Stage primaryStage = gameView.getPrimaryStage();
+            if (primaryStage != null) {
+                Dialog.showErrorToast(primaryStage, message);
+            }
+        }
     }
 
     public boolean isGameOver() {
