@@ -35,7 +35,7 @@ public class PlayerController {
      * Constructs a new PlayerController with default values
      */
     public PlayerController() {
-
+        this.chosenCard = null;
     }
 
     /**
@@ -100,7 +100,7 @@ public class PlayerController {
      * 
      * @param treasureDeck The deck of treasure cards to draw from
      */
-    public void dealCards(Deque<Card> treasureDeck) {
+    public void dealCards(List<Card> treasureDeck) {
         for (Player player : room.getPlayers()) {
             while (player.getCards().size() < 2) {
                 Card card = treasureDeck.poll();
@@ -122,6 +122,8 @@ public class PlayerController {
      */
     public boolean canPlaySpecialCard(Player player) {
         if (player == null) return false;
+        
+        // Check if player has any special cards
         for (Card card : player.getCards()) {
             if (card.getType() == CardType.HELICOPTER || card.getType() == CardType.SANDBAGS) {
                 return true;
@@ -267,6 +269,22 @@ public class PlayerController {
      */
     public void shutdown() {
 
+    }
+
+    public boolean canPerformAction(Player player) {
+        return player != null && player.canPerformAction();
+    }
+
+    public void useAction(Player player) {
+        if (player != null) {
+            player.useAction();
+        }
+    }
+
+    public void movePlayer(Player player, Position position) {
+        if (player != null && position != null) {
+            player.move(position);
+        }
     }
 }
 

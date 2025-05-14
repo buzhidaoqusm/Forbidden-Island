@@ -50,6 +50,8 @@ public class IslandController {
      */
     private String[] treasures = new String[] { "Earth", "Wind", "Fire", "Ocean" };
 
+    private List<Position> validPositions;
+
     /**
      * Constructs an IslandController with the given Island model
      * Initializes the water level to 1 (lowest level)
@@ -60,6 +62,7 @@ public class IslandController {
         this.island = island;
         chosenTile = null;
         waterLevel = 1;
+        this.validPositions = new ArrayList<>();
     }
 
     /**
@@ -126,7 +129,10 @@ public class IslandController {
      * Updates the UI to reflect the new water level.
      */
     public void increaseWaterLevel() {
-        waterLevel++;
+        int currentLevel = island.getWaterLevel();
+        if (currentLevel < 10) {
+            island.setWaterLevel(currentLevel + 1);
+        }
         if (gameController != null) {
             gameController.updateWaterLevel();
         }
@@ -346,6 +352,88 @@ public class IslandController {
      * @return The water level value (1-10)
      */
     public int getWaterLevel() {
-        return waterLevel;
+        return island.getWaterLevel();
+    }
+
+    public void setValidPositions(List<Position> positions) {
+        this.validPositions = new ArrayList<>(positions);
+    }
+
+    public void clearValidPositions() {
+        this.validPositions.clear();
+    }
+
+    public List<Position> getValidPositions() {
+        return new ArrayList<>(validPositions);
+    }
+
+    // New methods for special card handling
+
+    public List<Position> getValidShoreUpPositions(Player player) {
+        return island.getValidShoreUpPositions(player);
+    }
+
+    public boolean isAtFoolsLanding(Position position) {
+        return island.isFoolsLanding(position);
+    }
+
+    public List<Position> getValidHelicopterDestinations() {
+        List<Position> validPositions = new ArrayList<>();
+        for (Map.Entry<Position, Tile> entry : island.getGameMap().entrySet()) {
+            if (!entry.getValue().isSunk()) {
+                validPositions.add(entry.getKey());
+            }
+        }
+        return validPositions;
+    }
+
+    public boolean isValidShoreUpPosition(Player player, Position position) {
+        Tile targetTile = island.getTile(position);
+        if (targetTile == null || !targetTile.isFlooded() || targetTile.isSunk()) {
+            return false;
+        }
+
+        if (player instanceof Engineer) {
+            return true;
+        }
+
+        return island.isAdjacent(player.getPosition(), position);
+    }
+
+    public void shoreUpTile(Position position) {
+        Tile tile = island.getTile(position);
+        if (tile != null && tile.isFlooded() && !tile.isSunk()) {
+            tile.shoreUp();
+        }
+    }
+
+    public boolean isValidHelicopterDestination(Position position) {
+        Tile targetTile = island.getTile(position);
+        return targetTile != null && !targetTile.isSunk();
+    }
+
+    public boolean checkHelicopterWinCondition() {
+        List<Player> players = gameController.getRoom().getPlayers();
+        if (players.isEmpty()) {
+            return false;
+        }
+
+        Position firstPlayerPos = players.get(0).getPosition();
+        if (firstPlayerPos == null) {
+            return false;
+        }
+
+        Tile currentTile = island.getTile(firstPlayerPos);
+        if (currentTile == null || currentTile.isSunk()) {
+            return false;
+        }
+
+        for (int i = 1; i < players.size(); i++) {
+            if (!players.get(i).getPosition().equals(firstPlayerPos)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

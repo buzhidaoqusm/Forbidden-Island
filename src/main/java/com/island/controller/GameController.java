@@ -64,6 +64,11 @@ public class GameController {
     // Game over flag
     private boolean gameOver = false;
 
+    // Players selected for helicopter lift
+    private List<Player> selectedPlayers;
+    // Target position for helicopter lift
+    private Position targetPosition;
+
     /**
      * Constructs a GameController with the given RoomController.
      * Initializes all other controllers and establishes bidirectional references.
@@ -368,29 +373,133 @@ public class GameController {
 
 
     public void handlePlaySpecialAction() {
+        if (currentPlayer == null || !playerController.canPlaySpecialCard(currentPlayer)) {
+            showWarningToast("Cannot use special card");
+            return;
+        }
 
+        Card chosenCard = playerController.getChosenCard();
+        if (chosenCard == null) {
+            showWarningToast("Please select a special card");
+            return;
+        }
+
+        if (chosenCard.getType() == CardType.HELICOPTER) {
+            handleHelicopterCard(chosenCard);
+        } else if (chosenCard.getType() == CardType.SANDBAGS) {
+            handleSandbagsCard(chosenCard);
+        }
     }
 
     private void handleSandbagsCard(Card chosenCard) {
+        if (chosenCard.getType() != CardType.SANDBAGS) {
+            showErrorToast("Invalid sandbag card");
+            return;
+        }
 
+        // Get valid positions from IslandController
+        List<Position> validPositions = islandController.getValidShoreUpPositions(currentPlayer);
+        if (validPositions.isEmpty()) {
+            showWarningToast("No flooded tiles available");
+            return;
+        }
+
+        // Check action points through PlayerController
+        if (!playerController.canPerformAction(currentPlayer)) {
+            showWarningToast("Not enough action points");
+            return;
+        }
+
+        activeSpecialCard = chosenCard;
+        islandController.setValidPositions(validPositions);
+        showToast("Please select a flooded tile to shore up");
     }
 
     private void handleHelicopterCard(Card chosenCard) {
+        if (chosenCard.getType() != CardType.HELICOPTER) {
+            showErrorToast("Invalid helicopter card");
+            return;
+        }
 
+        // Check Fool's Landing through IslandController
+        if (!islandController.isAtFoolsLanding(currentPlayer.getPosition())) {
+            showWarningToast("Helicopter card can only be used at Fool's Landing");
+            return;
+        }
+
+        activeSpecialCard = chosenCard;
+        selectedPlayers = new ArrayList<>();
+        selectedPlayers.add(currentPlayer);
+
+        // Get valid positions from IslandController
+        List<Position> validPositions = islandController.getValidHelicopterDestinations();
+        islandController.setValidPositions(validPositions);
+        showToast("Please select a destination");
     }
 
     public void handleUseSpecialCard(Position position) {
+        if (activeSpecialCard == null) {
+            showErrorToast("No active special card");
+            return;
+        }
 
+        if (activeSpecialCard.getType() == CardType.HELICOPTER) {
+            executeHelicopterMove(position);
+        } else if (activeSpecialCard.getType() == CardType.SANDBAGS) {
+            executeSandbagsUse(position);
+        }
+
+        activeSpecialCard = null;
+        islandController.clearValidPositions();
     }
 
     private void executeSandbagsUse(Position position) {
-
+        try {
+            // Set the target position for the sandbag card
+            activeSpecialCard.setTargetPosition(position);
+            
+            // Use the sandbag card
+            activeSpecialCard.useCard(currentPlayer);
+            
+            showSuccessToast("Successfully shored up tile");
+            
+            // Check game state through IslandController
+            if (!islandController.checkTreasureTiles()) {
+                gameOver = true;
+                roomController.sendGameOverMessage("A treasure tile has sunk before its treasure was collected!");
+            } else if (!islandController.checkFoolsLanding()) {
+                gameOver = true;
+                roomController.sendGameOverMessage("Fool's Landing has sunk!");
+            }
+        } catch (IllegalStateException e) {
+            showErrorToast(e.getMessage());
+        }
     }
 
     private void executeHelicopterMove(Position position) {
+        try {
+            // Set the target position for the helicopter card
+            activeSpecialCard.setTargetPosition(position);
+            
+            // Add selected players to the helicopter card
+            for (Player player : selectedPlayers) {
+                activeSpecialCard.addSelectedPlayer(player);
+            }
+            
+            // Use the helicopter card
+            activeSpecialCard.useCard(currentPlayer);
+            
+            showSuccessToast("Successfully used helicopter lift");
 
+            // Check win condition through IslandController
+            if (islandController.checkHelicopterWinCondition()) {
+                gameOver = true;
+                roomController.sendGameOverMessage("All players have successfully escaped!");
+            }
+        } catch (IllegalStateException e) {
+            showErrorToast(e.getMessage());
+        }
     }
-
 
     /**
      * Displays a toast message to the user.
