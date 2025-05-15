@@ -8,7 +8,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
 import com.island.model.Player;
 import com.island.model.PlayerRole;
@@ -25,6 +30,10 @@ public class GameStart {
     private Stage primaryStage;
     private GameController gameController;
     private Player player;
+    
+    // Image resources
+    private Image startBackgroundImage;
+    private Image gameLogo;
 
     /**
      * Constructor with Stage
@@ -32,6 +41,7 @@ public class GameStart {
      */
     public GameStart(Stage primaryStage) {
         this.primaryStage = primaryStage;
+        loadImages();
     }
     
     /**
@@ -42,6 +52,22 @@ public class GameStart {
     public GameStart(Stage primaryStage, GameController gameController) {
         this.primaryStage = primaryStage;
         this.gameController = gameController;
+        loadImages();
+    }
+    
+    /**
+     * Load game start interface images
+     */
+    private void loadImages() {
+        try {
+            // Load start screen background
+            startBackgroundImage = new Image(getClass().getResourceAsStream("/image/UI/start_background.jpg"));
+            // Load game logo
+            gameLogo = new Image(getClass().getResourceAsStream("/image/UI/game_logo.png"));
+        } catch (Exception e) {
+            System.err.println("Start screen image resources loading failed: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -49,16 +75,45 @@ public class GameStart {
      * @return Scene object for username input
      */
     public Scene createScene() {
-        VBox root = new VBox(10);
-        root.setAlignment(Pos.CENTER);
-        root.setPadding(new Insets(20));
+        StackPane root = new StackPane();
+        
+        // Add background image
+        if (startBackgroundImage != null) {
+            ImageView backgroundImageView = new ImageView(startBackgroundImage);
+            backgroundImageView.setFitWidth(600);
+            backgroundImageView.setFitHeight(400);
+            backgroundImageView.setPreserveRatio(true);
+            root.getChildren().add(backgroundImageView);
+        }
+        
+        // Add interface controls
+        VBox contentBox = new VBox(15);
+        contentBox.setAlignment(Pos.CENTER);
+        contentBox.setPadding(new Insets(20));
+        
+        // Add game logo
+        if (gameLogo != null) {
+            ImageView logoImageView = new ImageView(gameLogo);
+            logoImageView.setFitWidth(300);
+            logoImageView.setFitHeight(100);
+            logoImageView.setPreserveRatio(true);
+            contentBox.getChildren().add(logoImageView);
+        } else {
+            // If no logo image, display text title
+            Label titleLabel = new Label("Forbidden Island");
+            titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 32));
+            titleLabel.setStyle("-fx-text-fill: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.7), 3, 0, 0, 0);");
+            contentBox.getChildren().add(titleLabel);
+        }
 
         Label nameLabel = new Label("Enter your username:");
+        nameLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
         TextField nameInput = new TextField();
         nameInput.setPromptText("Username");
         nameInput.setMaxWidth(200);
 
         Button submitButton = new Button("Submit");
+        submitButton.setStyle("-fx-font-size: 14px; -fx-background-radius: 10;");
         submitButton.setOnAction(event -> {
             String username = nameInput.getText().trim();
             if (!username.isEmpty()) {
@@ -84,12 +139,16 @@ public class GameStart {
             } else {
                 // Handle empty username case
                 System.out.println("Username cannot be empty.");
+                nameLabel.setText("Username cannot be empty, please try again:");
+                nameLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
                 // Could add alert dialog here in the future
             }
         });
 
-        root.getChildren().addAll(nameLabel, nameInput, submitButton);
-        return new Scene(root, 300, 200);
+        contentBox.getChildren().addAll(nameLabel, nameInput, submitButton);
+        root.getChildren().add(contentBox);
+        
+        return new Scene(root, 600, 400);
     }
     
     /**

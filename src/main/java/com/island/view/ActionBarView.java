@@ -7,13 +7,19 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.control.ListView;
 import javafx.application.Platform;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.island.controller.GameController;
 import com.island.controller.ActionBarController;
@@ -22,7 +28,7 @@ import com.island.view.ActionType;
 
 public class ActionBarView {
 
-    private VBox viewPane; // Root pane for this view (changed to VBox)
+    private BorderPane viewPane; // 使用BorderPane作为根容器
     private HBox actionBarControls; // HBox for the action buttons and label
     private ListView<String> logListView; // For displaying game log messages
     private VBox logPane; // Container for the log title and list view
@@ -33,6 +39,11 @@ public class ActionBarView {
     private Button captureTreasureButton;
     private Button useAbilityButton;
     private Button endTurnButton;
+    
+    // 水位计相关控件
+    private ImageView waterMeterImageView;
+    private Map<Integer, Image> waterMeterImages = new HashMap<>();
+    private VBox waterMeterPane;
 
     // GameController reference
     private GameController gameController;
@@ -40,25 +51,45 @@ public class ActionBarView {
     // Constructor
     public ActionBarView(GameController gameController) {
         this.gameController = gameController;
+        loadWaterMeterImages();
         initialize();
+    }
+    
+    /**
+     * 加载水位计的图片资源
+     */
+    private void loadWaterMeterImages() {
+        try {
+            // 加载所有的水位计图片（0到10）
+            for (int i = 0; i <= 10; i++) {
+                String path = "/image/WaterMeter/" + i + ".png";
+                waterMeterImages.put(i, new Image(getClass().getResourceAsStream(path)));
+            }
+        } catch (Exception e) {
+            System.err.println("Error loading water meter images: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void initialize() {
+        // 使用BorderPane作为主容器
+        viewPane = new BorderPane();
+        viewPane.setStyle("-fx-background-color: #d3d3d3;"); // Grey background
+        
         // --- Initialize Action Bar Controls --- 
         actionBarControls = new HBox(10); // Spacing between action elements
         actionBarControls.setPadding(new Insets(5, 10, 5, 10)); // Reduced padding for controls
         actionBarControls.setAlignment(Pos.CENTER_LEFT);
-        // actionBarControls.setStyle("-fx-background-color: #d3d3d3;"); // Style moved to main pane
 
-        actionsRemainingLabel = new Label("Actions: ?");
+        actionsRemainingLabel = new Label("行动点: ?");
         actionsRemainingLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
 
-        moveButton = new Button("Move");
-        shoreUpButton = new Button("Shore Up");
-        giveCardButton = new Button("Give Card");
-        captureTreasureButton = new Button("Capture Treasure");
-        useAbilityButton = new Button("Use Ability");
-        endTurnButton = new Button("End Turn");
+        moveButton = new Button("移动");
+        shoreUpButton = new Button("加固");
+        giveCardButton = new Button("交换卡牌");
+        captureTreasureButton = new Button("获取宝藏");
+        useAbilityButton = new Button("使用能力");
+        endTurnButton = new Button("结束回合");
 
         // --- Button Actions (Send requests to Controller) ---
         moveButton.setOnAction(event -> {
@@ -99,9 +130,8 @@ public class ActionBarView {
         // --- Initialize Log View --- 
         logPane = new VBox(5);
         logPane.setPadding(new Insets(5, 10, 10, 10)); // Padding for log area
-        // logPane.setStyle("-fx-background-color: #f5f5dc;"); // Optional: different background for log
 
-        Label logTitle = new Label("Game Log");
+        Label logTitle = new Label("游戏日志");
         logTitle.setFont(Font.font("Arial", FontWeight.BOLD, 14));
 
         logListView = new ListView<>();
@@ -110,20 +140,48 @@ public class ActionBarView {
         logListView.setFocusTraversable(false);
 
         logPane.getChildren().addAll(logTitle, logListView);
+        
+        // --- 初始化水位计显示 ---
+        waterMeterPane = new VBox(5);
+        waterMeterPane.setPadding(new Insets(5));
+        waterMeterPane.setAlignment(Pos.CENTER);
+        
+        Label waterMeterTitle = new Label("水位计");
+        waterMeterTitle.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        
+        // 创建水位计图像视图，默认显示0级
+        waterMeterImageView = new ImageView();
+        waterMeterImageView.setFitWidth(100);  // 根据实际图片调整大小
+        waterMeterImageView.setFitHeight(150);
+        waterMeterImageView.setPreserveRatio(true);
+        
+        // 设置默认水位计图片
+        if (waterMeterImages.containsKey(0)) {
+            waterMeterImageView.setImage(waterMeterImages.get(0));
+        }
+        
+        waterMeterPane.getChildren().addAll(waterMeterTitle, waterMeterImageView);
 
-        // --- Combine Controls and Log in Main VBox --- 
-        viewPane = new VBox(5); // Main container
-        viewPane.setPadding(new Insets(0)); // No padding for the main VBox itself
-        viewPane.setStyle("-fx-background-color: #d3d3d3;"); // Grey background for the whole bar
-        viewPane.getChildren().addAll(actionBarControls, logPane);
+        // --- 设置布局 ---
+        viewPane.setTop(actionBarControls);      // 顶部放置动作按钮
+        viewPane.setCenter(logPane);             // 中间放置日志
+        viewPane.setRight(waterMeterPane);       // 右边放置水位计
+        
+        // 设置边距
+        BorderPane.setMargin(actionBarControls, new Insets(5));
+        BorderPane.setMargin(logPane, new Insets(5));
+        BorderPane.setMargin(waterMeterPane, new Insets(5));
 
         // Initially disable all action buttons until updated
         setAvailableActions(new ArrayList<>(), 0);
+        
+        // 初始化水位计
+        updateWaterLevelIndicator(0);
     }
 
     public void updateActions(List<Object> availableActions, int actionsRemaining) {
         Platform.runLater(() -> {
-            actionsRemainingLabel.setText("Actions: " + actionsRemaining);
+            actionsRemainingLabel.setText("行动点: " + actionsRemaining);
             setAvailableActions(availableActions, actionsRemaining);
         });
     }
@@ -222,13 +280,21 @@ public class ActionBarView {
     }
     
     /**
-     * Update water level indicator
-     * @param waterLevel Current water level
+     * 更新水位计显示
+     * @param waterLevel 当前水位等级（0-10）
      */
-    private void updateWaterLevelIndicator(int waterLevel) {
-        // Implement water level indicator update logic
-        // For example: update water level label or progress bar
-        System.out.println("Current water level: " + waterLevel);
-        // In actual implementation, UI elements should be updated
+    public void updateWaterLevelIndicator(int waterLevel) {
+        Platform.runLater(() -> {
+            // 确保水位值在有效范围内
+            int level = Math.min(Math.max(waterLevel, 0), 10);
+            
+            // 更新水位计图片
+            if (waterMeterImages.containsKey(level)) {
+                waterMeterImageView.setImage(waterMeterImages.get(level));
+            }
+            
+            // 打印日志
+            System.out.println("水位更新为: " + level);
+        });
     }
 }

@@ -8,8 +8,13 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.application.Platform;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
 // import model.Player;
 import com.island.controller.GameController;
@@ -24,6 +29,10 @@ public class CreateRoomView {
 
     private ListView<String> playerListView;
     private ComboBox<String> difficultyComboBox;
+    
+    // Image resources
+    private Image roomBackgroundImage;
+    private Image roomTitleImage;
 
     // Constructor (potentially needs Player and GameController)
     public CreateRoomView(Stage primaryStage /*, Player hostPlayer */) {
@@ -32,6 +41,7 @@ public class CreateRoomView {
         this.gameController = null;
         this.playerListView = new ListView<>();
         this.difficultyComboBox = new ComboBox<>();
+        loadImages();
     }
     
     // Constructor with GameController
@@ -41,35 +51,94 @@ public class CreateRoomView {
         // this.hostPlayer = hostPlayer;
         this.playerListView = new ListView<>();
         this.difficultyComboBox = new ComboBox<>();
+        loadImages();
+    }
+    
+    /**
+     * Load room-related images
+     */
+    private void loadImages() {
+        try {
+            // Load room background image
+            roomBackgroundImage = new Image(getClass().getResourceAsStream("/image/UI/room_background.jpg"));
+            // Load room title image
+            roomTitleImage = new Image(getClass().getResourceAsStream("/image/UI/create_room_title.png"));
+        } catch (Exception e) {
+            System.err.println("Room image resources loading failed: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     public Scene createScene() {
-        BorderPane root = new BorderPane();
-        root.setPadding(new Insets(20));
+        StackPane root = new StackPane();
+        
+        // Add background image
+        if (roomBackgroundImage != null) {
+            ImageView backgroundImageView = new ImageView(roomBackgroundImage);
+            backgroundImageView.setFitWidth(600);
+            backgroundImageView.setFitHeight(400);
+            backgroundImageView.setPreserveRatio(true);
+            root.getChildren().add(backgroundImageView);
+        }
+        
+        // Add content panel
+        BorderPane contentPane = createContentPane();
+        root.getChildren().add(contentPane);
+        
+        return new Scene(root, 600, 400);
+    }
+    
+    private BorderPane createContentPane() {
+        BorderPane contentPane = new BorderPane();
+        contentPane.setPadding(new Insets(20));
+        
+        // Room title or image
+        if (roomTitleImage != null) {
+            ImageView titleImageView = new ImageView(roomTitleImage);
+            titleImageView.setFitWidth(200);
+            titleImageView.setFitHeight(50);
+            titleImageView.setPreserveRatio(true);
+            HBox titleBox = new HBox(titleImageView);
+            titleBox.setAlignment(Pos.CENTER);
+            contentPane.setTop(titleBox);
+            BorderPane.setMargin(titleBox, new Insets(0, 0, 15, 0));
+        } else {
+            Label titleLabel = new Label("Create Room");
+            titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+            titleLabel.setStyle("-fx-text-fill: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.7), 3, 0, 0, 0);");
+            HBox titleBox = new HBox(titleLabel);
+            titleBox.setAlignment(Pos.CENTER);
+            contentPane.setTop(titleBox);
+            BorderPane.setMargin(titleBox, new Insets(0, 0, 15, 0));
+        }
 
         // Center: Player List and Settings
         VBox centerBox = new VBox(15);
         centerBox.setAlignment(Pos.CENTER);
 
         Label playerListLabel = new Label("Players in Room:");
+        playerListLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
         // Initialize player list (e.g., add the host)
         // if (hostPlayer != null) {
         //     playerListView.getItems().add(hostPlayer.getName() + " (Host)");
         // }
         playerListView.setPrefHeight(150);
+        playerListView.setStyle("-fx-control-inner-background: rgba(255, 255, 255, 0.7);");
 
         Label difficultyLabel = new Label("Select Difficulty:");
+        difficultyLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
         difficultyComboBox.getItems().addAll("Novice", "Normal", "Elite", "Legendary");
         difficultyComboBox.setValue("Normal"); // Default difficulty
 
         centerBox.getChildren().addAll(playerListLabel, playerListView, difficultyLabel, difficultyComboBox);
-        root.setCenter(centerBox);
+        contentPane.setCenter(centerBox);
 
         // Bottom: Buttons
         HBox bottomBox = new HBox(10);
         bottomBox.setAlignment(Pos.CENTER_RIGHT);
 
         Button returnButton = new Button("Return");
+        returnButton.setStyle("-fx-font-size: 14px; -fx-background-radius: 10;");
         returnButton.setOnAction(event -> {
             System.out.println("Return button clicked.");
             // Transition back to MenuView
@@ -90,6 +159,7 @@ public class CreateRoomView {
         });
 
         Button startGameButton = new Button("Start Game");
+        startGameButton.setStyle("-fx-font-size: 14px; -fx-background-radius: 10;");
         startGameButton.setOnAction(event -> {
             String selectedDifficulty = difficultyComboBox.getValue();
             System.out.println("Start Game button clicked. Difficulty: " + selectedDifficulty);
@@ -107,10 +177,10 @@ public class CreateRoomView {
         });
 
         bottomBox.getChildren().addAll(returnButton, startGameButton);
-        root.setBottom(bottomBox);
+        contentPane.setBottom(bottomBox);
         BorderPane.setMargin(bottomBox, new Insets(15, 0, 0, 0));
 
-        return new Scene(root, 400, 350);
+        return contentPane;
     }
 
     /**
@@ -152,65 +222,7 @@ public class CreateRoomView {
      * @return The root node of the view
      */
     public Pane getView() {
-        BorderPane root = new BorderPane();
-        root.setPadding(new Insets(20));
-        
-        // Center: Player List and Settings
-        VBox centerBox = new VBox(15);
-        centerBox.setAlignment(Pos.CENTER);
-
-        Label playerListLabel = new Label("Players in Room:");
-        playerListView.setPrefHeight(150);
-
-        Label difficultyLabel = new Label("Select Difficulty:");
-        difficultyComboBox.getItems().addAll("Novice", "Normal", "Elite", "Legendary");
-        difficultyComboBox.setValue("Normal"); // Default difficulty
-
-        centerBox.getChildren().addAll(playerListLabel, playerListView, difficultyLabel, difficultyComboBox);
-        root.setCenter(centerBox);
-
-        // Bottom: Buttons
-        HBox bottomBox = new HBox(10);
-        bottomBox.setAlignment(Pos.CENTER_RIGHT);
-
-        Button returnButton = new Button("Return");
-        returnButton.setOnAction(event -> {
-            System.out.println("Return button clicked.");
-            if (gameController != null) {
-                // This method is not yet implemented in GameController
-                // gameController.showMainMenu();
-                // Using direct transition for now
-                System.out.println("Returning to Main Menu...");
-                MenuView menuView = new MenuView(primaryStage);
-                primaryStage.setScene(menuView.createScene());
-                primaryStage.setTitle("Forbidden Island - Main Menu");
-            } else {
-                System.out.println("Returning to Main Menu...");
-                MenuView menuView = new MenuView(primaryStage);
-                primaryStage.setScene(menuView.createScene());
-                primaryStage.setTitle("Forbidden Island - Main Menu");
-            }
-        });
-
-        Button startGameButton = new Button("Start Game");
-        startGameButton.setOnAction(event -> {
-            String selectedDifficulty = difficultyComboBox.getValue();
-            System.out.println("Start Game button clicked. Difficulty: " + selectedDifficulty);
-            if (gameController != null) {
-                // The controller's startGame method exists, but takes a seed parameter
-                // that we need to pass directly
-                gameController.startGame(System.currentTimeMillis());  // Use current time as seed
-            } else {
-                System.out.println("Starting game setup...");
-                // Fallback when controller is not available
-            }
-        });
-
-        bottomBox.getChildren().addAll(returnButton, startGameButton);
-        root.setBottom(bottomBox);
-        BorderPane.setMargin(bottomBox, new Insets(15, 0, 0, 0));
-        
-        return root;
+        return createContentPane();
     }
     
     /**

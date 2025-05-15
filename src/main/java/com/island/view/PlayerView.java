@@ -7,11 +7,14 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.application.Platform;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,13 +28,35 @@ import com.island.controller.PlayerController;
 public class PlayerView {
 
     private VBox viewPane; // The root pane for this view component
-    private Map<String, VBox> playerInfoBoxes; // Map playerName to their display VBox
+    private Map<String, BorderPane> playerInfoBoxes; // Map playerName to their display BorderPane
     private GameController gameController;
+    
+    // 角色图片资源
+    private Map<PlayerRole, Image> adventurerImages = new HashMap<>();
 
     // Constructor
     public PlayerView(GameController gameController) {
         this.gameController = gameController;
+        loadImages();
         initialize();
+    }
+    
+    /**
+     * 加载角色图片资源
+     */
+    private void loadImages() {
+        try {
+            // 加载冒险家图片
+            adventurerImages.put(PlayerRole.ENGINEER, new Image(getClass().getResourceAsStream("/image/Adventurers/Engineer.png")));
+            adventurerImages.put(PlayerRole.PILOT, new Image(getClass().getResourceAsStream("/image/Adventurers/Pilot.png")));
+            adventurerImages.put(PlayerRole.NAVIGATOR, new Image(getClass().getResourceAsStream("/image/Adventurers/Navigator.png")));
+            adventurerImages.put(PlayerRole.EXPLORER, new Image(getClass().getResourceAsStream("/image/Adventurers/Explorer.png")));
+            adventurerImages.put(PlayerRole.MESSENGER, new Image(getClass().getResourceAsStream("/image/Adventurers/Messenger.png")));
+            adventurerImages.put(PlayerRole.DIVER, new Image(getClass().getResourceAsStream("/image/Adventurers/Diver.png")));
+        } catch (Exception e) {
+            System.err.println("Error loading adventurer images: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void initialize() {
@@ -41,7 +66,7 @@ public class PlayerView {
         viewPane.setStyle("-fx-background-color: #f0f0f0;"); // Light grey background
         playerInfoBoxes = new HashMap<>();
 
-        Label title = new Label("Players");
+        Label title = new Label("玩家信息");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         viewPane.getChildren().add(title);
     }
@@ -51,29 +76,66 @@ public class PlayerView {
     }
 
     public void updatePlayerInfo(Player player, boolean isCurrentPlayer) {
-        String playerName = player.getName();
-        PlayerRole playerRole = player.getRole();
-        int handSize = player.getCards().size();
-        String position = "Unknown position";
+        final String playerName = player.getName();
+        final PlayerRole playerRole = player.getRole();
+        final int handSize = player.getCards().size();
+        final String position = (player.getPosition() != null) ? 
+            player.getPosition().toString() : "未知位置";
         
-        if (player.getPosition() != null) {
-            position = player.getPosition().toString();
-        }
-        
-        Color playerColor = getRoleColor(playerRole);
+        final Color playerColor = getRoleColor(playerRole);
 
         Platform.runLater(() -> {
-            VBox playerBox = playerInfoBoxes.get(playerName);
+            BorderPane playerBox = playerInfoBoxes.get(playerName);
             if (playerBox == null) {
                 // Create new box if player not seen before
-                playerBox = new VBox(3);
+                playerBox = new BorderPane();
                 playerBox.setPadding(new Insets(5));
                 playerBox.setStyle("-fx-border-color: black; -fx-border-width: 1;");
                 playerInfoBoxes.put(playerName, playerBox);
+                
+                // 添加玩家信息VBox到BorderPane的右侧
+                VBox infoBox = new VBox(3);
+                playerBox.setRight(infoBox);
+                
+                // 创建图片显示区域
+                ImageView playerImage = new ImageView();
+                playerImage.setFitHeight(100);
+                playerImage.setFitWidth(70);
+                playerImage.setPreserveRatio(true);
+                
+                // 设置玩家角色图片
+                if (playerRole != null && adventurerImages.containsKey(playerRole)) {
+                    playerImage.setImage(adventurerImages.get(playerRole));
+                }
+                
+                playerBox.setLeft(playerImage);
+                
+                // 添加到主视图
                 viewPane.getChildren().add(playerBox);
             } else {
                 // Clear existing content before updating
+                Node imageView = playerBox.getLeft();
+                Node infoBox = playerBox.getRight();
                 playerBox.getChildren().clear();
+                
+                // 如果已有图片和信息盒子，重新添加
+                if (imageView != null) {
+                    playerBox.setLeft(imageView);
+                }
+                
+                if (infoBox instanceof VBox) {
+                    ((VBox) infoBox).getChildren().clear();
+                } else {
+                    infoBox = new VBox(3);
+                    playerBox.setRight(infoBox);
+                }
+            }
+            
+            // 获取或创建信息VBox
+            VBox infoBox = (VBox) playerBox.getRight();
+            if (infoBox == null) {
+                infoBox = new VBox(3);
+                playerBox.setRight(infoBox);
             }
 
             // Player Name and Color Indicator
@@ -85,11 +147,25 @@ public class PlayerView {
             nameBox.getChildren().addAll(colorRect, nameLabel);
 
             // Other Info
-            Label roleLabel = new Label("Role: " + playerRole);
-            Label handLabel = new Label("Cards: " + handSize);
-            Label posLabel = new Label("Position: " + position);
+            Label roleLabel = new Label("角色: " + getChineseRoleName(playerRole));
+            Label handLabel = new Label("卡牌数: " + handSize);
+            Label posLabel = new Label("位置: " + position);
 
-            playerBox.getChildren().addAll(nameBox, roleLabel, handLabel, posLabel);
+            infoBox.getChildren().addAll(nameBox, roleLabel, handLabel, posLabel);
+            
+            // 更新图片显示
+            ImageView playerImage = (ImageView) playerBox.getLeft();
+            if (playerImage == null) {
+                playerImage = new ImageView();
+                playerImage.setFitHeight(100);
+                playerImage.setFitWidth(70);
+                playerImage.setPreserveRatio(true);
+                playerBox.setLeft(playerImage);
+            }
+            
+            if (playerRole != null && adventurerImages.containsKey(playerRole)) {
+                playerImage.setImage(adventurerImages.get(playerRole));
+            }
 
             // Highlight current player
             if (isCurrentPlayer) {
@@ -98,6 +174,23 @@ public class PlayerView {
                 playerBox.setStyle("-fx-border-color: black; -fx-border-width: 1;");
             }
         });
+    }
+    
+    /**
+     * 获取角色的中文名称
+     */
+    private String getChineseRoleName(PlayerRole role) {
+        if (role == null) return "未知";
+        
+        switch (role) {
+            case ENGINEER: return "工程师";
+            case EXPLORER: return "探险家";
+            case PILOT: return "飞行员";
+            case MESSENGER: return "信使";
+            case NAVIGATOR: return "领航员";
+            case DIVER: return "潜水员";
+            default: return role.toString();
+        }
     }
 
     public void updateAllPlayers(List<Player> players, Player currentPlayer) {
@@ -119,7 +212,7 @@ public class PlayerView {
 
     public void removePlayer(String playerName) {
         Platform.runLater(() -> {
-            VBox playerBox = playerInfoBoxes.remove(playerName);
+            BorderPane playerBox = playerInfoBoxes.remove(playerName);
             if (playerBox != null) {
                 viewPane.getChildren().remove(playerBox);
             }

@@ -8,6 +8,12 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.control.Label;
 
 import com.island.model.Player;
 import com.island.controller.GameController;
@@ -20,6 +26,10 @@ public class MenuView {
     private Button joinRoomButton;
     private Button exitButton;
     
+    // Image resources
+    private Image menuBackgroundImage;
+    private Image gameLogo;
+    
     // GameController reference
     private GameController gameController;
 
@@ -27,18 +37,36 @@ public class MenuView {
     public MenuView(Stage primaryStage) {
         this.primaryStage = primaryStage;
         this.gameController = null;
+        loadImages();
     }
     
     // Constructor with GameController
     public MenuView(Stage primaryStage, GameController gameController) {
         this.primaryStage = primaryStage;
         this.gameController = gameController;
+        loadImages();
     }
 
     // Constructor with Player
     public MenuView(Stage primaryStage, Player player) {
         this.primaryStage = primaryStage;
         this.player = player;
+        loadImages();
+    }
+    
+    /**
+     * Load menu interface images
+     */
+    private void loadImages() {
+        try {
+            // Load menu background
+            menuBackgroundImage = new Image(getClass().getResourceAsStream("/image/UI/menu_background.jpg"));
+            // Load game logo
+            gameLogo = new Image(getClass().getResourceAsStream("/image/UI/game_logo.png"));
+        } catch (Exception e) {
+            System.err.println("Menu image resources loading failed: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     /**
@@ -46,8 +74,22 @@ public class MenuView {
      * @return Scene object for menu
      */
     public Scene createScene() {
-        VBox root = createMenuLayout();
-        return new Scene(root, 350, 250);
+        StackPane root = new StackPane();
+        
+        // Add background image
+        if (menuBackgroundImage != null) {
+            ImageView backgroundImageView = new ImageView(menuBackgroundImage);
+            backgroundImageView.setFitWidth(600);
+            backgroundImageView.setFitHeight(400);
+            backgroundImageView.setPreserveRatio(true);
+            root.getChildren().add(backgroundImageView);
+        }
+        
+        // Add menu controls
+        VBox menuBox = createMenuLayout();
+        root.getChildren().add(menuBox);
+        
+        return new Scene(root, 600, 400);
     }
 
     /**
@@ -58,9 +100,25 @@ public class MenuView {
         VBox root = new VBox(15); // Spacing between buttons
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(25));
+        
+        // Add game logo
+        if (gameLogo != null) {
+            ImageView logoImageView = new ImageView(gameLogo);
+            logoImageView.setFitWidth(300);
+            logoImageView.setFitHeight(100);
+            logoImageView.setPreserveRatio(true);
+            root.getChildren().add(logoImageView);
+        } else {
+            // If no logo image, display text title
+            Label titleLabel = new Label("Forbidden Island");
+            titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 32));
+            titleLabel.setStyle("-fx-text-fill: white; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.7), 3, 0, 0, 0);");
+            root.getChildren().add(titleLabel);
+        }
 
         createRoomButton = new Button("Create Room");
         createRoomButton.setPrefWidth(150);
+        createRoomButton.setStyle("-fx-font-size: 14px; -fx-background-radius: 10;");
         createRoomButton.setOnAction(event -> {
             System.out.println("Create Room button clicked.");
             // Transition to CreateRoomView
@@ -84,6 +142,7 @@ public class MenuView {
 
         joinRoomButton = new Button("Join Room");
         joinRoomButton.setPrefWidth(150);
+        joinRoomButton.setStyle("-fx-font-size: 14px; -fx-background-radius: 10;");
         joinRoomButton.setOnAction(event -> {
             System.out.println("Join Room button clicked.");
             // Transition to JoinRoomView
@@ -107,6 +166,7 @@ public class MenuView {
 
         exitButton = new Button("Exit Game");
         exitButton.setPrefWidth(150);
+        exitButton.setStyle("-fx-font-size: 14px; -fx-background-radius: 10;");
         exitButton.setOnAction(event -> {
             System.out.println("Exit Game button clicked.");
             Platform.exit(); // Closes the JavaFX application
