@@ -1,3 +1,5 @@
+package com.island.view;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -6,10 +8,15 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.Node;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.application.Platform;
 import java.util.List;
 
 import com.island.controller.GameController;
@@ -138,13 +145,13 @@ public class CardView {
     }
 
     public void updateTreasureDeckCount(int count) {
-        javafx.application.Platform.runLater(() -> {
+        Platform.runLater(() -> {
             treasureDeckCountLabel.setText("Count: " + count);
         });
     }
 
     public void updateFloodDeckCount(int count) {
-        javafx.application.Platform.runLater(() -> {
+        Platform.runLater(() -> {
             floodDeckCountLabel.setText("Count: " + count);
         });
     }
@@ -191,13 +198,13 @@ public class CardView {
     }
 
     public void updateTreasureDiscardPile(Card topCard) {
-        javafx.application.Platform.runLater(() -> {
+        Platform.runLater(() -> {
             updateDiscardPilePane(treasureDiscardPilePane, topCard, "Discard");
         });
     }
 
     public void updateFloodDiscardPile(Card topCard) {
-        javafx.application.Platform.runLater(() -> {
+        Platform.runLater(() -> {
             updateDiscardPilePane(floodDiscardPilePane, topCard, "Discard");
         });
     }
@@ -229,8 +236,7 @@ public class CardView {
                 String cardName = "Unknown Card";
                 try {
                     // Try to get card name if method exists
-                    // cardName = card.getName();
-                    cardName = "Card " + card.hashCode()%100;
+                    cardName = card.getName();
                 } catch (Exception e) {
                     cardName = "Card " + card.hashCode()%100;
                 }
@@ -245,28 +251,26 @@ public class CardView {
 
     // Placeholder for generating a card image (replace with actual image loading)
     private Image createPlaceholderCardImage(Card card) {
-        javafx.scene.canvas.Canvas canvas = new javafx.scene.canvas.Canvas(65, 95);
-        javafx.scene.canvas.GraphicsContext gc = canvas.getGraphicsContext2D();
+        Canvas canvas = new Canvas(65, 95);
+        GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setFill(Color.WHITE);
         gc.fillRect(0, 0, 65, 95);
         gc.setStroke(Color.BLACK);
         gc.strokeRect(0, 0, 65, 95);
-        gc.setFill(Color.BLACK);
         
-        // Try to get card name if available
-        String cardText = "Card "+ card.hashCode()%100;
         try {
-            // Uncomment when Card class has getName() method
-            // cardText = card.getName();
+            String cardName = card.getName();
+            gc.setFill(Color.BLACK);
+            gc.fillText(cardName, 5, 15);
         } catch (Exception e) {
-            // Use default text if getName() is not available
+            gc.setFill(Color.BLACK);
+            gc.fillText("Card " + card.hashCode()%100, 5, 15);
         }
         
-        gc.fillText(cardText, 5, 20);
         return canvas.snapshot(null, null);
     }
 
-    public HBox getView() {
+    public Pane getView() {
         return viewPane;
     }
 }

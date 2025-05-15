@@ -1,3 +1,5 @@
+package com.island.view;
+
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -8,8 +10,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-// Assuming Player class exists in a model package
-// import model.Player;
+import com.island.model.Player;
+import com.island.model.PlayerRole;
+import com.island.controller.GameController;
 
 /**
  * GameStart: Responsible for implementing the game startup interface, including user name
@@ -20,13 +23,31 @@ import javafx.stage.Stage;
 public class GameStart {
 
     private Stage primaryStage;
-    // Placeholder for Player class - replace with actual import
-    // private Player player;
+    private GameController gameController;
+    private Player player;
 
+    /**
+     * Constructor with Stage
+     * @param primaryStage The primary stage
+     */
     public GameStart(Stage primaryStage) {
         this.primaryStage = primaryStage;
     }
+    
+    /**
+     * Constructor with Stage and GameController
+     * @param primaryStage The primary stage
+     * @param gameController The game controller
+     */
+    public GameStart(Stage primaryStage, GameController gameController) {
+        this.primaryStage = primaryStage;
+        this.gameController = gameController;
+    }
 
+    /**
+     * Creates the username input scene
+     * @return Scene object for username input
+     */
     public Scene createScene() {
         VBox root = new VBox(10);
         root.setAlignment(Pos.CENTER);
@@ -41,29 +62,50 @@ public class GameStart {
         submitButton.setOnAction(event -> {
             String username = nameInput.getText().trim();
             if (!username.isEmpty()) {
-                // Create Player object (assuming Player constructor takes username)
-                player = new Player(username);
-                System.out.println("Player created: " + username);
-                MainApplication.showMenuView(primaryStage, player);
-                // Or: gameController.showMainMenu(player);
-
-                // Placeholder transition - replace with actual logic
-                MenuView menuView = new MenuView(primaryStage /*, player */); // Pass player if needed
-                primaryStage.setScene(menuView.createScene());
-                primaryStage.setTitle("Forbidden Island - Main Menu");
-
+                if (gameController != null) {
+                    // Note: These methods are not yet implemented in GameController
+                    // Future implementation will handle player creation and menu transition
+                    System.out.println("Creating player via GameController: " + username);
+                    // Future implementation:
+                    // gameController.createPlayer(username, PlayerRole.EXPLORER);
+                    // gameController.showMainMenu();
+                    
+                    // For now, use direct transition
+                    MenuView menuView = new MenuView(primaryStage);
+                    primaryStage.setScene(menuView.createScene());
+                    primaryStage.setTitle("Forbidden Island - Main Menu");
+                } else {
+                    // For standalone usage without GameController
+                    System.out.println("Player created: " + username);
+                    MenuView menuView = new MenuView(primaryStage);
+                    primaryStage.setScene(menuView.createScene());
+                    primaryStage.setTitle("Forbidden Island - Main Menu");
+                }
             } else {
-                // Handle empty username case (e.g., show an error message)
+                // Handle empty username case
                 System.out.println("Username cannot be empty.");
-                // You might want to show an alert dialog here
+                // Could add alert dialog here in the future
             }
         });
 
         root.getChildren().addAll(nameLabel, nameInput, submitButton);
-
         return new Scene(root, 300, 200);
     }
+    
+    /**
+     * Load the main menu
+     * @param stage The primary stage
+     * @param player The player object
+     */
+    public void loadMainMenu(Stage stage, Player player) {
+        MenuView menuView = new MenuView(stage, player);
+        stage.setScene(menuView.createScene());
+        stage.setTitle("Forbidden Island - Main Menu");
+    }
 
+    /**
+     * Main application class for standalone usage
+     */
     public static class MainApplication extends Application {
         @Override
         public void start(Stage primaryStage) {
@@ -84,5 +126,5 @@ public class GameStart {
              stage.setTitle("Forbidden Island - Main Menu");
         }
     }
-    
 }
+

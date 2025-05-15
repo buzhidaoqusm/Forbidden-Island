@@ -1,14 +1,22 @@
+package com.island.view;
+
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.geometry.Insets;
+import javafx.application.Platform;
+import javafx.scene.control.Label;
+import javafx.scene.layout.StackPane;
 
 import com.island.view.IslandView;
 import com.island.view.PlayerView;
 import com.island.view.CardView;
 import com.island.view.ActionBarView;
 import com.island.controller.GameController;
+import com.island.model.Player;
+import com.island.model.Position;
 
 public class GameView {
 
@@ -16,12 +24,17 @@ public class GameView {
     private BorderPane rootLayout;
     private Scene gameScene;
 
-    // Sub-views (placeholders - actual instances will be created/injected)
-    private Pane islandViewPane; // Placeholder for IslandView's root node
-    private Pane playerViewPane; // Placeholder for PlayerView's root node
-    private Pane cardViewPane;   // Placeholder for CardView's root node
-    private Pane actionBarViewPane; // Placeholder for ActionBarView's root node
-    // ActionLogView functionality is now part of ActionBarView
+    // Sub-views (actual instances)
+    private IslandView islandView;
+    private PlayerView playerView;
+    private CardView cardView;
+    private ActionBarView actionBarView;
+    
+    // Sub-view panes
+    private Pane islandViewPane;
+    private Pane playerViewPane;
+    private Pane cardViewPane;
+    private Pane actionBarViewPane;
 
     // GameController reference
     private GameController gameController;
@@ -33,16 +46,18 @@ public class GameView {
         initialize();
     }
 
-
     private void initialize() {
         rootLayout = new BorderPane();
         rootLayout.setStyle("-fx-background-color: #add8e6;"); // Light blue background
 
         // Initialize view components
-        IslandView islandView = new IslandView(gameController);
-        PlayerView playerView = new PlayerView(gameController);
-        CardView cardView = new CardView(gameController);
-        ActionBarView actionBarView = new ActionBarView(gameController);
+        islandView = new IslandView(gameController);
+        playerView = new PlayerView(gameController);
+        cardView = new CardView(gameController);
+        actionBarView = new ActionBarView(gameController);
+
+        // Register views as observers to be implemented later
+        // Currently the observer pattern is not fully implemented in GameController
 
         // Get panes from view components
         islandViewPane = islandView.getView();
@@ -58,7 +73,7 @@ public class GameView {
         rootLayout.setLeft(playerViewPane);
 
         // Right: Card view
-        javafx.scene.layout.VBox rightPanel = new javafx.scene.layout.VBox(10);
+        VBox rightPanel = new VBox(10);
         rightPanel.getChildren().add(cardViewPane);
         rootLayout.setRight(rightPanel);
 
@@ -70,7 +85,7 @@ public class GameView {
         BorderPane.setMargin(rightPanel, new Insets(10));
         BorderPane.setMargin(actionBarViewPane, new Insets(10));
 
-        gameScene = new Scene(rootLayout, 1200, 800); // 设置游戏窗口大小
+        gameScene = new Scene(rootLayout, 1200, 800);
     }
 
     public Scene getScene() {
@@ -78,10 +93,10 @@ public class GameView {
     }
 
     public void showGameOverInterface() {
-        javafx.application.Platform.runLater(() -> {
-            javafx.scene.control.Label gameOverLabel = new javafx.scene.control.Label("Game Over");
+        Platform.runLater(() -> {
+            Label gameOverLabel = new Label("Game Over");
             gameOverLabel.setStyle("-fx-font-size: 48px; -fx-text-fill: red;");
-            rootLayout.setCenter(new javafx.scene.layout.StackPane(gameOverLabel)); // Replace center content
+            rootLayout.setCenter(new StackPane(gameOverLabel)); // Replace center content
             System.out.println("Showing game over interface");
         });
     }
@@ -100,33 +115,43 @@ public class GameView {
     public void updateAllViews() {
         if (gameController == null) return;
         
-        
-        if (islandViewPane != null) {
+        if (islandView != null) {
             gameController.getIslandController().updateIslandView();
-            System.out.println("update island view");
+            System.out.println("Update island view");
         }
         
-       
-        if (playerViewPane != null) {
+        if (playerView != null) {
             gameController.getPlayerController().updatePlayerView();
-            System.out.println("update player view");
+            System.out.println("Update player view");
         }
         
-        if (cardViewPane != null) {
+        if (cardView != null) {
             gameController.getCardController().updateCardView();
-            System.out.println("update card view");
+            System.out.println("Update card view");
         }
         
-        if (actionBarViewPane != null) {
+        if (actionBarView != null) {
             gameController.getActionBarController().updateActionBarView();
-            System.out.println("update actionbar view");
+            System.out.println("Update actionbar view");
         }
     }
 
+    /**
+     * Set the primary stage scene and show it
+     */
     public void setPrimaryStage() {
-        primaryStage.setTitle("island"); // 设置窗口标题为中文
+        primaryStage.setTitle("Forbidden Island");
         primaryStage.setScene(gameScene);
         primaryStage.show();
+    }
+    
+    /**
+     * Called when returning to main menu
+     */
+    public void returnToMainMenu() {
+        // This would connect to GameController if the method was implemented
+        System.out.println("Returning to main menu");
+        // Future implementation will call: gameController.showMainMenu();
     }
 
     public IslandView getIslandView() { return islandView; }
@@ -134,12 +159,25 @@ public class GameView {
     public CardView getCardView() { return cardView; }
     public ActionBarView getActionBarView() { return actionBarView; }
     
+    /**
+     * Update player position on the board
+     * @param player Player to update
+     * @param newPosition New position
+     */
     public void updatePlayerPosition(Player player, Position newPosition) {
         if (islandView != null) {
             islandView.updatePlayerMarker(player, newPosition);
         }
         if (playerView != null) {
-            playerView.updatePlayerInfo(player); // Assuming PlayerView also shows position
+            playerView.updatePlayerInfo(player);
         }
+    }
+    
+    /**
+     * Update method called by observed subjects
+     * Will be used when Observer pattern is implemented
+     */
+    public void update() {
+        updateAllViews();
     }
 }

@@ -1,3 +1,5 @@
+package com.island.view;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -7,6 +9,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.application.Platform;
 
 // import model.Player;
 import com.island.controller.GameController;
@@ -71,7 +74,13 @@ public class CreateRoomView {
             System.out.println("Return button clicked.");
             // Transition back to MenuView
             if (gameController != null) {
-                gameController.showMainMenu();
+                // This method is not yet implemented in GameController
+                // gameController.showMainMenu();
+                // Using direct transition for now
+                System.out.println("Returning to Main Menu...");
+                MenuView menuView = new MenuView(primaryStage);
+                primaryStage.setScene(menuView.createScene());
+                primaryStage.setTitle("Forbidden Island - Main Menu");
             } else {
                 System.out.println("Returning to Main Menu...");
                 MenuView menuView = new MenuView(primaryStage);
@@ -87,13 +96,15 @@ public class CreateRoomView {
             // Validate if enough players have joined (usually handled by controller)
             // Notify the controller to start the game
             if (gameController != null) {
-                gameController.startGame(selectedDifficulty);
+                // The controller's startGame method exists, but takes a seed parameter
+                // that we need to pass directly
+                gameController.startGame(System.currentTimeMillis());  // Use current time as seed
             } else {
                 System.out.println("Starting game setup...");
                 // Fallback when controller is not available
             }
             // Transition to GameView (handled by controller after setup)
-        });}
+        });
 
         bottomBox.getChildren().addAll(returnButton, startGameButton);
         root.setBottom(bottomBox);
@@ -109,7 +120,7 @@ public class CreateRoomView {
      */
     public void addPlayerToList(String playerName) {
         // Ensure UI updates are run on the JavaFX Application Thread
-        javafx.application.Platform.runLater(() -> {
+        Platform.runLater(() -> {
             playerListView.getItems().add(playerName);
         });
     }
@@ -120,7 +131,7 @@ public class CreateRoomView {
      * @param playerName The name of the player who left.
      */
     public void removePlayerFromList(String playerName) {
-        javafx.application.Platform.runLater(() -> {
+        Platform.runLater(() -> {
             playerListView.getItems().remove(playerName);
             // Potentially remove host tag if needed
             playerListView.getItems().remove(playerName + " (Host)");
@@ -166,7 +177,13 @@ public class CreateRoomView {
         returnButton.setOnAction(event -> {
             System.out.println("Return button clicked.");
             if (gameController != null) {
-                gameController.showMainMenu();
+                // This method is not yet implemented in GameController
+                // gameController.showMainMenu();
+                // Using direct transition for now
+                System.out.println("Returning to Main Menu...");
+                MenuView menuView = new MenuView(primaryStage);
+                primaryStage.setScene(menuView.createScene());
+                primaryStage.setTitle("Forbidden Island - Main Menu");
             } else {
                 System.out.println("Returning to Main Menu...");
                 MenuView menuView = new MenuView(primaryStage);
@@ -180,7 +197,9 @@ public class CreateRoomView {
             String selectedDifficulty = difficultyComboBox.getValue();
             System.out.println("Start Game button clicked. Difficulty: " + selectedDifficulty);
             if (gameController != null) {
-                gameController.startGame(selectedDifficulty);
+                // The controller's startGame method exists, but takes a seed parameter
+                // that we need to pass directly
+                gameController.startGame(System.currentTimeMillis());  // Use current time as seed
             } else {
                 System.out.println("Starting game setup...");
                 // Fallback when controller is not available
@@ -200,19 +219,16 @@ public class CreateRoomView {
      */
     public void update() {
         if (gameController != null) {
-            // Update room information
-            // For example: update player list, room status, etc.
-            System.out.println("CreateRoomView updated");
-            
-            // Get current players in room
-            java.util.List<String> players = gameController.getPlayersInRoom();
-            if (players != null) {
-                javafx.application.Platform.runLater(() -> {
-                    playerListView.getItems().setAll(players);
-                });
-            }
-            
-            // Update other UI elements
+            // Update player list
+            Platform.runLater(() -> {
+                playerListView.getItems().clear();
+                // Add players from the game controller
+                // These methods are not yet implemented in GameController
+                // gameController.getPlayerList().forEach(player -> {
+                //     playerListView.getItems().add(player.getName());
+                // });
+                System.out.println("CreateRoomView updated - would display player list here");
+            });
         }
     }
 }

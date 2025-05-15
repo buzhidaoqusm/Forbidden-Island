@@ -1,23 +1,26 @@
+package com.island.view;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.application.Platform;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// Assuming Player class exists in a model package
-// import model.Player;
-// import model.Role;
-// Assuming GameController exists
-// import controller.GameController;
+import com.island.model.Player;
+import com.island.model.PlayerRole;
+import com.island.controller.GameController;
+import com.island.controller.PlayerController;
 
 public class PlayerView {
 
@@ -43,22 +46,23 @@ public class PlayerView {
         viewPane.getChildren().add(title);
     }
 
+    public void updatePlayerInfo(Player player) {
+        updatePlayerInfo(player, false);
+    }
+
     public void updatePlayerInfo(Player player, boolean isCurrentPlayer) {
         String playerName = player.getName();
-        String playerRole = player.getRole().getName();
-        int handSize = player.getHand().size();
-        String position = "";
-        if (player.getCurrentTile() != null) {
-            position = player.getCurrentTile().getName();
-        } else if (player.getPosition() != null) {
+        PlayerRole playerRole = player.getRole();
+        int handSize = player.getCards().size();
+        String position = "Unknown position";
+        
+        if (player.getPosition() != null) {
             position = player.getPosition().toString();
-        } else {
-            position = "Unknown position";
         }
         
-        Color playerColor = getRoleColor(player.getRole());
+        Color playerColor = getRoleColor(playerRole);
 
-        javafx.application.Platform.runLater(() -> {
+        Platform.runLater(() -> {
             VBox playerBox = playerInfoBoxes.get(playerName);
             if (playerBox == null) {
                 // Create new box if player not seen before
@@ -97,8 +101,11 @@ public class PlayerView {
     }
 
     public void updateAllPlayers(List<Player> players, Player currentPlayer) {
-        javafx.application.Platform.runLater(() -> {
-            viewPane.getChildren().retainAll(viewPane.getChildren().get(0)); // Keep title
+        Platform.runLater(() -> {
+            // Remove all player boxes but keep the title
+            if (viewPane.getChildren().size() > 0) {
+                viewPane.getChildren().retainAll(viewPane.getChildren().get(0));
+            }
             playerInfoBoxes.clear();
 
             String currentPlayerName = (currentPlayer != null) ? currentPlayer.getName() : null;
@@ -111,7 +118,7 @@ public class PlayerView {
     }
 
     public void removePlayer(String playerName) {
-        javafx.application.Platform.runLater(() -> {
+        Platform.runLater(() -> {
             VBox playerBox = playerInfoBoxes.remove(playerName);
             if (playerBox != null) {
                 viewPane.getChildren().remove(playerBox);
@@ -119,7 +126,7 @@ public class PlayerView {
         });
     }
 
-    public VBox getView() {
+    public Pane getView() {
         return viewPane;
     }
     
@@ -128,16 +135,16 @@ public class PlayerView {
      * @param role Player role
      * @return Corresponding color
      */
-    private Color getRoleColor(Role role) {
+    private Color getRoleColor(PlayerRole role) {
         if (role == null) return Color.GRAY;
         
-        switch (role.getName()) {
-            case "ENGINEER": return Color.RED;
-            case "EXPLORER": return Color.GREEN;
-            case "PILOT": return Color.BLUE;
-            case "MESSENGER": return Color.GRAY;
-            case "NAVIGATOR": return Color.YELLOW;
-            case "DIVER": return Color.BLACK;
+        switch (role) {
+            case ENGINEER: return Color.RED;
+            case EXPLORER: return Color.GREEN;
+            case PILOT: return Color.BLUE;
+            case MESSENGER: return Color.GRAY;
+            case NAVIGATOR: return Color.YELLOW;
+            case DIVER: return Color.BLACK;
             default: return Color.PURPLE;
         }
     }

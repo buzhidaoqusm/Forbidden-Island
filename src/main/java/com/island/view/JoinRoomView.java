@@ -1,3 +1,5 @@
+package com.island.view;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -7,14 +9,15 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.application.Platform;
 
 // import model.Player;
 import com.island.controller.GameController;
+import com.island.model.Room;
 
 public class JoinRoomView {
 
     private Stage primaryStage;
-    private Player joiningPlayer;
     // GameController reference
     private GameController gameController;
 
@@ -22,10 +25,9 @@ public class JoinRoomView {
     private TextField roomIdInput;
     private Label feedbackLabel; // To display join status/errors
 
-    // Constructor (potentially needs Player and GameController)
-    public JoinRoomView(Stage primaryStage /*, Player joiningPlayer */) {
+    // Constructor without GameController
+    public JoinRoomView(Stage primaryStage) {
         this.primaryStage = primaryStage;
-        this.joiningPlayer = joiningPlayer;
         this.gameController = null;
         this.playerListView = new ListView<>();
         this.roomIdInput = new TextField();
@@ -33,10 +35,9 @@ public class JoinRoomView {
     }
     
     // Constructor with GameController
-    public JoinRoomView(Stage primaryStage, GameController gameController /*, Player joiningPlayer */) {
+    public JoinRoomView(Stage primaryStage, GameController gameController) {
         this.primaryStage = primaryStage;
         this.gameController = gameController;
-        this.joiningPlayer = joiningPlayer;
         this.playerListView = new ListView<>();
         this.roomIdInput = new TextField();
         this.feedbackLabel = new Label();
@@ -72,7 +73,13 @@ public class JoinRoomView {
             System.out.println("Return button clicked.");
             // Transition back to MenuView using controller
             if (gameController != null) {
-                gameController.showMainMenu();
+                // This method is not implemented yet in the controller
+                // gameController.showMainMenu();
+                // Using direct transition for now
+                System.out.println("Returning to Main Menu...");
+                MenuView menuView = new MenuView(primaryStage);
+                primaryStage.setScene(menuView.createScene());
+                primaryStage.setTitle("Forbidden Island - Main Menu");
             } else {
                 System.out.println("Returning to Main Menu...");
                 // Fallback if controller is not available
@@ -90,7 +97,11 @@ public class JoinRoomView {
                 System.out.println("Join button clicked. Attempting to join Room ID: " + roomId);
                 // Send join request to the controller
                 if (gameController != null) {
-                    gameController.joinRoom(roomId);
+                    // This method is not implemented yet in the controller
+                    // gameController.joinRoom(roomId);
+                    // Using placeholder for now
+                    System.out.println("Would join room with ID: " + roomId);
+                    setFeedback("Join function not yet implemented in controller");
                 } else {
                     // Placeholder action when controller is not available
                     System.out.println("Sending join request...");
@@ -100,7 +111,7 @@ public class JoinRoomView {
             } else {
                 setFeedback("Invalid Room ID format.");
             }
-        });}
+        });
 
         bottomBox.getChildren().addAll(returnButton, joinButton);
         root.setBottom(bottomBox);
@@ -115,13 +126,13 @@ public class JoinRoomView {
     }
 
     public void updatePlayerList(java.util.List<String> playerNames) {
-        javafx.application.Platform.runLater(() -> {
+        Platform.runLater(() -> {
             playerListView.getItems().setAll(playerNames);
         });
     }
 
     public void setFeedback(String message) {
-        javafx.application.Platform.runLater(() -> {
+        Platform.runLater(() -> {
             feedbackLabel.setText(message);
         });
     }
@@ -171,7 +182,18 @@ public class JoinRoomView {
         returnButton.setOnAction(event -> {
             System.out.println("Return button clicked.");
             if (gameController != null) {
-                gameController.showMainMenu();
+                // This method is not implemented yet in the controller
+                // gameController.showMainMenu();
+                // Using direct transition for now
+                System.out.println("Returning to Main Menu...");
+                MenuView menuView = new MenuView(primaryStage);
+                primaryStage.setScene(menuView.createScene());
+                primaryStage.setTitle("Forbidden Island - Main Menu");
+            } else {
+                System.out.println("Returning to Main Menu...");
+                MenuView menuView = new MenuView(primaryStage);
+                primaryStage.setScene(menuView.createScene());
+                primaryStage.setTitle("Forbidden Island - Main Menu");
             }
         });
 
@@ -182,7 +204,15 @@ public class JoinRoomView {
             if (isValidRoomId(roomId)) {
                 System.out.println("Join button clicked. Attempting to join Room ID: " + roomId);
                 if (gameController != null) {
-                    gameController.joinRoom(roomId);
+                    // This method is not implemented yet in the controller
+                    // gameController.joinRoom(roomId);
+                    // Using placeholder for now
+                    System.out.println("Would join room with ID: " + roomId);
+                    setFeedback("Join function not yet implemented in controller");
+                } else {
+                    // Placeholder action when controller is not available
+                    System.out.println("Sending join request...");
+                    setFeedback("Controller not available. Cannot join room.");
                 }
             } else {
                 setFeedback("Invalid Room ID format.");
@@ -205,20 +235,21 @@ public class JoinRoomView {
             // Update room information
             System.out.println("JoinRoomView updated");
             
+            // The following methods are not yet implemented in the controller
             // Get available rooms list
-            java.util.List<String> availableRooms = gameController.getAvailableRooms();
-            if (availableRooms != null) {
-                // Update available rooms list display
-                // This would be implemented if we had a room list control
-            }
-            
+            // java.util.List<String> availableRooms = gameController.getAvailableRooms();
+            // if (availableRooms != null) {
+            //     // Update available rooms list display
+            // }
+            //
             // Get current players in room
-            java.util.List<String> playersInRoom = gameController.getPlayersInRoom();
-            if (playersInRoom != null) {
-                updatePlayerList(playersInRoom);
-            }
+            // java.util.List<String> playersInRoom = gameController.getPlayersInRoom();
+            // if (playersInRoom != null) {
+            //     updatePlayerList(playersInRoom);
+            // }
             
-            // Update other UI elements
+            // For now, just log the update attempt
+            System.out.println("Room and player information would be updated here");
         }
     }
 }

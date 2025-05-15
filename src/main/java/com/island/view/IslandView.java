@@ -1,17 +1,23 @@
+package com.island.view;
+
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.control.Label;
 import javafx.geometry.Pos;
+import javafx.application.Platform;
+import javafx.scene.Node;
+import javafx.scene.shape.Circle;
 
+import java.util.List;
 import com.island.controller.GameController;
 import com.island.controller.PlayerController;
 import com.island.controller.IslandController;
 import com.island.model.Tile;
 import com.island.model.Player;
 import com.island.model.Position;
- import com.island.model.Island;
+import com.island.model.Island;
 
 public class IslandView {
 
@@ -84,9 +90,9 @@ public class IslandView {
     public void updateTileView(int row, int col, Tile tile) {
         // Find the corresponding Pane in the gridPane
         // This requires a way to map row/col back to the Node in the grid
-        javafx.application.Platform.runLater(() -> {
+        Platform.runLater(() -> {
             // Example: Get node by row/col (might need adjustment based on gridPane structure)
-            javafx.scene.Node node = getNodeByRowColumnIndex(row, col, gridPane);
+            Node node = getNodeByRowColumnIndex(row, col, gridPane);
             if (node instanceof Pane) {
                 Pane tilePane = (Pane) node;
                 Rectangle background = (Rectangle) tilePane.getChildren().get(0); // Assuming rect is first
@@ -128,28 +134,37 @@ public class IslandView {
         });
     }
 
-    public void updatePlayerMarker(Object player, Object newPosition) {
-        javafx.application.Platform.runLater(() -> {
-            System.out.println("Updating player marker for "  + player.getName()  + " at "  + newPosition );
+    public void updatePlayerMarker(Player player, Position newPosition) {
+        Platform.runLater(() -> {
+            System.out.println("Updating player marker for " + player.getName() + " at " + newPosition);
             
             int row = newPosition.getRow();
             int col = newPosition.getCol();
             Node node = getNodeByRowColumnIndex(row, col, gridPane);
             if (node instanceof Pane) {
-                 Pane tilePane = (Pane) node;
-                 javafx.scene.shape.Circle playerMarker = new javafx.scene.shape.Circle(TILE_SIZE / 4, player.getColor());
-                 Remove previous markers of this player before adding
-                 tilePane.getChildren().add(playerMarker);
-                 Position the marker within the tile pane
-                 playerMarker.setCenterX(TILE_SIZE / 2);
-                 playerMarker.setCenterY(TILE_SIZE / 2);
+                Pane tilePane = (Pane) node;
+                // Remove previous markers of this player before adding
+                for (int i = tilePane.getChildren().size() - 1; i >= 0; i--) {
+                    if (tilePane.getChildren().get(i) instanceof Circle) {
+                        tilePane.getChildren().remove(i);
+                    }
+                }
+                
+                // Create a new player marker
+                Color playerColor = Color.RED; // Default color, should be based on player role
+                Circle playerMarker = new Circle(TILE_SIZE / 4, playerColor);
+                tilePane.getChildren().add(playerMarker);
+                
+                // Position the marker within the tile pane
+                playerMarker.setCenterX(TILE_SIZE / 2);
+                playerMarker.setCenterY(TILE_SIZE / 2);
             }
         });
     }
 
-    public void highlightTiles(java.util.List<Object> positions, String highlightType) {
+    public void highlightTiles(List<Position> positions, String highlightType) {
         clearHighlights(); // Clear previous highlights first
-        javafx.application.Platform.runLater(() -> {
+        Platform.runLater(() -> {
             Color highlightColor = Color.YELLOW; // Default highlight
             if ("shore_up".equals(highlightType)) {
                 highlightColor = Color.LIGHTGREEN;
@@ -159,7 +174,7 @@ public class IslandView {
                 if (node instanceof Pane) {
                     Pane tilePane = (Pane) node;
                     Rectangle background = (Rectangle) tilePane.getChildren().get(0);
-                    Apply highlight (e.g., change border)
+                    // Apply highlight (e.g., change border)
                     background.setStroke(highlightColor);
                     background.setStrokeWidth(3.0);
                     System.out.println("Highlighting tile at " + pos + " for " + highlightType);
@@ -170,8 +185,8 @@ public class IslandView {
     }
 
     public void clearHighlights() {
-        javafx.application.Platform.runLater(() -> {
-            for (javafx.scene.Node node : gridPane.getChildren()) {
+        Platform.runLater(() -> {
+            for (Node node : gridPane.getChildren()) {
                 if (node instanceof Pane) {
                     Pane tilePane = (Pane) node;
                     Rectangle background = (Rectangle) tilePane.getChildren().get(0);
@@ -217,7 +232,7 @@ public class IslandView {
                     List<Player> players = playerController.getRoom().getPlayers();
                     for (Player player : players) {
                         // Ensure player position is updated correctly
-                        if (player.getCurrentTile() != null) {
+                        if (player.getPosition() != null) {
                             System.out.println("Updating position for player: " + player.getName());
                             updatePlayerMarker(player, player.getPosition());
                         }
@@ -229,9 +244,8 @@ public class IslandView {
         }
     }
 
-    private javafx.scene.Node getNodeByRowColumnIndex(final int row, final int column, GridPane gridPane) {
-        javafx.collections.ObservableList<javafx.scene.Node> children = gridPane.getChildren();
-        for (javafx.scene.Node node : children) {
+    private Node getNodeByRowColumnIndex(final int row, final int column, GridPane gridPane) {
+        for (Node node : gridPane.getChildren()) {
             Integer r = GridPane.getRowIndex(node);
             Integer c = GridPane.getColumnIndex(node);
             int nodeRow = (r == null) ? 0 : r;

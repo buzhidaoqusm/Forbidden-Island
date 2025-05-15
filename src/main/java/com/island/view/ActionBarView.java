@@ -1,9 +1,12 @@
+package com.island.view;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.control.ListView;
 import javafx.application.Platform;
 import javafx.scene.text.Font;
@@ -15,10 +18,7 @@ import java.util.List;
 import com.island.controller.GameController;
 import com.island.controller.ActionBarController;
 import com.island.model.Player;
-
-// ActionType enum for action types
-enum ActionType { MOVE, SHORE_UP, GIVE_CARD, CAPTURE_TREASURE, USE_ABILITY, END_TURN }
-
+import com.island.view.ActionType;
 
 public class ActionBarView {
 
@@ -122,7 +122,7 @@ public class ActionBarView {
     }
 
     public void updateActions(List<Object> availableActions, int actionsRemaining) {
-        javafx.application.Platform.runLater(() -> {
+        Platform.runLater(() -> {
             actionsRemainingLabel.setText("Actions: " + actionsRemaining);
             setAvailableActions(availableActions, actionsRemaining);
         });
@@ -167,7 +167,7 @@ public class ActionBarView {
         // endTurnButton usually doesn't need highlighting
     }
 
-    public VBox getView() {
+    public Pane getView() {
         return viewPane;
     }
 
