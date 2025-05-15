@@ -4,6 +4,7 @@ import com.island.model.*;
 import com.island.network.Message;
 import com.island.network.MessageHandler;
 import com.island.network.RoomController;
+import com.island.util.observer.GameSubjectImpl;
 import com.island.util.ui.Dialog;
 import com.island.view.GameView;
 import javafx.stage.Stage;
@@ -70,6 +71,9 @@ public class GameController {
     // Target position for helicopter lift
     private Position targetPosition;
 
+    // Observer pattern implementation
+    private GameSubjectImpl gameSubject = new GameSubjectImpl();
+
     /**
      * Constructs a GameController with the given RoomController.
      * Initializes all other controllers and establishes bidirectional references.
@@ -109,6 +113,7 @@ public class GameController {
         // Deal cards for players
         playerController.dealCards(cardController.getTreasureDeck());
 
+        gameSubject.setGameState(GameState.RUNNING);
         gameView.initGame();
         gameView.setPrimaryStage();
     }
@@ -125,6 +130,8 @@ public class GameController {
         actionBarController.setCurrentPlayer(player);
         remainingActions = 3;
         playerController.resetPlayerState();
+        gameSubject.setGameState(GameState.TURN_START);
+        gameSubject.notifyActionBarChanged();
     }
 
     /**
@@ -571,6 +578,7 @@ public class GameController {
     }
 
     public void returnToMainMenu() {
+        gameView.returnToMainMenu();
     }
 
     public void resetTileBorders() {
@@ -578,6 +586,30 @@ public class GameController {
 
     public boolean isGameStart() {
         return gameStart;
+    }
+
+    public GameSubjectImpl getGameSubject() {
+        return gameSubject;
+    }
+
+    public void updateBoard() {
+        gameSubject.notifyBoardChanged();
+    }
+
+    public void updateActionBar() {
+        gameSubject.notifyActionBarChanged();
+    }
+
+    public void updatePlayersInfo() {
+        gameSubject.notifyPlayerInfoChanged();
+    }
+
+    public void updateCardView() {
+        gameSubject.notifyCardChanged();
+    }
+
+    public void updateWaterLevel() {
+        gameSubject.notifyWaterLevelChanged(islandController.getWaterLevel());
     }
 }
 
