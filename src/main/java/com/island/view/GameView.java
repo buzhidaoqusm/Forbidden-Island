@@ -296,4 +296,8 @@ public class GameView {
     public void update() {
         updateAllViews();
     }
+
+    public Stage getPrimaryStage() {
+        return primaryStage;
+    }
 }

@@ -5,6 +5,7 @@ import com.island.network.Message;
 import com.island.network.MessageHandler;
 import com.island.network.RoomController;
 import com.island.util.ui.Dialog;
+import com.island.view.GameView;
 import javafx.stage.Stage;
 
 import java.util.*;

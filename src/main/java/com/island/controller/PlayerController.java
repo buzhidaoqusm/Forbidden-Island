@@ -100,7 +100,7 @@ public class PlayerController {
      * 
      * @param treasureDeck The deck of treasure cards to draw from
      */
-    public void dealCards(List<Card> treasureDeck) {
+    public void dealCards(Deque<Card> treasureDeck) {
         for (Player player : room.getPlayers()) {
             while (player.getCards().size() < 2) {
                 Card card = treasureDeck.poll();
@@ -227,7 +227,7 @@ public class PlayerController {
      * @return true if the player has drawn treasure cards, false otherwise
      */
     public boolean hasDrawnTreasureCards() {
-        return room.getCurrentProgramPlayer().isHasDrawnTreasureCards();
+        return room.getCurrentProgramPlayer().hasDrawnTreasureCards();
     }
 
     /**
@@ -236,7 +236,7 @@ public class PlayerController {
      * @return The number of flood cards drawn
      */
     public int getDrawnFloodCards() {
-        return room.getCurrentProgramPlayer().getDrawnFloodCards();
+        return room.getCurrentProgramPlayer().getDrawFloodCards();
     }
 
     /**

@@ -552,7 +552,7 @@ public class ActionBarController {
      * Handles the situation where a player is on a sunk tile
      * Coordinates with the game controller to manage player movement or game over conditions
      * 
-     * @param player The player on a sunk tile
+     * @param currentProgramPlayer The player on a sunk tile
      */
     public void handlePlayerSunk(Player currentProgramPlayer) {
         gameController.handlePlayerSunk(currentProgramPlayer);

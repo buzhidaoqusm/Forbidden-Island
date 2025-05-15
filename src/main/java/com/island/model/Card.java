@@ -39,6 +39,23 @@ public class Card {
         this.isUsed = false;
     }
 
+    public static Card createSpecialCard(CardType type) {
+        return switch (type) {
+            case WATER_RISE -> new Card(type, "WaterRise", null, null, null);
+            case HELICOPTER -> new Card(type, "Helicopter", null, null, null);
+            case SANDBAGS -> new Card(type, "Sandbags", null, null, null);
+            default -> throw new IllegalArgumentException("Unknown card type");
+        };
+    }
+
+    public static Card createTreasureCard(TreasureType treasureType, String belongingPlayer) {
+        return new Card(CardType.TREASURE, treasureType.getDisplayName(), belongingPlayer,null, treasureType);
+    }
+
+    public static Card createFloodCard(String tileName, Position position, String belongingPlayer) {
+        return new Card(CardType.FLOOD, tileName, belongingPlayer, position,null);
+    }
+
     /**
      * Sets the game controller for this card
      * @param gameController The game controller instance

@@ -177,8 +177,8 @@ public abstract class Player {
         return drawFloodCards;
     }
 
-    public void setDrawFloodCards(int drawFloodCards) {
-        this.drawFloodCards = drawFloodCards;
+    public void addDrawnFloodCards(int count) {
+        this.drawFloodCards += count;
     }
 
     public int getActions() {
@@ -235,4 +235,5 @@ public abstract class Player {
         this.hasDrawnTreasureCards = false;
         this.drawFloodCards = 0;
     }
+
 }
