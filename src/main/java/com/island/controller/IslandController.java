@@ -78,18 +78,10 @@ public class IslandController {
 
         // Initialize tiles on the island
         int i = 2, j = 0;
-        for (String tileName : tilesList) {
-            if (tileName.contains("Earth")) {
-                addTile(tileName, new Position(i, j), TreasureType.EARTH_STONE);
-            } else if (tileName.contains("Fire")) {
-                addTile(tileName, new Position(i, j), TreasureType.FIRE_CRYSTAL);
-            } else if (tileName.contains("Ocean")) {
-                addTile(tileName, new Position(i, j), TreasureType.OCEAN_CHALICE);
-            } else if (tileName.contains("Wind")) {
-                addTile(tileName, new Position(i, j), TreasureType.WIND_STATUE);
-            } else {
-                addTile(tileName, new Position(i, j), null);
-            }
+        for (String tileNumStr : tilesList) {
+            TreasureType treasureType = getTreasureType(tileNumStr);
+
+            addTile(tileNumStr, new Position(i, j), treasureType);
 
             // Make the tiles follow a specific pattern
             i++;
@@ -110,6 +102,21 @@ public class IslandController {
             gameController.updateBoard();
             gameController.updateWaterLevel();
         }
+    }
+
+    private static TreasureType getTreasureType(String tileNumStr) {
+        int tileNum = Integer.parseInt(tileNumStr);
+        TreasureType treasureType = null;
+        if (tileNum == 1 || tileNum == 2) {
+            treasureType = TreasureType.EARTH_STONE;
+        } else if (tileNum == 3 || tileNum == 4) {
+            treasureType = TreasureType.WIND_STATUE;
+        } else if (tileNum == 5 || tileNum == 6) {
+            treasureType = TreasureType.FIRE_CRYSTAL;
+        } else if (tileNum == 7 || tileNum == 8) {
+            treasureType = TreasureType.OCEAN_CHALICE;
+        }
+        return treasureType;
     }
 
     /**
@@ -225,6 +232,11 @@ public class IslandController {
      * @return true if Fool's Landing is still available, false if it has sunk
      */
     public boolean checkFoolsLanding() {
+        for (Tile tile : island.getGameMap().values()) {
+            if (tile.getName().equals("14") && tile.isSunk()) {
+                return false;
+            }
+        }
         return true;
     }
 
