@@ -52,15 +52,17 @@ public class CardController {
      */
     private Island island;
 
+    private CardFactory cardFactory;
 
     /**
      * Constructs a new CardController with empty card collections
      */
-    public CardController() {
+    public CardController(CardFactory cardFactory) {
         this.treasureDeck = new ArrayDeque<>();
         this.floodDeck = new ArrayDeque<>();
         this.treasureDiscardPile = new ArrayList<>();
         this.floodDiscardPile = new ArrayList<>();
+        this.cardFactory = cardFactory;
     }
 
     /**
@@ -83,41 +85,7 @@ public class CardController {
      * @param seed The random seed for deterministic card shuffling
      */
     public void initCards(long seed) {
-        this.seed = seed;
-        // Initialize the treasure deck
-        for (TreasureType type : TreasureType.values()) {
-            if (type != TreasureType.NONE) {
-                for (int i = 0; i < 4; i++) {
-                    treasureDeck.add(Card.createTreasureCard(type, ""));
-                }
-            }
-        }
-
-        // Add special cards
-        treasureDeck.add(Card.createSpecialCard(CardType.HELICOPTER));
-        treasureDeck.add(Card.createSpecialCard(CardType.HELICOPTER));
-        treasureDeck.add(Card.createSpecialCard(CardType.HELICOPTER));
-        treasureDeck.add(Card.createSpecialCard(CardType.SANDBAGS));
-        treasureDeck.add(Card.createSpecialCard(CardType.SANDBAGS));
-        treasureDeck.add(Card.createSpecialCard(CardType.WATER_RISE));
-        treasureDeck.add(Card.createSpecialCard(CardType.WATER_RISE));
-        treasureDeck.add(Card.createSpecialCard(CardType.WATER_RISE));
-
-        // Initialize the flood deck
-        for (Map.Entry<Position, Tile> entry : island.getGameMap().entrySet()) {
-            floodDeck.add(Card.createFloodCard(entry.getValue().getName(), entry.getKey(), ""));
-        }
-
-        // shuffle decks
-        shuffleDecks();
-
-        // draw 6 flood cards
-        drawFloodCards(6);
-
-        // update card view
-        if (gameController != null) {
-            gameController.updateCardView();
-        }
+        cardFactory.initCards(this, seed);
     }
 
     /**
@@ -126,7 +94,7 @@ public class CardController {
      * back to the respective deck queues. This ensures consistent shuffling behavior
      * when using the same seed.
      */
-    private void shuffleDecks() {
+    public void shuffleDecks() {
         Random random = new Random(seed);
         List<Card> tempTreasure = new ArrayList<>(treasureDeck);
         List<Card> tempFlood = new ArrayList<>(floodDeck);
@@ -287,4 +255,8 @@ public class CardController {
      */
     public void shutdown() {
     }
+
+    public void setSeed(long seed) { this.seed = seed; }
+    public Island getIsland() { return island; }
+    public GameController getGameController() { return gameController; }
 }
