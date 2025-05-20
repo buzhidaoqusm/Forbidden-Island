@@ -3,6 +3,8 @@ package com.island.network;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper; // 使用 Jackson 的真实实现示例
 
 public class Message {
@@ -52,18 +54,6 @@ public class Message {
     //-------------------------
     // 序列化/反序列化方法
     //-------------------------
-//    public static Message fromString(String message) {
-//        // TODO: 实现字符串反序列化为 Message 对象
-//        // 示例使用简单占位符（实际需用 JSON 库如 Jackson/Gson）
-//        try {
-//            // 伪代码示例：
-//            // ObjectMapper mapper = new ObjectMapper();
-//            // return mapper.readValue(message, Message.class);
-//            return new Message(MessageType.MESSAGE_ACK, 0, "system");
-//        } catch (Exception e) {
-//            throw new IllegalArgumentException("Invalid message format");
-//        }
-//    }
 
     @Override
     public String toString() {
@@ -76,7 +66,11 @@ public class Message {
 
     public static Message fromString(String json) {
         try {
-            return new ObjectMapper().readValue(json, Message.class);
+            try {
+                return new ObjectMapper().readValue(json, Message.class);
+            } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid JSON");
         }

@@ -8,8 +8,10 @@ import com.island.model.Tile;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class RoomController {
     private GameController gameController;
@@ -30,126 +32,217 @@ public class RoomController {
     // 心跳相关方法
     //-------------------------
     public void startHeartbeat() {
-        // TODO: 实现心跳启动逻辑
+        scheduler.scheduleAtFixedRate(() -> {
+            Message heartbeatMsg = new Message(MessageType.MESSAGE_ACK, room.getRoomId(), "system");
+            broadcast(heartbeatMsg);
+        }, 0, 10, TimeUnit.SECONDS);
     }
 
     public void startHeartbeatCheck() {
-        // TODO: 实现心跳检查逻辑
+        scheduler.scheduleAtFixedRate(() -> {
+            long currentTime = System.currentTimeMillis();
+            playerHeartbeat.entrySet().removeIf(entry ->
+                    currentTime - entry.getValue() > 30000 // 30秒超时
+            );
+            playerHeartbeat.keySet().forEach(this::handlePlayerDisconnect);
+        }, 0, 15, TimeUnit.SECONDS);
     }
 
     public void removeHeartbeat(String username) {
-        // TODO: 移除指定用户的心跳记录
+        playerHeartbeat.remove(username);
     }
 
     //-------------------------
     // 玩家连接处理
     //-------------------------
     public void handlePlayerDisconnect(String username) {
-        // TODO: 处理玩家断开连接
+        room.removePlayer(username);
+        broadcast(new Message(MessageType.PLAYER_LEAVE,
+                Map.of("username", username)));
+        updateRoomStatus();
     }
 
     public void updatePlayerDisconnect(String username) {
-        // TODO: 更新玩家断开状态
+        removeHeartbeat(username);
+        room.markPlayerOffline(username);
     }
 
     public void updatePlayerHeartbeat(String username) {
-        // TODO: 更新玩家心跳时间戳
+        playerHeartbeat.put(username, System.currentTimeMillis());
     }
 
     //-------------------------
     // 消息广播基础方法
     //-------------------------
     public void broadcast(Message message) {
-        // TODO: 实现消息广播
+        Set<String> addresses = BroadcastAddressCalculator.getBroadcastAddresses();
+        addresses.forEach(addr -> {
+            try (BroadcastSender sender = new BroadcastSender(addr, 8888)) {
+                sender.broadcast(message);
+            } catch (Exception e) {
+                System.err.println("广播到 " + addr + " 失败: " + e.getMessage());
+            }
+        });
     }
 
     //-------------------------
     // 消息处理相关方法
     //-------------------------
     public void handleJoinRequest(Message message) {
-        // TODO: 处理加入请求
+        String username = (String) message.getData().get("username");
+        if (room.addPlayer(username)) {
+            sendJoinResponse(username, true);
+            broadcast(new Message(MessageType.PLAYER_JOIN,
+                    Map.of("username", username)));
+        } else {
+            sendJoinResponse(username, false);
+        }
     }
 
     public void handleGameMessage(Message message) {
-        // TODO: 处理游戏消息
+        messageHandler.handleMessage(message);
     }
 
     //-------------------------
     // 游戏状态消息发送方法
     //-------------------------
     public void sendGameOverMessage(String description) {
-        // TODO: 发送游戏结束消息
+        broadcast(new Message(MessageType.GAME_OVER,
+                Map.of("description", description)));
     }
 
     public void sendUpdateRoomMessage() {
-        // TODO: 发送房间状态更新
+        broadcast(new Message(MessageType.UPDATE_ROOM,
+                Map.of(
+                        "players", room.getPlayers().stream().map(Player::getName).collect(Collectors.toList()),
+                        "status", room.getStatus()
+                )));
     }
 
     //-------------------------
     // 玩家动作消息发送方法
     //-------------------------
     public void sendDrawTreasureCardsMessage(int count, Player player) {
-        // TODO: 发送抽取宝藏卡消息
+        Message msg = new Message(MessageType.DRAW_TREASURE_CARD, room.getRoomId(), "system")
+                .addExtraData("username", player.getName())
+                .addExtraData("count", count);
+        broadcast(msg);
     }
 
     public void sendDrawFloodMessage(int count, Player player) {
-        // TODO: 发送抽取洪水卡消息
+        Message msg = new Message(MessageType.DRAW_FLOOD_CARD, room.getRoomId(), "system")
+                .addExtraData("username", player.getName())
+                .addExtraData("count", count);
+        broadcast(msg);
     }
 
     public void sendJoinResponse(String username, boolean b) {
-        // TODO: 发送加入响应
+        Message msg = new Message(success ? MessageType.PLAYER_JOIN : MessageType.LEAVE_ROOM,
+                room.getRoomId(), "system")
+                .addExtraData("username", username)
+                .addExtraData("status", success);
+        sendPrivateMessage(username, msg);
     }
 
     public void sendMoveMessage(Player player, Position position) {
-        // TODO: 发送移动消息
+        Message msg = new Message(MessageType.MOVE_PLAYER, room.getRoomId(), player.getName())
+                .addExtraData("position", position);
+        broadcast(msg);
     }
 
     public void sendShoreUpMessage(Player player, Position position) {
-        // TODO: 发送加固地形消息
+        Message msg = new Message(MessageType.SHORE_UP, room.getRoomId(), player.getName())
+                .addExtraData("position", position);
+        broadcast(msg);
     }
-
-    // ... 其他方法按照相同模式实现 ...
 
     //-------------------------
     // 复杂动作消息发送方法
     //-------------------------
     public void sendMoveByNavigatorMessage(Player player, Player target, Tile tile) {
-        // TODO: 导航员协助移动
+        Message msg = new Message(MessageType.MOVE_PLAYER_BY_NAVIGATOR,
+                room.getRoomId(), navigator.getName())
+                .addExtraData("target", target.getName())
+                .addExtraData("position", tile.getPosition());
+        broadcast(msg);
     }
 
     public void sendGiveCardMessage(Player from, Player to, int cardIndex) {
-        // TODO: 发送给卡消息
+        String cardId = from.getCards().get(cardIndex).getId();
+        Message msg = new Message(MessageType.GIVE_CARD, room.getRoomId(), from.getName())
+                .addExtraData("to", to.getName())
+                .addExtraData("cardId", cardId);
+        broadcast(msg);
     }
 
     public void sendCaptureTreasureMessage(Player player, List<Integer> cardIndices) {
-        // TODO: 发送捕获宝藏消息
+        List<String> cardIds = cardIndices.stream()
+                .map(i -> player.getCards().get(i).getId())
+                .collect(Collectors.toList());
+
+        Message msg = new Message(MessageType.CAPTURE_TREASURE,
+                room.getRoomId(), player.getName())
+                .addExtraData("cards", cardIds);
+        broadcast(msg);
     }
 
     public void sendEndTurnMessage(Player player) {
-        // TODO: 发送结束回合消息
+        Message msg = new Message(MessageType.END_TURN, room.getRoomId(), player.getName());
+        broadcast(msg);
     }
 
     public void sendHelicopterMoveMessage(List<Player> players, Player user, Position position, int cardIndex) {
-        // TODO: 发送直升机移动消息
+        List<String> playerNames = players.stream()
+                .map(Player::getName)
+                .collect(Collectors.toList());
+
+        Message msg = new Message(MessageType.HELICOPTER_MOVE,
+                room.getRoomId(), user.getName())
+                .addExtraData("players", playerNames)
+                .addExtraData("position", position)
+                .addExtraData("cardIndex", cardIndex);
+        broadcast(msg);
     }
 
     public void sendSandbagsMessage(Player user, Position position, int cardIndex) {
-        // TODO: 发送沙袋消息
+        Message msg = new Message(MessageType.SANDBAGS_USE,
+                room.getRoomId(), user.getName())
+                .addExtraData("position", position)
+                .addExtraData("cardIndex", cardIndex);
+        broadcast(msg);
     }
 
     public void sendStartTurnMessage(Player player) {
-        // TODO: 发送回合开始消息
+        Message msg = new Message(MessageType.TURN_START,
+                room.getRoomId(), "system")
+                .addExtraData("username", player.getName());
+        broadcast(msg);
     }
 
     public void sendDiscardMessage(Player player, int cardIndex) {
-        // TODO: 发送弃牌消息
+        String cardId = player.getCards().get(cardIndex).getId();
+        Message msg = new Message(MessageType.DISCARD_CARD,
+                room.getRoomId(), player.getName())
+                .addExtraData("cardId", cardId);
+        broadcast(msg);
     }
 
     public void sendGameStartMessage() {
-        // TODO: 发送游戏开始消息
+        Message msg = new Message(MessageType.GAME_START,
+                room.getRoomId(), "system")
+                .addExtraData("players", room.getPlayerNames())
+                .addExtraData("initialMap", gameController.getCurrentMapState());
+        broadcast(msg);
     }
 
     public void sendAckMessage(Message message) {
-        // TODO: 发送确认消息
+        Message ack = new Message(MessageType.MESSAGE_ACK,
+                room.getRoomId(), "system")
+                .addExtraData("originalId", originalMessage.getMessageId());
+        sendPrivateMessage(originalMessage.getFrom(), ack);
+    }
+
+    public MessageHandler getMessageHandler() {
+        return this.messageHandler;
     }
 }

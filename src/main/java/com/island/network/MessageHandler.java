@@ -172,6 +172,8 @@ public class MessageHandler {
     private void handleDiscardCard(Message message) {
         String username = (String) message.getData().get("username");
         String cardId = (String) message.getData().get("cardId");
+        // 通过RoomController获取GameController
+        GameController gameController = roomController.getGameController();
         try {
             gameController.discardCard(username, cardId);
             actionLogView.log(username + "丢弃了卡牌: " + cardId);
