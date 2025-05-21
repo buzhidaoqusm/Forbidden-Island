@@ -15,10 +15,10 @@ import javafx.scene.image.ImageView;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
-import com.island.controller.GameController;
+import com.island.controller.*;
 import com.island.controller.PlayerController;
 import com.island.controller.IslandController;
-import com.island.model.Tile;
+import com.island.model.*;
 import com.island.model.Player;
 import com.island.model.Position;
 import com.island.model.Island;
@@ -149,7 +149,9 @@ public class IslandView {
             System.out.println("Clicked on tile at (" + row + ", " + col + ")");
             // Pass interaction to the controller
             if (gameController != null) {
-                gameController.getIslandController().handleTileClick(new Position(row, col));
+                Island island = gameController.getIslandController().getIsland();
+                Tile clickedTile = island.getTile(new Position(row, col));
+                gameController.getIslandController().handleTileClick(clickedTile);
             }
         });
 
@@ -168,7 +170,7 @@ public class IslandView {
                 tilePane.getChildren().clear();
                 
                 String tileId = tile.getName();
-                Tile.State state = tile.getState();
+                TileState state = tile.getState();
                 boolean isShoredUp = tile.isShoredUp();
                 
                 ImageView tileImageView = new ImageView();
@@ -214,7 +216,7 @@ public class IslandView {
                 }
                 
                 // 如果是加固的瓷砖，添加边框
-                if (isShoredUp && state != Tile.State.SUNK) {
+                if (isShoredUp && state != TileState.SUNK) {
                     Rectangle shoreUpIndicator = new Rectangle(TILE_SIZE, TILE_SIZE);
                     shoreUpIndicator.setFill(Color.TRANSPARENT);
                     shoreUpIndicator.setStroke(SHORED_UP_BORDER_COLOR);
@@ -239,8 +241,8 @@ public class IslandView {
         Platform.runLater(() -> {
             System.out.println("Updating player marker for " + player.getName() + " at " + newPosition);
             
-            int row = newPosition.getRow();
-            int col = newPosition.getCol();
+            int row = newPosition.getX();
+            int col = newPosition.getY();
             Node node = getNodeByRowColumnIndex(row, col, gridPane);
             if (node instanceof Pane) {
                 Pane tilePane = (Pane) node;
@@ -303,7 +305,7 @@ public class IslandView {
                 highlightColor = Color.LIGHTGREEN;
             }
             for (Position pos : positions) {
-                Node node = getNodeByRowColumnIndex(pos.getRow(), pos.getCol(), gridPane);
+                Node node = getNodeByRowColumnIndex(pos.getX(), pos.getY(), gridPane);
                 if (node instanceof Pane) {
                     Pane tilePane = (Pane) node;
                     
@@ -354,9 +356,20 @@ public class IslandView {
                 Island island = islandController.getIsland();
                 if (island == null) return;
                 
+                // 获取所有瓦片位置
+                Map<Position, Tile> gameMap = island.getGameMap();
+                
+                // 计算最大行和列
+                int maxRow = 0;
+                int maxCol = 0;
+                for (Position pos : gameMap.keySet()) {
+                    maxRow = Math.max(maxRow, pos.getX());
+                    maxCol = Math.max(maxCol, pos.getY());
+                }
+                
                 // Update all tile states
-                for (int row = 0; row < island.getSize(); row++) {
-                    for (int col = 0; col < island.getSize(); col++) {
+                for (int row = 0; row <= maxRow; row++) {
+                    for (int col = 0; col <= maxCol; col++) {
                         Tile tile = island.getTile(new Position(row, col));
                         if (tile != null) {
                             updateTileView(row, col, tile);
