@@ -331,4 +331,8 @@ public class Card {
                 ", isUsed=" + isUsed +
                 '}';
     }
+
+    public String getId() {
+        return "";
+    }
 }

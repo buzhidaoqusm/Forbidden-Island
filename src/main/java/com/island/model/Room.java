@@ -49,10 +49,11 @@ public class Room {
         return hostPlayer != null && hostPlayer.getName().equals(playerName);
     }
 
-    public void addPlayer(Player player) {
+    public boolean addPlayer(Player player) {
         if (player != null && !players.contains(player)) {
             players.add(player);
         }
+        return false;
     }
 
     public void removePlayer(Player player) {

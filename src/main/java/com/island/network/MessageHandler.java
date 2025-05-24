@@ -2,96 +2,97 @@ package com.island.network;
 
 import com.island.controller.GameController;
 import com.island.model.*;
+import com.island.util.ActionLogView;
+import com.island.view.GameView;
 
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 public class MessageHandler {
-    // 字段声明
     private Map<String, UnconfirmedMessage> unconfirmedMessages;
     private GameController gameController;
     private RoomController roomController;
     private Room room;
     private ActionLogView actionLogView;
-    private PriorityQueue<Long> messageQueue;
+    private PriorityQueue<Long> messageQueue = new PriorityQueue<>();
     private final Object queueLock = new Object();
-    private boolean isProcessingQueue;
+    private volatile boolean isProcessingQueue = false;
     private MessageType messageType;
+    private List drawnCards;
 
-    //-------------------------
-    // 构造函数（依赖注入）
-    //-------------------------
     public MessageHandler(GameController gameController,
                           RoomController roomController,
                           Room room,
                           ActionLogView actionLogView) {
-        this.gameController = gameController;
-        this.roomController = roomController;
-        this.room = room;
-        this.actionLogView = actionLogView;
+        this.gameController = Objects.requireNonNull(gameController, "GameController can not be null");
+        this.roomController = Objects.requireNonNull(roomController, "RoomController can not be null");
+        this.room = Objects.requireNonNull(room, "Room can not be null");
+        this.actionLogView = Objects.requireNonNull(actionLogView, "ActionLogView can not be null");
         this.unconfirmedMessages = new ConcurrentHashMap<>();
         this.messageQueue = new PriorityQueue<>();
     }
 
-    //-------------------------
-    // 公有方法
-    //-------------------------
     public void handleMessage(Message message) {
-        MessageType messageType = message.getType();
-        switch (messageType) {
-            case LEAVE_ROOM:
-                handleLeaveRoom(message);
-                break;
-            case PLAYER_LEAVE:
-                handlePlayerLeave(message);
-                break;
-            case GAME_OVER:
-                handleGameOver(message);
-                break;
-            case DISCARD_CARD:
-                handleDiscardCard(message);
-                break;
-            case DRAW_FLOOD_CARD:
-                handleDrawFloodCard(message);
-                break;
-            case SANDBAGS_USE:
-                handleUseSandbags(message);
-                break;
-            case HELICOPTER_MOVE:
-                handleMoveByHelicopter(message);
-                break;
-            case END_TURN:
-                handleEndTurn(message);
-                break;
-            case CAPTURE_TREASURE:
-                handleCaptureTreasure(message);
-                break;
-            case MOVE_PLAYER_BY_NAVIGATOR:
-                handleMoveByNavigator(message);
-                break;
-            case GIVE_CARD:
-                handleGiveCard(message);
-                break;
-            case SHORE_UP:
-                handleShoreUp(message);
-                break;
-            case MOVE_PLAYER:
-                handlePlayerMove(message);
-                break;
-            case TURN_START:
-                handleTurnStart(message);
-                break;
-            case DRAW_TREASURE_CARD:
-                handleDrawTreasureCard(message);
-                break;
-            case GAME_START:
-                handleGameStart(message);
-                break;
-            case UPDATE_ROOM:
-                handleUpdateRoom(message);
-                break;
-            default:
-                actionLogView.log("未知消息类型: " + messageType);
+        try {
+            MessageType messageType = message.getType();
+            switch (messageType) {
+                case LEAVE_ROOM:
+                    handleLeaveRoom(message);
+                    break;
+                case PLAYER_LEAVE:
+                    handlePlayerLeave();
+                    break;
+                case GAME_OVER:
+                    handleGameOver(message);
+                    break;
+                case DISCARD_CARD:
+                    handleDiscardCard(message);
+                    break;
+                case DRAW_FLOOD_CARD:
+                    handleDrawFloodCard(message);
+                    break;
+                case SANDBAGS_USE:
+                    handleUseSandbags(message);
+                    break;
+                case HELICOPTER_MOVE:
+                    handleMoveByHelicopter(message);
+                    break;
+                case END_TURN:
+                    handleEndTurn(message);
+                    break;
+                case CAPTURE_TREASURE:
+                    handleCaptureTreasure(message);
+                    break;
+                case MOVE_PLAYER_BY_NAVIGATOR:
+                    handleMoveByNavigator(message);
+                    break;
+                case GIVE_CARD:
+                    handleGiveCard(message);
+                    break;
+                case SHORE_UP:
+                    handleShoreUp(message);
+                    break;
+                case MOVE_PLAYER:
+                    handlePlayerMove(message);
+                    break;
+                case TURN_START:
+                    handleTurnStart(message);
+                    break;
+                case DRAW_TREASURE_CARD:
+                    handleDrawTreasureCard(message);
+                    break;
+                case GAME_START:
+                    handleGameStart(message);
+                    break;
+                case UPDATE_ROOM:
+//                    handleUpdateRoom(message);
+                    break;
+                default:
+                    actionLogView.log("Unknown message type: " + messageType);
+            }
+        } catch (Exception e) {
+                actionLogView.log("Message processing exception: " + e.getMessage());
         }
     }
 
@@ -99,7 +100,7 @@ public class MessageHandler {
         String messageId = String.valueOf(message.getMessageId());
         if (unconfirmedMessages.containsKey(messageId)) {
             unconfirmedMessages.remove(messageId);
-            actionLogView.log("消息确认成功: " + messageId);
+            actionLogView.log("Message confirmation successful: " + messageId);
         }
     }
 
@@ -112,12 +113,9 @@ public class MessageHandler {
         String key = String.valueOf(messageId);
         unconfirmedMessages.put(key, unconfirmedMessage);
         messageQueue.add(messageId);
-        processMessageQueue(); // 触发队列处理
+        processMessageQueue(); // Trigger queue processing
     }
 
-    //-------------------------
-    // 私有方法（消息队列处理）
-    //-------------------------
     private void processMessageQueue() {
         synchronized (queueLock) {
             if (isProcessingQueue) return;
@@ -125,7 +123,13 @@ public class MessageHandler {
             try {
                 while (!messageQueue.isEmpty()) {
                     long messageId = messageQueue.poll();
-                    processMessageRetry(messageId);
+                    UnconfirmedMessage msg = unconfirmedMessages.get(String.valueOf(messageId));
+                    if (msg != null && msg.getRetryCount() < 3) {
+                        roomController.broadcast(msg.getMessage());
+                        msg.incrementRetryCount();
+                    } else {
+                        unconfirmedMessages.remove(String.valueOf(messageId));
+                    }
                 }
             } finally {
                 isProcessingQueue = false;
@@ -142,70 +146,65 @@ public class MessageHandler {
             scheduleMessageRetry(messageId);
         } else {
             unconfirmedMessages.remove(key);
-            actionLogView.log("消息重试失败: " + key);
+            actionLogView.log("Message retry failed: " + key);
         }
     }
 
-    //-------------------------
-    // 私有方法（具体消息处理）
-    //-------------------------
     private void handleLeaveRoom(Message message) {
-        // TODO: 实现离开房间逻辑
         String username = (String) message.getData().get("username");
         roomController.handlePlayerDisconnect(username);
     }
 
-    private void handlePlayerLeave(Message message) {
-        // TODO: 处理玩家主动离开
-        String username = (String) message.getData().get("username");
-        room.removePlayer(username);
+    private void handlePlayerLeave() {
+        room.removePlayer(room.getHostPlayer());
     }
 
     private void handleGameOver(Message message) {
-        // TODO: 处理游戏结束
         String description = (String) message.getData().get("description");
-        gameController.endGame(description);
+        gameController.setGameOver(true); // Set room status
+        roomController.broadcast(new Message(MessageType.GAME_OVER, room.getRoomId(), "system")
+                .addExtraData("description", description));
+        gameController.shutdown(); // Trigger game closure process
     }
 
-    // 消息处理方法实现
-    //-------------------------
+    // Implementation of message processing methods
     private void handleDiscardCard(Message message) {
         String username = (String) message.getData().get("username");
         String cardId = (String) message.getData().get("cardId");
-        // 通过RoomController获取GameController
+        // Obtain GameController through RoomController
         GameController gameController = roomController.getGameController();
         try {
-            gameController.discardCard(username, cardId);
-            actionLogView.log(username + "丢弃了卡牌: " + cardId);
+            gameController.handleDiscardAction();
+            actionLogView.log(username + "discard card: " + cardId);
             confirmMessageDelivery(message.getMessageId());
-        } catch (GameException ex) {
-            actionLogView.log("卡牌丢弃失败: " + ex.getMessage());
+        } catch (Exception ex) {
+            actionLogView.log("Failed to discard card: " + ex.getMessage());
             scheduleMessageRetry(message.getMessageId());
         }
     }
 
     private void handleDrawFloodCard(Message message) {
-        String username = (String) message.getData().get("username");
         int count = (int) message.getData().get("count");
         try {
-            List<FloodCard> cards = gameController.drawFloodCards(username, count);
-            roomController.sendPrivateMessage(username, new Message(MessageType.DRAW_FLOOD_CARD, cards));
+            List<Position> cards = gameController.drawFloodCards(count);
+            roomController.sendDrawFloodMessage(count, gameController.getCurrentPlayer());
             confirmMessageDelivery(message.getMessageId());
-        } catch (DeckEmptyException ex) {
-            handleGameOver(new Message(MessageType.GAME_OVER, Map.of("description", "洪水牌堆耗尽")));
+        } catch (Exception ex) {
+            handleGameOver(new Message(MessageType.GAME_OVER, "description", "The flood pile is exhausted."));
         }
     }
 
     private void handleUseSandbags(Message message) {
-        String username = (String) message.getData().get("username");
+        Player username = (Player) message.getData().get("username");
         Position position = (Position) message.getData().get("position");
+        int cardIndex = (int) message.getData().get("count");
         try {
-            gameController.useSandbags(username, position);
-            actionLogView.log(username + "在位置" + position + "使用了沙袋");
+            gameController.executeSandbagsUse(position);
+            actionLogView.log(username + "at" + position + "use the sandbag");
             confirmMessageDelivery(message.getMessageId());
-        } catch (InvalidActionException ex) {
-            actionLogView.log("沙袋使用失败: " + ex.getMessage());
-            roomController.sendError(username, ex.getMessage());
+        } catch (Exception ex) {
+            actionLogView.log("Failed using sandbag: " + ex.getMessage());
+            roomController.sendSandbagsMessage(username, position, cardIndex);
         }
     }
 
@@ -213,238 +212,196 @@ public class MessageHandler {
         String username = (String) message.getData().get("username");
         Position destination = (Position) message.getData().get("destination");
         try {
-            gameController.helicopterMove(username, destination);
-            actionLogView.log(username + "使用直升机移动到" + destination);
+            gameController.executeHelicopterMove(destination);
+            actionLogView.log(username + "using helicopter moving to " + destination);
             confirmMessageDelivery(message.getMessageId());
-        } catch (MovementException ex) {
-            actionLogView.log("直升机移动失败: " + ex.getMessage());
+        } catch (Exception ex) {
+            actionLogView.log("Failed moving by helicopter: " + ex.getMessage());
             scheduleMessageRetry(message.getMessageId());
         }
     }
 
     private void handleEndTurn(Message message) {
-        String username = (String) message.getData().get("username");
+        Player username = (Player) message.getData().get("username");
         try {
-            gameController.endPlayerTurn(username);
-            actionLogView.log(username + "结束了回合");
+            roomController.sendEndTurnMessage(username);
+            actionLogView.log(username + "end the turn!");
             confirmMessageDelivery(message.getMessageId());
-        } catch (TurnOrderException ex) {
-            actionLogView.log("回合结束失败: " + ex.getMessage());
-            roomController.sendError(username, "非法回合结束请求");
+        } catch (Exception ex) {
+            actionLogView.log("End of turn failed: " + ex.getMessage());
+            gameController.showErrorToast("Illegal turn end request");
         }
     }
 
     private void handleCaptureTreasure(Message message) {
-        String username = (String) message.getData().get("username");
+        Player username = (Player) message.getData().get("username");
         TreasureType treasure = TreasureType.valueOf((String) message.getData().get("treasure"));
+        List<Integer> cardIndice = (List<Integer>) message.getData().get("count");
         try {
-            gameController.captureTreasure(username, treasure);
-            actionLogView.log(username + "夺取了" + treasure + "宝藏!");
+           roomController.sendCaptureTreasureMessage(username, cardIndice);
+            actionLogView.log(username + "capture the treasure " + treasure);
             confirmMessageDelivery(message.getMessageId());
-        } catch (TreasureException ex) {
-            actionLogView.log("宝藏夺取失败: " + ex.getMessage());
+        } catch (Exception ex) {
+            actionLogView.log("Failed to capture the treasure: " + ex.getMessage());
             scheduleMessageRetry(message.getMessageId());
         }
     }
 
     private void handleMoveByNavigator(Message message) {
-        String navigatorUser = (String) message.getData().get("navigator");
-        String targetUser = (String) message.getData().get("target");
-        Position position = (Position) message.getData().get("position");
+        Player navigatorUser = (Player) message.getData().get("navigator");
+        Player targetUser = (Player) message.getData().get("target");
+        Tile position = (Tile) message.getData().get("position");
         try {
-            gameController.navigatorMove(navigatorUser, targetUser, position);
-            actionLogView.log(navigatorUser + "使用导航员移动了" + targetUser);
+            roomController.sendMoveByNavigatorMessage(navigatorUser, targetUser, position);
+            actionLogView.log(navigatorUser + "uses the navigator to move " + targetUser);
             confirmMessageDelivery(message.getMessageId());
-        } catch (CollaborationException ex) {
-            actionLogView.log("导航员移动失败: " + ex.getMessage());
-            roomController.sendError(navigatorUser, ex.getMessage());
+        } catch (Exception ex) {
+            actionLogView.log("Navigator failed to move: " + ex.getMessage());
+            gameController.showErrorToast(ex.getMessage());
         }
     }
 
-    //-------------------------
-    // 卡牌传递处理
-    //-------------------------
+    // Gard passing
     private void handleGiveCard(Message message) {
-        String fromUser = (String) message.getData().get("from");
-        String toUser = (String) message.getData().get("to");
+        Player fromUser = (Player) message.getData().get("from");
+        Player toUser = (Player) message.getData().get("to");
         String cardId = (String) message.getData().get("cardId");
-
+        int card_id = (int) message.getData().get("card_id");
         try {
-            // 验证卡牌所有权和玩家位置
-            gameController.transferCard(fromUser, toUser, cardId);
-            actionLogView.log(fromUser + "向" + toUser + "赠送了卡牌: " + cardId);
+            // Verify card ownership and player position
+            gameController.giveCard(fromUser, toUser, cardId);
+            actionLogView.log(fromUser + "send card " + cardId + "to " + toUser);
             confirmMessageDelivery(message.getMessageId());
-
-            // 给双方发送更新通知
-            roomController.sendPrivateMessage(fromUser, new Message(MessageType.GIVE_CARD,
-                    Map.of("action", "send", "cardId", cardId, "target", toUser));
-            roomController.sendPrivateMessage(toUser, new Message(MessageType.GIVE_CARD,
-                    Map.of("action", "receive", "cardId", cardId, "from", fromUser));
-        } catch (CardTransferException ex) {
-            actionLogView.log("卡牌传递失败: " + ex.getMessage());
-            roomController.sendError(fromUser, ex.getMessage());
+            // Send update notifications to both parties
+            roomController.sendGiveCardMessage(fromUser, toUser, card_id);
+            roomController.sendGiveCardMessage(toUser, fromUser, card_id);
+        } catch (Exception ex) {
+            actionLogView.log("Failed to give card: " + ex.getMessage());
+            gameController.showErrorToast(ex.getMessage());
             scheduleMessageRetry(message.getMessageId());
         }
     }
 
-    //-------------------------
-    // 地块加固处理
-    //-------------------------
+    // Land consolidation treatment
     private void handleShoreUp(Message message) {
-        String username = (String) message.getData().get("username");
+        Player username = (Player) message.getData().get("username");
         Position position = (Position) message.getData().get("position");
-
         try {
-            gameController.shoreUpTile(username, position);
-            actionLogView.log(username + "加固了位置" + position);
+            roomController.sendShoreUpMessage(username, position);
+            actionLogView.log(username + "shore up the tile: " + position);
             confirmMessageDelivery(message.getMessageId());
-
-            // 广播地图状态更新
-            roomController.broadcast(new Message(MessageType.UPDATE_ROOM,
-                    Map.of("mapState", gameController.getCurrentMapState()));
-        } catch (ShoreUpException ex) {
-            actionLogView.log("加固操作失败: " + ex.getLocalizedMessage());
-            roomController.sendError(username, "无法加固该位置: " + position);
+            // Broadcast map status update
+            roomController.broadcast(new Message(MessageType.UPDATE_ROOM,"mapState", "Tile board reset"));
+        } catch (Exception ex) {
+            actionLogView.log("Reinforcement operation failed: " + ex.getLocalizedMessage());
+            gameController.showErrorToast("Can not shore up the tile.");
         }
     }
 
-    //-------------------------
-    // 玩家移动基础逻辑
-    //-------------------------
+    // Player Mobile Basic Logic
     private void handlePlayerMove(Message message) {
-        String username = (String) message.getData().get("username");
+        Player username = (Player) message.getData().get("username");
         Position newPosition = (Position) message.getData().get("position");
-
         try {
-            gameController.movePlayer(username, newPosition);
-            actionLogView.log(username + "移动到了" + newPosition);
+            roomController.sendMoveMessage(username, newPosition);
+            actionLogView.log(username + "move to " + newPosition);
             confirmMessageDelivery(message.getMessageId());
-
-            // 更新所有玩家视野
-            roomController.broadcast(new Message(MessageType.UPDATE_ROOM,
-                    Map.of("playerPositions", gameController.getPlayerPositions())));
-        } catch (MovementException ex) {
-            actionLogView.log("移动失败: " + ex.getMessage());
-            roomController.sendError(username, "无法移动到该位置");
+            // Update all player perspectives
+            roomController.broadcast(new Message(MessageType.UPDATE_ROOM, "fromPlayerPositions", "toPlayerPositions"));
+        } catch (Exception ex) {
+            actionLogView.log("Movement failed: " + ex.getMessage());
+            gameController.showErrorToast("Can not move to the position!");
             scheduleMessageRetry(message.getMessageId());
         }
     }
 
-    //-------------------------
-    // 回合开始处理
-    //-------------------------
+    // Handling start turns
     private void handleTurnStart(Message message) {
-        String username = (String) message.getData().get("username");
-
+        Player username = (Player) message.getData().get("username");
         try {
-            gameController.startPlayerTurn(username);
-            actionLogView.log(username + "的回合开始");
+            gameController.startTurn(username);
+            actionLogView.log(username + "'s turn starts");
             confirmMessageDelivery(message.getMessageId());
-
-            // 发送回合初始化数据
-            Message turnData = new Message(MessageType.TURN_START,
-                    Map.of(
-                            "actionPoints", 3,
-                            "floodLevel", gameController.getCurrentFloodLevel(),
-                            "handCards", gameController.getPlayerHand(username)
-                    ));
-            roomController.sendPrivateMessage(username, turnData);
-        } catch (TurnOrderException ex) {
-            actionLogView.log("回合启动异常: " + ex.getMessage());
-            roomController.sendError(username, "非法的回合开始请求");
+            // Send round initialization data
+            Message turnData = new Message(MessageType.TURN_START, "actionPoints", "floodLevel", "handCards");
+            roomController.sendStartTurnMessage(username);
+        } catch (Exception ex) {
+            actionLogView.log("Start exception: " + ex.getMessage());
+            gameController.showErrorToast("Illegal start turn request!");
         }
     }
 
-    //-------------------------
-    // 宝藏卡牌抽取
-    //-------------------------
+    // Draw treasure card
     private void handleDrawTreasureCard(Message message) {
-        String username = (String) message.getData().get("username");
+        Player username = (Player) message.getData().get("username");
         int drawCount = (int) message.getData().get("count");
-
         try {
-            List<TreasureCard> drawnCards = gameController.drawTreasureCards(username, drawCount);
-            actionLogView.log(username + "抽取了" + drawCount + "张宝藏卡牌");
+            drawnCards = gameController.handleDrawTreasureCard(drawCount, username);
+            actionLogView.log(username + "draw " + drawCount + "numbers of treasure cards");
             confirmMessageDelivery(message.getMessageId());
-
-            // 私有消息发送抽卡结果
-            Message resultMsg = new Message(MessageType.DRAW_TREASURE_CARD,
-                    Map.of("cards", drawnCards.stream()
-                            .map(TreasureCard::getBriefInfo)
-                            .collect(Collectors.toList())));
-            roomController.sendPrivateMessage(username, resultMsg);
-        } catch (DeckEmptyException ex) {
-            actionLogView.log("宝藏牌堆已空");
-            roomController.sendError(username, "无法抽取更多卡牌");
-        } catch (HandLimitExceededException ex) {
-            actionLogView.log("手牌超过限制: " + ex.getMessage());
-            handleDiscardCard(message); // 触发弃牌流程
+            // Private message sending of card draw results
+            Message resultMsg = new Message(MessageType.DRAW_TREASURE_CARD, "cards", "drawCards");
+            roomController.sendDrawTreasureCardsMessage(drawCount, username);
+        } catch (Exception ex) {
+            actionLogView.log("Treasure cards stack is empty");
+            gameController.showErrorToast("Can not draw any more treasure cards!");
+        } finally {
+            actionLogView.log("Cards in hand out of restriction");
+            handleDiscardCard(message); // Trigger the discard process
         }
     }
 
-    //-------------------------
-    // 游戏全局启动
-    //-------------------------
+    // Game global startup
     private void handleGameStart(Message message) {
         try {
-            GameConfig config = (GameConfig) message.getData().get("config");
-            gameController.initializeGame(config);
-            actionLogView.log("游戏已启动，模式: " + config.getGameMode());
+            long config = (long) message.getData().get("config");
+            gameController.startGame(config);
+            actionLogView.log("Game started, pattern");
             confirmMessageDelivery(message.getMessageId());
-
-            // 广播初始状态
-            roomController.broadcast(new Message(MessageType.GAME_START,
-                    Map.of(
-                            "players", gameController.getPlayerList(),
-                            "initialMap", gameController.getCurrentMapState(),
-                            "firstPlayer", gameController.getCurrentPlayer()
-                    )));
-        } catch (GameInitializationException ex) {
-            actionLogView.log("游戏初始化失败: " + ex.getMessage());
-            roomController.broadcast(new Message(MessageType.GAME_OVER,
-                    Map.of("reason", "初始化失败: " + ex.getMessage())));
+            // Broadcast initial state
+            roomController.broadcast(new Message(MessageType.GAME_START, "players", "initialMap","firstPlayer"));
+        } catch (Exception ex) {
+            actionLogView.log("Failed to initialize game: " + ex.getMessage());
+            roomController.broadcast(new Message(MessageType.GAME_OVER,"reason", "Failing: " + ex.getMessage()));
         }
     }
 
-    //-------------------------
-    // 房间状态更新
-    //-------------------------
-    private void handleUpdateRoom(Message message) {
-        RoomUpdateType updateType = RoomUpdateType.valueOf(
-                (String) message.getData().get("updateType"));
+//    // Room status update
+//    private void handleUpdateRoom(Message message) {
+//        RoomUpdateType updateType = RoomUpdateType.valueOf((String) message.getData().get("updateType"));
+//        switch (updateType) {
+//            case PLAYER_READY:
+//                String readyUser = (String) message.getData().get("username");
+//                boolean isReady = (boolean) message.getData().get("status");
+//                room.setPlayerReady(readyUser, isReady);
+//                break;
+//            case TEAM_CHANGE:
+//                String teamUser = (String) message.getData().get("username");
+//                Team newTeam = Team.valueOf((String) message.getData().get("team"));
+//                room.changePlayerTeam(teamUser, newTeam);
+//                break;
+//            case SETTING_CHANGE:
+//                GameSettings newSettings = (GameSettings) message.getData().get("settings");
+//                room.updateGameSettings(newSettings);
+//                break;
+//        }
+//        // Broadcast updated room status
+//        roomController.broadcast(new Message(MessageType.UPDATE_ROOM, "playerStatus", "gameSettings"));
+//        confirmMessageDelivery(message.getMessageId());
+//    }
 
-        switch (updateType) {
-            case PLAYER_READY:
-                String readyUser = (String) message.getData().get("username");
-                boolean isReady = (boolean) message.getData().get("status");
-                room.setPlayerReady(readyUser, isReady);
-                break;
-            case TEAM_CHANGE:
-                String teamUser = (String) message.getData().get("username");
-                Team newTeam = Team.valueOf((String) message.getData().get("team"));
-                room.changePlayerTeam(teamUser, newTeam);
-                break;
-            case SETTING_CHANGE:
-                GameSettings newSettings = (GameSettings) message.getData().get("settings");
-                room.updateGameSettings(newSettings);
-                break;
-        }
-
-        // 广播更新后的房间状态
-        roomController.broadcast(new Message(MessageType.UPDATE_ROOM,
-                Map.of(
-                        "playerStatus", room.getPlayerStatus(),
-                        "gameSettings", room.getCurrentSettings()
-                )));
-        confirmMessageDelivery(message.getMessageId());
-    }
-
-    //-------------------------
-    // 消息确认管理增强方法
-    //-------------------------
+    // Enhanced methods for message confirmation management
     private void confirmMessageDelivery(long messageId) {
         String key = String.valueOf(messageId);
         unconfirmedMessages.remove(key);
-        actionLogView.log("消息处理完成: " + key);
+        actionLogView.log("Message dealing complete: " + key);
+    }
+
+    // Timed tasks ensure the final delivery of messages
+    public void startMessageRetryTask() {
+        Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(() -> {
+            if (isProcessingQueue) return;
+            processMessageQueue();
+        }, 0, 5, TimeUnit.SECONDS);
     }
 }

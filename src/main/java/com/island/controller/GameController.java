@@ -180,8 +180,9 @@ public class GameController {
      * @param count The number of cards to draw
      * @param player The player who is drawing the cards
      */
-    public void handleDrawTreasureCard(int count, Player player) {
+    public List handleDrawTreasureCard(int count, Player player) {
         cardController.drawTreasureCard(count, player);
+        return List.of();
     }
 
     /**
@@ -461,7 +462,7 @@ public class GameController {
         islandController.clearValidPositions();
     }
 
-    private void executeSandbagsUse(Position position) {
+    public void executeSandbagsUse(Position position) {
         try {
             // Set the target position for the sandbag card
             activeSpecialCard.setTargetPosition(position);
@@ -484,7 +485,7 @@ public class GameController {
         }
     }
 
-    private void executeHelicopterMove(Position position) {
+    public void executeHelicopterMove(Position position) {
         try {
             // Set the target position for the helicopter card
             activeSpecialCard.setTargetPosition(position);
@@ -592,8 +593,9 @@ public class GameController {
         return gameSubject;
     }
 
-    public void updateBoard() {
+    public Object updateBoard() {
         gameSubject.notifyBoardChanged();
+        return null;
     }
 
     public void updateActionBar() {

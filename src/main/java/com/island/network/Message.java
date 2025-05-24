@@ -4,13 +4,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper; // 使用 Jackson 的真实实现示例
 
 public class Message {
-    private long messageId;
+    private static long messageId;
     private MessageType type;
-    private int roomId;
+    private String roomId;
     private String from;
     private String to;
     private boolean isAck;
@@ -19,24 +18,24 @@ public class Message {
     //-------------------------
     // 构造函数（4 个重载版本）
     //-------------------------
-    public Message(MessageType type, int roomId, String from) {
+    public Message(MessageType type, String roomId, String from) {
         this.type = type;
         this.roomId = roomId;
         this.from = from;
         this.data = new HashMap<>();  // 初始化 data
     }
 
-    public Message(MessageType type, int roomId, String from, boolean isAck) {
+    public Message(MessageType type, String roomId, String from, boolean isAck) {
         this(type, roomId, from);  // 复用上一个构造函数
         this.isAck = isAck;
     }
 
-    public Message(MessageType type, int roomId, String from, String to) {
+    public Message(MessageType type, String roomId, String from, String to) {
         this(type, roomId, from);  // 复用基础构造函数
         this.to = to;
     }
 
-    public Message(long messageId, MessageType type, int roomId, String from, String to) {
+    public Message(long messageId, MessageType type, String roomId, String from, String to) {
         this(type, roomId, from, to);  // 复用带 to 的构造函数
         this.messageId = messageId;
     }
@@ -44,11 +43,12 @@ public class Message {
     //-------------------------
     // 数据操作方法
     //-------------------------
-    public void addExtraData(String key, Object value) {
+    public Message addExtraData(String key, Object value) {
         if (data == null) {
             data = new HashMap<>();
         }
         data.put(key, value);
+        return null;
     }
 
     //-------------------------
@@ -84,9 +84,9 @@ public class Message {
     //-------------------------
     // Getter 方法（可选，根据需求添加）
     //-------------------------
-    public long getMessageId() { return messageId; }
+    public static long getMessageId() { return messageId; }
     public MessageType getType() { return type; }
-    public int getRoomId() { return roomId; }
+    public String getRoomId() { return roomId; }
     public String getFrom() { return from; }
     public String getTo() { return to; }
     public boolean isAck() { return isAck; }

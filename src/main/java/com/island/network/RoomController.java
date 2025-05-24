@@ -5,13 +5,16 @@ import com.island.model.Player;
 import com.island.model.Room;
 import com.island.model.Position;
 import com.island.model.Tile;
+import com.island.model.Navigator;
+import com.island.util.ActionLogView;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.io.IOException;
+import java.net.SocketException;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class RoomController {
     private GameController gameController;
@@ -22,15 +25,54 @@ public class RoomController {
     private Map<String, Long> playerHeartbeat;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
 
-    // 构造函数
-    public RoomController(Room room) {
-        this.room = room;
-        // 其他字段可能需要初始化（根据你的具体逻辑）
+    public RoomController(GameController gameController, Room room) {
+        this.gameController = Objects.requireNonNull(gameController, "GameController not empty");
+        this.room = Objects.requireNonNull(room, "Room not empty");
+        this.messageHandler = new MessageHandler(gameController, this, room, new ActionLogView());
+        try {
+            this.sender = new BroadcastSender("255.255.255.255", 8888);
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            this.receiver = new BroadcastReceiver(this, 8888);
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    //-------------------------
-    // 心跳相关方法
-    //-------------------------
+    public void start() {
+        scheduler.scheduleAtFixedRate(this::broadcastHeartbeat, 0, 10, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(this::checkHeartbeats, 0, 15, TimeUnit.SECONDS);
+        receiver.run(); // 直接运行接收线程
+    }
+
+    public void shutdown() {
+        scheduler.shutdownNow();
+        receiver.stop();
+        sender.close();
+    }
+
+    private void broadcastHeartbeat() {
+        Message msg = new Message(MessageType.MESSAGE_ACK, room.getRoomId(), "system");
+        broadcast(msg);
+    }
+
+    private void checkHeartbeats() {
+        long now = System.currentTimeMillis();
+        List<String> disconnected = new ArrayList<>();
+
+        playerHeartbeat.entrySet().removeIf(entry -> {
+            if (now - entry.getValue() > 30000) {
+                disconnected.add(entry.getKey());
+                return true;
+            }
+            return false;
+        });
+        disconnected.forEach(this::handlePlayerDisconnect);
+    }
+
+    // Heartbeat related methods
     public void startHeartbeat() {
         scheduler.scheduleAtFixedRate(() -> {
             Message heartbeatMsg = new Message(MessageType.MESSAGE_ACK, room.getRoomId(), "system");
@@ -42,7 +84,7 @@ public class RoomController {
         scheduler.scheduleAtFixedRate(() -> {
             long currentTime = System.currentTimeMillis();
             playerHeartbeat.entrySet().removeIf(entry ->
-                    currentTime - entry.getValue() > 30000 // 30秒超时
+                    currentTime - entry.getValue() > 30000 // over 30 seconds
             );
             playerHeartbeat.keySet().forEach(this::handlePlayerDisconnect);
         }, 0, 15, TimeUnit.SECONDS);
@@ -52,48 +94,47 @@ public class RoomController {
         playerHeartbeat.remove(username);
     }
 
-    //-------------------------
-    // 玩家连接处理
-    //-------------------------
+    // Handle players connection
     public void handlePlayerDisconnect(String username) {
-        room.removePlayer(username);
-        broadcast(new Message(MessageType.PLAYER_LEAVE,
-                Map.of("username", username)));
-        updateRoomStatus();
+        Player player = room.getPlayerByName(username); // 新增获取Player的方法
+        if (player != null) {
+            room.removePlayer(player);
+            broadcast(new Message(MessageType.PLAYER_LEAVE, "username","status", "disconnected")); // 使用Player信息
+            // updateRoomStatus();
+        }
     }
 
-    public void updatePlayerDisconnect(String username) {
-        removeHeartbeat(username);
-        room.markPlayerOffline(username);
-    }
+//    public void updatePlayerDisconnect(String username) {
+//        removeHeartbeat(username);
+//        room.markPlayerOffline(username);
+//    }
 
     public void updatePlayerHeartbeat(String username) {
         playerHeartbeat.put(username, System.currentTimeMillis());
     }
 
-    //-------------------------
-    // 消息广播基础方法
-    //-------------------------
+    // 心跳相关方法
     public void broadcast(Message message) {
-        Set<String> addresses = BroadcastAddressCalculator.getBroadcastAddresses();
-        addresses.forEach(addr -> {
-            try (BroadcastSender sender = new BroadcastSender(addr, 8888)) {
-                sender.broadcast(message);
-            } catch (Exception e) {
-                System.err.println("广播到 " + addr + " 失败: " + e.getMessage());
+        try {
+            Set<String> addresses = BroadcastAddressCalculator.getBroadcastAddresses();
+            for (String addr : addresses) {
+                sendToAddress(addr, message);
             }
-        });
+        } catch (Exception e) {
+            System.err.println("Broadcast failed: " + e.getMessage());
+        }
     }
 
-    //-------------------------
-    // 消息处理相关方法
-    //-------------------------
+    private void sendToAddress(String address, Message message) {
+        sender.broadcast(message);
+    }
+
+    // Message processing related methods
     public void handleJoinRequest(Message message) {
-        String username = (String) message.getData().get("username");
+        Player username = (Player) message.getData().get("username");
         if (room.addPlayer(username)) {
             sendJoinResponse(username, true);
-            broadcast(new Message(MessageType.PLAYER_JOIN,
-                    Map.of("username", username)));
+            broadcast(new Message(MessageType.PLAYER_JOIN,"username", "wants to join"));
         } else {
             sendJoinResponse(username, false);
         }
@@ -103,25 +144,16 @@ public class RoomController {
         messageHandler.handleMessage(message);
     }
 
-    //-------------------------
-    // 游戏状态消息发送方法
-    //-------------------------
+    // Game status message sending method
     public void sendGameOverMessage(String description) {
-        broadcast(new Message(MessageType.GAME_OVER,
-                Map.of("description", description)));
+        broadcast(new Message(MessageType.GAME_OVER, "description", "gameover", description));
     }
 
     public void sendUpdateRoomMessage() {
-        broadcast(new Message(MessageType.UPDATE_ROOM,
-                Map.of(
-                        "players", room.getPlayers().stream().map(Player::getName).collect(Collectors.toList()),
-                        "status", room.getStatus()
-                )));
+        broadcast(new Message(MessageType.UPDATE_ROOM, "players", "status"));
     }
 
-    //-------------------------
-    // 玩家动作消息发送方法
-    //-------------------------
+    // Method for sending player action messages
     public void sendDrawTreasureCardsMessage(int count, Player player) {
         Message msg = new Message(MessageType.DRAW_TREASURE_CARD, room.getRoomId(), "system")
                 .addExtraData("username", player.getName())
@@ -136,12 +168,12 @@ public class RoomController {
         broadcast(msg);
     }
 
-    public void sendJoinResponse(String username, boolean b) {
-        Message msg = new Message(success ? MessageType.PLAYER_JOIN : MessageType.LEAVE_ROOM,
+    public void sendJoinResponse(Player username, boolean b) {
+        Message msg = new Message(b ? MessageType.PLAYER_JOIN : MessageType.LEAVE_ROOM,
                 room.getRoomId(), "system")
                 .addExtraData("username", username)
-                .addExtraData("status", success);
-        sendPrivateMessage(username, msg);
+                .addExtraData("status", b);
+        handleGameMessage(msg);
     }
 
     public void sendMoveMessage(Player player, Position position) {
@@ -156,10 +188,8 @@ public class RoomController {
         broadcast(msg);
     }
 
-    //-------------------------
-    // 复杂动作消息发送方法
-    //-------------------------
-    public void sendMoveByNavigatorMessage(Player player, Player target, Tile tile) {
+    // Method for sending complex action messages
+    public void sendMoveByNavigatorMessage(Player navigator, Player target, Tile tile) {
         Message msg = new Message(MessageType.MOVE_PLAYER_BY_NAVIGATOR,
                 room.getRoomId(), navigator.getName())
                 .addExtraData("target", target.getName())
@@ -227,22 +257,35 @@ public class RoomController {
         broadcast(msg);
     }
 
-    public void sendGameStartMessage() {
+    public void sendGameStartMessage(Message message) {
+        String username = (String) message.getData().get("username");
         Message msg = new Message(MessageType.GAME_START,
                 room.getRoomId(), "system")
-                .addExtraData("players", room.getPlayerNames())
-                .addExtraData("initialMap", gameController.getCurrentMapState());
+                .addExtraData("players", room.getPlayerByName(username))
+                .addExtraData("initialMap", gameController.updateBoard());
         broadcast(msg);
     }
 
     public void sendAckMessage(Message message) {
         Message ack = new Message(MessageType.MESSAGE_ACK,
                 room.getRoomId(), "system")
-                .addExtraData("originalId", originalMessage.getMessageId());
-        sendPrivateMessage(originalMessage.getFrom(), ack);
+                .addExtraData("originalId", Message.getMessageId());
+        handleGameMessage(ack);
     }
 
     public MessageHandler getMessageHandler() {
         return this.messageHandler;
+    }
+
+    public GameController setGameController(GameController gameController) {
+        return gameController;
+    }
+
+    public Room getRoom() {
+        return this.room = getRoom();
+    }
+
+    public GameController getGameController() {
+        return this.gameController = getGameController();
     }
 }

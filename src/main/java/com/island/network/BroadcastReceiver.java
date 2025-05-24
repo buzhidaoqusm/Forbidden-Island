@@ -41,7 +41,7 @@ public class BroadcastReceiver implements Runnable {
     private void handleMessage(String messageStr) {
         try {
             Message message = Message.fromString(messageStr);
-            MessageHandler.handleMessage(message); // 交给RoomController处理
+            roomController.getMessageHandler().handleMessage(message); // 交给RoomController处理
         } catch (Exception e) {
             System.err.println("消息解析失败: " + e.getMessage());
         }
