@@ -50,6 +50,9 @@ public class Room {
     }
 
     public boolean addPlayer(Player player) {
+        if (isFull()) {
+            throw new IllegalStateException("Room is full, cannot add player: " + player.getName());
+        }
         if (player != null && !players.contains(player)) {
             players.add(player);
         }

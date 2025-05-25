@@ -407,11 +407,37 @@ public class Island {
     }
 
     public Tile findTile(String color) {
+        // Map color names to tile names
+        String tileName = switch (color.toLowerCase()) {
+            case "red" -> "Cave of Embers";
+            case "blue" -> "Fool's Landing";
+            case "green" -> "Bronze Gate";
+            case "yellow" -> "Coral Palace";
+            case "black" -> "Temple of the Moon";
+            case "white" -> "Silver Gate";
+            default -> null;
+        };
+
+        if (tileName == null) {
+            System.err.println("Invalid color for starting tile: " + color);
+            return null;
+        }
+
+        // First try to find a treasure tile with this name
         for (Tile tile : gameMap.values()) {
-            if (tile.getName().contains(color)) {
+            if (tile.getName().equals(tileName) && tile.getTreasureType() != null) {
                 return tile;
             }
         }
+
+        // If no treasure tile found, try any tile with this name
+        for (Tile tile : gameMap.values()) {
+            if (tile.getName().equals(tileName)) {
+                return tile;
+            }
+        }
+
+        System.err.println("Could not find starting tile for color: " + color);
         return null;
     }
 

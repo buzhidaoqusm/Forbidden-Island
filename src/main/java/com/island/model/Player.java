@@ -103,9 +103,11 @@ public abstract class Player {
     }
 
     public void removeCard(Card card) {
-        cards.remove(card);
+        if (card != null) {
+            cards.remove(card);
+            card.setBelongingPlayer(null);
+        }
     }
-
     public void addCaptureTreasure(TreasureType treasure) {
         capturedTreasures.add(treasure);
     }

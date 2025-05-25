@@ -326,13 +326,18 @@ public class Card {
     @Override
     public String toString() {
         return "Card{" +
-                "type=" + type +
-                ", name='" + name + '\'' +
+                "type=" + (type != null ? type : "null") +
+                ", name='" + (name != null ? name : "null") + '\'' +
+                ", belongingPlayer='" + (belongingPlayer != null ? belongingPlayer : "null") + '\'' +
+                ", floodPosition=" + (floodPosition != null ? floodPosition : "null") +
+                ", treasureType=" + (treasureType != null ? treasureType : "null") +
+                ", selectedPlayers=" + (selectedPlayers != null ? selectedPlayers : "null") +
+                ", targetPosition=" + (targetPosition != null ? targetPosition : "null") +
                 ", isUsed=" + isUsed +
                 '}';
-    }
 
-    public String getId() {
+    }
+        public String getId() {
         return "";
     }
 }
