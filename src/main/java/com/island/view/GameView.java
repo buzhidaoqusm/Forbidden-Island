@@ -22,6 +22,7 @@ import com.island.view.IslandView;
 import com.island.view.PlayerView;
 import com.island.view.CardView;
 import com.island.view.ActionBarView;
+import com.island.view.ActionLogView;
 import com.island.controller.GameController;
 import com.island.model.Player;
 import com.island.model.Position;
@@ -37,12 +38,14 @@ public class GameView {
     private PlayerView playerView;
     private CardView cardView;
     private ActionBarView actionBarView;
+    private ActionLogView actionLogView;
     
     // Sub-view panes
     private Pane islandViewPane;
     private Pane playerViewPane;
     private Pane cardViewPane;
     private Pane actionBarViewPane;
+    private VBox actionLogViewPane;
     
     // Game interface image resources
     private Image gameBackgroundImage;
@@ -66,24 +69,187 @@ public class GameView {
      */
     private void loadImages() {
         try {
+            // 使用多种可能的路径尝试加载图片
             // Load game background image
-            gameBackgroundImage = new Image(getClass().getResourceAsStream("/image/UI/game_background.jpg"));
+            String[] backgroundPaths = {
+                "/Map/background.jpg",
+                "/images/background.jpg",
+                "/Map/Arena.jpg"
+            };
             
-            // Load game status icons
-            victoryIcon = new Image(getClass().getResourceAsStream("/image/UI/victory.png"));
-            defeatIcon = new Image(getClass().getResourceAsStream("/image/UI/defeat.png"));
-            
-            // Load treasure icons
-            for (int i = 1; i <= 4; i++) {
-                String path = "/image/UI/treasure_" + i + ".png";
+            for (String path : backgroundPaths) {
                 try {
-                    treasureIcons.put(i, new Image(getClass().getResourceAsStream(path)));
+                    gameBackgroundImage = new Image(getClass().getResourceAsStream(path));
+                    if (gameBackgroundImage != null && !gameBackgroundImage.isError()) {
+                        System.out.println("成功加载背景图: " + path);
+                        break;
+                    }
                 } catch (Exception e) {
-                    System.err.println("Unable to load treasure icon: " + path);
+                    // 继续尝试下一个路径
                 }
             }
+            
+            // 如果背景加载失败，创建默认背景
+            if (gameBackgroundImage == null || gameBackgroundImage.isError()) {
+                // 创建一个渐变背景作为备用
+                javafx.scene.canvas.Canvas canvas = new javafx.scene.canvas.Canvas(1200, 800);
+                javafx.scene.canvas.GraphicsContext gc = canvas.getGraphicsContext2D();
+                
+                // 绘制渐变背景
+                javafx.scene.paint.LinearGradient gradient = 
+                    new javafx.scene.paint.LinearGradient(0, 0, 0, 800, false, 
+                    javafx.scene.paint.CycleMethod.NO_CYCLE,
+                    new javafx.scene.paint.Stop(0, Color.LIGHTBLUE),
+                    new javafx.scene.paint.Stop(1, Color.DARKBLUE));
+                
+                gc.setFill(gradient);
+                gc.fillRect(0, 0, 1200, 800);
+                
+                // 将Canvas转换为Image
+                javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
+                params.setFill(Color.TRANSPARENT);
+                gameBackgroundImage = canvas.snapshot(params, null);
+                
+                System.out.println("使用默认背景替代图片");
+            }
+            
+            // Load game status icons
+            // 尝试加载胜利图标
+            String[] victoryPaths = {
+                "/Design/victory.png",
+                "/images/victory.png",
+                "/Design/Icons/victory.png"
+            };
+            
+            for (String path : victoryPaths) {
+                try {
+                    victoryIcon = new Image(getClass().getResourceAsStream(path));
+                    if (victoryIcon != null && !victoryIcon.isError()) {
+                        System.out.println("成功加载胜利图标: " + path);
+                        break;
+                    }
+                } catch (Exception e) {
+                    // 继续尝试
+                }
+            }
+            
+            // 如果胜利图标加载失败，创建默认图标
+            if (victoryIcon == null || victoryIcon.isError()) {
+                javafx.scene.canvas.Canvas canvas = new javafx.scene.canvas.Canvas(200, 200);
+                javafx.scene.canvas.GraphicsContext gc = canvas.getGraphicsContext2D();
+                
+                // 绘制一个金色圆圈和胜利标志
+                gc.setFill(Color.GOLD);
+                gc.fillOval(20, 20, 160, 160);
+                gc.setStroke(Color.WHITE);
+                gc.setLineWidth(10);
+                gc.strokeLine(60, 100, 90, 130);
+                gc.strokeLine(90, 130, 140, 70);
+                
+                javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
+                params.setFill(Color.TRANSPARENT);
+                victoryIcon = canvas.snapshot(params, null);
+                
+                System.out.println("使用默认胜利图标");
+            }
+            
+            // 尝试加载失败图标
+            String[] defeatPaths = {
+                "/Design/defeat.png",
+                "/images/defeat.png",
+                "/Design/Icons/defeat.png"
+            };
+            
+            for (String path : defeatPaths) {
+                try {
+                    defeatIcon = new Image(getClass().getResourceAsStream(path));
+                    if (defeatIcon != null && !defeatIcon.isError()) {
+                        System.out.println("成功加载失败图标: " + path);
+                        break;
+                    }
+                } catch (Exception e) {
+                    // 继续尝试
+                }
+            }
+            
+//            // 如果失败图标加载失败，创建默认图标
+//            if (defeatIcon == null || defeatIcon.isError()) {
+//                javafx.scene.canvas.Canvas canvas = new javafx.scene.canvas.Canvas(200, 200);
+//                javafx.scene.canvas.GraphicsContext gc = canvas.getGraphicsContext2D();
+//
+//                // 绘制一个红色圆圈和叉号
+//                gc.setFill(Color.DARKRED);
+//                gc.fillOval(20, 20, 160, 160);
+//                gc.setStroke(Color.WHITE);
+//                gc.setLineWidth(10);
+//                gc.strokeLine(60, 60, 140, 140);
+//                gc.strokeLine(60, 140, 140, 60);
+//
+//                javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
+//                params.setFill(Color.TRANSPARENT);
+//                defeatIcon = canvas.snapshot(params, null);
+//
+//                System.out.println("使用默认失败图标");
+//            }
+            
+            // Load treasure icons with fallback
+            String[][] treasurePaths = {
+                {"/TreasureCards/earth_stone.png", "/images/treasures/earth_stone.png"},
+                {"/TreasureCards/wind_statue.png", "/images/treasures/wind_statue.png"},
+                {"/TreasureCards/fire_crystal.png", "/images/treasures/fire_crystal.png"},
+                {"/TreasureCards/ocean_chalice.png", "/images/treasures/ocean_chalice.png"}
+            };
+            
+//            // 定义备用颜色
+//            Color[] fallbackColors = {
+//                Color.BROWN, // 地
+//                Color.LIGHTBLUE, // 风
+//                Color.RED, // 火
+//                Color.BLUE // 水
+//            };
+//
+//            for (int i = 0; i < treasurePaths.length; i++) {
+//                Image treasureImage = null;
+//
+//                // 尝试多个路径
+//                for (String path : treasurePaths[i]) {
+//                    try {
+//                        treasureImage = new Image(getClass().getResourceAsStream(path));
+//                        if (treasureImage != null && !treasureImage.isError()) {
+//                            treasureIcons.put(i + 1, treasureImage);
+//                            System.out.println("成功加载宝藏图标 " + (i+1) + ": " + path);
+//                            break;
+//                        }
+//                    } catch (Exception e) {
+//                        // 继续尝试下一个路径
+//                    }
+//                }
+//
+//                // 如果还是失败，创建一个备用图标
+//                if (treasureImage == null || treasureImage.isError()) {
+//                    javafx.scene.canvas.Canvas canvas = new javafx.scene.canvas.Canvas(100, 100);
+//                    javafx.scene.canvas.GraphicsContext gc = canvas.getGraphicsContext2D();
+//
+//                    // 绘制一个简单的宝藏图标
+//                    gc.setFill(fallbackColors[i]);
+//                    gc.fillRect(10, 10, 80, 80);
+//                    gc.setFill(Color.GOLD);
+//                    gc.fillOval(30, 30, 40, 40);
+//                    gc.setStroke(Color.BLACK);
+//                    gc.strokeRect(10, 10, 80, 80);
+//
+//                    javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
+//                    params.setFill(Color.TRANSPARENT);
+//                    treasureIcons.put(i + 1, canvas.snapshot(params, null));
+//
+//                    System.out.println("使用默认宝藏图标 " + (i+1));
+//                }
+//            }
+            
+//            System.out.println("游戏界面图片资源加载完成，成功: " + treasureIcons.size() + " 个宝藏图标");
+            
         } catch (Exception e) {
-            System.err.println("Game interface image resources loading failed: " + e.getMessage());
+            System.err.println("游戏界面图片资源加载失败: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -120,6 +286,7 @@ public class GameView {
         playerView = new PlayerView(gameController);
         cardView = new CardView(gameController);
         actionBarView = new ActionBarView(gameController);
+        actionLogView = new ActionLogView();
 
         // Register views as observers to be implemented later
         // Currently the observer pattern is not fully implemented in GameController
@@ -129,6 +296,7 @@ public class GameView {
         playerViewPane = playerView.getView();
         cardViewPane = cardView.getView();
         actionBarViewPane = actionBarView.getView();
+        actionLogViewPane = actionLogView.getView();
 
         // Set layout
         // Center: Island view (main game board)
@@ -137,9 +305,10 @@ public class GameView {
         // Left: Player information view
         rootLayout.setLeft(playerViewPane);
 
-        // Right: Card view
+        // Right: Card view + Action Log view
         VBox rightPanel = new VBox(10);
-        rightPanel.getChildren().add(cardViewPane);
+        rightPanel.getChildren().addAll(cardViewPane, actionLogViewPane);
+        rightPanel.setPrefWidth(250); // 设置右侧面板宽度
         rootLayout.setRight(rightPanel);
 
         // Bottom: Action bar view
@@ -149,6 +318,13 @@ public class GameView {
         BorderPane.setMargin(playerViewPane, new Insets(10));
         BorderPane.setMargin(rightPanel, new Insets(10));
         BorderPane.setMargin(actionBarViewPane, new Insets(10));
+        
+        // 设置ActionLog的适当大小
+        actionLogView.setLogAreaHeight(120);
+        actionLogView.setLogAreaWidth(230);
+        
+        // 记录游戏初始化日志
+        actionLogView.log("游戏界面初始化完成");
     }
 
     public Scene getScene() {
@@ -182,6 +358,11 @@ public class GameView {
             gameOverPane.getChildren().add(gameOverContent);
             rootLayout.setCenter(gameOverPane); // Replace center content
             
+            // 记录游戏结束日志
+            if (actionLogView != null) {
+                actionLogView.error("游戏结束 - 你们失败了！");
+            }
+            
             System.out.println("Showing game over interface");
         });
     }
@@ -212,6 +393,11 @@ public class GameView {
             
             victoryPane.getChildren().add(victoryContent);
             rootLayout.setCenter(victoryPane); // Replace center content
+            
+            // 记录胜利日志
+            if (actionLogView != null) {
+                actionLogView.success("恭喜！你们成功逃离了禁闭岛！");
+            }
             
             System.out.println("Showing victory interface");
         });
@@ -256,9 +442,17 @@ public class GameView {
      * Set the primary stage scene and show it
      */
     public void setPrimaryStage() {
-        primaryStage.setTitle("Forbidden Island");
-        primaryStage.setScene(gameScene);
-        primaryStage.show();
+        try {
+            primaryStage.setTitle("Forbidden Island - Game");
+            primaryStage.setScene(gameScene);
+            primaryStage.setResizable(false);
+            primaryStage.centerOnScreen();
+            primaryStage.show();
+            System.out.println("Game window displayed successfully");
+        } catch (Exception e) {
+            System.err.println("Error displaying game window: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     /**
@@ -274,6 +468,7 @@ public class GameView {
     public PlayerView getPlayerView() { return playerView; }
     public CardView getCardView() { return cardView; }
     public ActionBarView getActionBarView() { return actionBarView; }
+    public ActionLogView getActionLogView() { return actionLogView; }
     
     /**
      * Update player position on the board
@@ -286,6 +481,9 @@ public class GameView {
         }
         if (playerView != null) {
             playerView.updatePlayerInfo(player);
+        }
+        if (actionLogView != null) {
+            actionLogView.log(player.getName() + " 移动到位置 [" + newPosition.getX() + ", " + newPosition.getY() + "]");
         }
     }
     
