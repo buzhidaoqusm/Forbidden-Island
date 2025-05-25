@@ -161,9 +161,9 @@ public class RoomController {
         broadcast(msg);
     }
 
-    public void sendDrawFloodMessage(int count, Player player) {
+    public void sendDrawFloodMessage(int count, String name) {
         Message msg = new Message(MessageType.DRAW_FLOOD_CARD, room.getRoomId(), "system")
-                .addExtraData("username", player.getName())
+                .addExtraData("username", name)
                 .addExtraData("count", count);
         broadcast(msg);
     }

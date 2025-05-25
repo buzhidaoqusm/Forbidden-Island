@@ -90,7 +90,7 @@ public class GameController {
 
         playerController = new PlayerController();
         playerController.setGameController(this);
-        cardController = new CardController();
+        cardController = new CardController(new StandardCardFactory());
         cardController.setGameController(this);
         actionBarController = new ActionBarController();
         actionBarController.setGameController(this);

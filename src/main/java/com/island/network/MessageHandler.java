@@ -187,7 +187,7 @@ public class MessageHandler {
         int count = (int) message.getData().get("count");
         try {
             List<Position> cards = gameController.drawFloodCards(count);
-            roomController.sendDrawFloodMessage(count, gameController.getCurrentPlayer());
+            roomController.sendDrawFloodMessage(count, gameController.getCurrentPlayer().getName());
             confirmMessageDelivery(message.getMessageId());
         } catch (Exception ex) {
             handleGameOver(new Message(MessageType.GAME_OVER, "description", "The flood pile is exhausted."));

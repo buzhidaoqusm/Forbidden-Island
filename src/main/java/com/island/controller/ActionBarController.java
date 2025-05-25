@@ -504,7 +504,7 @@ public class ActionBarController {
      */
     public void handleDrawFloodAction() {
         gameController.getPlayerController().addDrawnFloodCards(1);
-        gameController.getRoomController().sendDrawFloodMessage(1, currentPlayer);
+        gameController.getRoomController().sendDrawFloodMessage(1, currentPlayer.getName());
     }
 
     /**
