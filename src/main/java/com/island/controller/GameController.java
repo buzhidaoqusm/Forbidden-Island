@@ -104,7 +104,7 @@ public class GameController {
      */
     public void startGame(long seed) {
         gameStart = true;
-        currentPlayer = room.getPlayers().getFirst();
+        currentPlayer = room.getPlayers().get(0);
 
         islandController.initIsland(seed);
         playerController.initPlayers(seed);
