@@ -6,52 +6,43 @@ import java.net.*;
 public class BroadcastSender {
     private DatagramSocket socket;
     private final String broadcastAddress;
-    private final int port; // 需补充端口配置
+    private final int port;
 
-    //-------------------------
-    // 构造函数（需指定广播地址和端口）
-    //-------------------------
+    // Constructor (requires specifying broadcast address and port)
     public BroadcastSender(String broadcastAddress, int port) throws SocketException {
         this.broadcastAddress = broadcastAddress;
         this.port = port;
         this.socket = new DatagramSocket();
-        this.socket.setBroadcast(true); // 启用广播模式
+        this.socket.setBroadcast(true); // Enable broadcast mode
     }
 
-    //-------------------------
-    // 核心广播方法
-    //-------------------------
+    // Core broadcast method
     public void broadcast(Message message) {
         try {
-            // 1. 序列化消息为字节
-            byte[] data = message.toBytes(); // 假设 Message 类有 toBytes() 方法
-            // byte[] data = message.toString().getBytes(); // 备选方案（需确保Message有toString序列化）
+            // 1. serialize messages into bytes
+            byte[] data = message.toBytes();
 
-            // 2. 创建广播数据包
+            // 2. Create a broadcast packet
             InetAddress address = InetAddress.getByName(broadcastAddress);
             DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
 
-            // 3. 发送广播
+            // 3. Send a broadcast
             socket.send(packet);
         } catch (UnknownHostException e) {
-            System.err.println("无效广播地址: " + broadcastAddress);
+            System.err.println("Invalid broadcast address: " + broadcastAddress);
         } catch (IOException e) {
-            System.err.println("广播发送失败: " + e.getMessage());
+            System.err.println("Broadcast transmission failed: " + e.getMessage());
         }
     }
 
-    //-------------------------
-    // 资源清理方法
-    //-------------------------
+    // Resource cleaning methods
     public void close() {
         if (socket != null && !socket.isClosed()) {
             socket.close();
         }
     }
 
-    //-------------------------
-    // 可选工具方法
-    //-------------------------
+    // Optional tool method
     public static boolean isValidBroadcastAddress(String ip) {
         try {
             InetAddress address = InetAddress.getByName(ip);

@@ -30,7 +30,7 @@ public class ActionLogView extends VBox {
     }
 
     private void initializeLogView() {
-        // 初始化日志显示区域
+        // Initialize log display area
         logTextArea = new TextArea();
         logTextArea.setEditable(false);
         logTextArea.setBackground(new Background(new BackgroundFill(
@@ -45,27 +45,12 @@ public class ActionLogView extends VBox {
             """);
 
 
-        // 设置滚动条
+        // Set scrollbar
         this.setPadding(new Insets(5));
         this.setSpacing(5);
         this.getChildren().add(logTextArea);
 
     }
-
-
-//        // 设置滚动条
-//        VBox container = new VBox(logTextArea);
-//        container.setPadding(new Insets(5));
-//        container.setBackground(new Background(new BackgroundFill(
-//                Color.rgb(10, 10, 10),
-//                CornerRadii.EMPTY,
-//                Insets.EMPTY
-//        )));
-//
-//        getChildren().add(container);
-//    public ObservableList<Node> getChildren() {
-//        return java.util.List.of();
-//    }
 
     public synchronized void log(String message) {
         String timestampedMessage = "[" + LocalDateTime.now() + "] " + message;
@@ -82,7 +67,7 @@ public class ActionLogView extends VBox {
         String timestampedMessage = "[ERROR] [" + LocalDateTime.now() + "] " + message;
         writeToLogFile(timestampedMessage);
 
-        appendToLogArea(timestampedMessage, "#ff4444"); // 红色
+        appendToLogArea(timestampedMessage, "#ff4444"); // red
         if (alsoPrintToConsole) {
             System.err.println(timestampedMessage);
         }
@@ -92,7 +77,7 @@ public class ActionLogView extends VBox {
         String timestampedMessage = "[SUCCESS] [" + LocalDateTime.now() + "] " + message;
         writeToLogFile(timestampedMessage);
 
-        appendToLogArea(timestampedMessage, "#00C851"); // 绿色
+        appendToLogArea(timestampedMessage, "#00C851"); // green
         if (alsoPrintToConsole) {
             System.out.println(timestampedMessage);
         }
@@ -101,7 +86,7 @@ public class ActionLogView extends VBox {
     private void appendToLogArea(String message, String color) {
         Platform.runLater(() -> {
             logTextArea.appendText(message + "\n");
-            // 应用颜色到最新行（需要HTML格式支持）
+            // Apply color to the latest line (requires HTML format support)
             logTextArea.setStyle(
                     " -fx-text-fill: " + color + ";"
             );
