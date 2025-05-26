@@ -153,6 +153,11 @@ public class GameController {
         return roomController;
     }
 
+    public void setRoomController(RoomController roomController) {
+        this.roomController = roomController;
+        roomController.setGameController(this); // 双向绑定
+    }
+
     /**
      * Cleans up resources when the game is shutting down.
      */

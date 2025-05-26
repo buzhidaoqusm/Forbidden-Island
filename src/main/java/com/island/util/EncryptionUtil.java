@@ -72,20 +72,4 @@ public class EncryptionUtil {
         }
     }
 
-    //-------------------------
-    // 使用示例
-    //-------------------------
-    public static void main(String[] args) {
-        String original = "Hello, 这是一条敏感数据!";
-
-        // 加密
-        String encrypted = encrypt(original);
-        System.out.println("加密结果: " + encrypted);
-
-        // 解密
-        String decrypted = decrypt(encrypted);
-        System.out.println("解密结果: " + decrypted);
-
-        System.out.println("验证结果: " + original.equals(decrypted)); // 应输出 true
-    }
 }

@@ -10,4 +10,5 @@ module com.island {
     exports com.island.controller;
     exports com.island.model;
     exports com.island.network;
+    exports com.island.launcher;
 }

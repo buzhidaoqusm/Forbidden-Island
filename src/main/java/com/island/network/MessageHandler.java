@@ -2,12 +2,10 @@ package com.island.network;
 
 import com.island.controller.GameController;
 import com.island.model.*;
-import com.island.util.ActionLogView;
-import com.island.view.GameView;
+import com.island.view.ActionLogView;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 
 public class MessageHandler {
     private Map<String, UnconfirmedMessage> unconfirmedMessages;
@@ -15,7 +13,7 @@ public class MessageHandler {
     private RoomController roomController;
     private Room room;
     private ActionLogView actionLogView;
-    private PriorityQueue<Long> messageQueue = new PriorityQueue<>();
+    private PriorityQueue<Long> messageQueue;
     private final Object queueLock = new Object();
     private volatile boolean isProcessingQueue = false;
     private MessageType messageType;

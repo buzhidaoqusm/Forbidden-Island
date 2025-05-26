@@ -29,13 +29,15 @@ public class Launcher extends Application {
         try {
             // Initialize room
             room = new Room();
-            
-            // Initialize room controller
-            roomController = new RoomController(gameController, room);
-            
+
+            roomController = new RoomController(null, room);
+
             // Initialize game controller with RoomController
-            gameController = new GameController(roomController);
-            
+            GameController gameController = new GameController(roomController);
+
+            // Initialize room controller
+            roomController.setGameController(gameController);
+
             // Create game start interface
             GameStart gameStart = new GameStart(primaryStage, gameController);
             

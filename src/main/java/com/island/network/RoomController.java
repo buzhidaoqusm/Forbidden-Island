@@ -5,10 +5,8 @@ import com.island.model.Player;
 import com.island.model.Room;
 import com.island.model.Position;
 import com.island.model.Tile;
-import com.island.model.Navigator;
-import com.island.util.ActionLogView;
+import com.island.view.ActionLogView;
 
-import java.io.IOException;
 import java.net.SocketException;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -146,7 +144,7 @@ public class RoomController {
 
     // Game status message sending method
     public void sendGameOverMessage(String description) {
-        broadcast(new Message(MessageType.GAME_OVER, "description", "gameover", description));
+        broadcast(new Message(MessageType.GAME_OVER, "description", "game over", description));
     }
 
     public void sendUpdateRoomMessage() {
