@@ -33,7 +33,7 @@ public class Launcher extends Application {
             roomController = new RoomController(null, room);
 
             // Initialize game controller with RoomController
-            GameController gameController = new GameController(roomController);
+            gameController = new GameController(roomController);
 
             // Initialize room controller
             roomController.setGameController(gameController);

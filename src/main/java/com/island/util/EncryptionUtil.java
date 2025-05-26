@@ -53,7 +53,7 @@ public class EncryptionUtil {
             System.arraycopy(combined, 0, iv, 0, IV_LENGTH);
             System.arraycopy(combined, IV_LENGTH, encrypted, 0, encrypted.length);
 
-            // 2. Create keys and decryptors
+            // 2. Create keys and decrypts
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
             SecretKeySpec keySpec = new SecretKeySpec(SECRET_KEY.getBytes(), "AES");
             Cipher cipher = Cipher.getInstance(ALGORITHM);

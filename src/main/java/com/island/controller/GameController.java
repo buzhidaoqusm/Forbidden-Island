@@ -162,7 +162,9 @@ public class GameController {
      * Cleans up resources when the game is shutting down.
      */
     public void shutdown() {
-
+        gameOver = true;
+        gameStart = false;
+        roomController.shutdown();
     }
 
     /**
@@ -185,9 +187,8 @@ public class GameController {
      * @param count The number of cards to draw
      * @param player The player who is drawing the cards
      */
-    public List handleDrawTreasureCard(int count, Player player) {
+    public void handleDrawTreasureCard(int count, Player player) {
         cardController.drawTreasureCard(count, player);
-        return List.of();
     }
 
     /**
