@@ -9,18 +9,22 @@ public class UnconfirmedMessage {
     private final Set<String> pendingReceivers;
     private int retryCount;
 
-    // Constructor (collection of received messages and pending recipients)
+    //-------------------------
+    // 构造函数（接收消息和待确认接收者集合）
+    //-------------------------
     public UnconfirmedMessage(Message message, Set<String> receivers) {
         if (message == null) {
             throw new IllegalArgumentException("Message cannot be null");
         }
         this.message = message;
-        // Use defensive copying to prevent external modifications
+        // 使用防御性拷贝防止外部修改
         this.pendingReceivers = new HashSet<>(receivers != null ? receivers : Collections.emptySet());
         this.retryCount = 0;
     }
 
-    // Receiver management methods
+    //-------------------------
+    // 接收者管理方法
+    //-------------------------
     public synchronized void removeReceiver(String receiver) {
         pendingReceivers.remove(receiver);
     }
@@ -29,7 +33,9 @@ public class UnconfirmedMessage {
         return !pendingReceivers.isEmpty();
     }
 
-    // Management method for retry count
+    //-------------------------
+    // 重试计数管理方法
+    //-------------------------
     public synchronized void incrementRetryCount() {
         retryCount++;
     }
@@ -38,12 +44,15 @@ public class UnconfirmedMessage {
         return retryCount;
     }
 
+    //-------------------------
+    // Getter 方法
+    //-------------------------
     public Message getMessage() {
         return message;
     }
 
     /**
-     * Get an immutable receiver collection view
+     * 获取不可修改的接收者集合视图
      */
     public Set<String> getPendingReceivers() {
         return Collections.unmodifiableSet(pendingReceivers);

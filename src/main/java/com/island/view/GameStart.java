@@ -125,8 +125,8 @@ public class GameStart {
                     // gameController.createPlayer(username, PlayerRole.EXPLORER);
                     // gameController.showMainMenu();
                     
-                    // For now, use direct transition
-                    MenuView menuView = new MenuView(primaryStage);
+                    // For now, use direct transition with gameController
+                    MenuView menuView = new MenuView(primaryStage, gameController);
                     primaryStage.setScene(menuView.createScene());
                     primaryStage.setTitle("Forbidden Island - Main Menu");
                 } else {

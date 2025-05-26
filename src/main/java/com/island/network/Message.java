@@ -15,29 +15,34 @@ public class Message {
     private boolean isAck;
     private Map<String, Object> data;
 
+    //-------------------------
+    // 构造函数（4 个重载版本）
+    //-------------------------
     public Message(MessageType type, String roomId, String from) {
         this.type = type;
         this.roomId = roomId;
         this.from = from;
-        this.data = new HashMap<>();  // Initialization data
+        this.data = new HashMap<>();  // 初始化 data
     }
 
     public Message(MessageType type, String roomId, String from, boolean isAck) {
-        this(type, roomId, from);  // Reuse the previous constructor
+        this(type, roomId, from);  // 复用上一个构造函数
         this.isAck = isAck;
     }
 
     public Message(MessageType type, String roomId, String from, String to) {
-        this(type, roomId, from);  // Reuse basic constructor
+        this(type, roomId, from);  // 复用基础构造函数
         this.to = to;
     }
 
     public Message(long messageId, MessageType type, String roomId, String from, String to) {
-        this(type, roomId, from, to);  // Reuse constructor with to
+        this(type, roomId, from, to);  // 复用带 to 的构造函数
         this.messageId = messageId;
     }
 
-    // Data operation methods
+    //-------------------------
+    // 数据操作方法
+    //-------------------------
     public Message addExtraData(String key, Object value) {
         if (data == null) {
             data = new HashMap<>();
@@ -46,7 +51,10 @@ public class Message {
         return null;
     }
 
-    // Serialization / deserialization
+    //-------------------------
+    // 序列化/反序列化方法
+    //-------------------------
+
     @Override
     public String toString() {
         try {
@@ -68,11 +76,14 @@ public class Message {
         }
     }
 
-    // Example methods in the Message class
+    // Message 类中的示例方法
     public byte[] toBytes() {
-        return this.toString().getBytes(StandardCharsets.UTF_8);
+        return this.toString().getBytes(StandardCharsets.UTF_8); // 简单实现
     }
 
+    //-------------------------
+    // Getter 方法（可选，根据需求添加）
+    //-------------------------
     public static long getMessageId() { return messageId; }
     public MessageType getType() { return type; }
     public String getRoomId() { return roomId; }

@@ -29,87 +29,92 @@ public class Launcher extends Application {
         try {
             // Initialize room
             room = new Room();
-
-            roomController = new RoomController(null, room);
-
-            // Initialize game controller with RoomController
-            gameController = new GameController(roomController);
-
-            // Initialize room controller
-            roomController.setGameController(gameController);
-
-            // Create game start interface
+            
+            // 更安全的初始化顺序
+            // 1. 先创建GameController，不传入RoomController
+            gameController = new GameController(null);
+            
+            // 2. 创建RoomController并将GameController传入
+            roomController = new RoomController(gameController, room);
+            
+            // 3. 将RoomController设置到GameController
+            gameController.setRoomController(roomController);
+            
+            // 4. 重新获取Room对象并设置到相关控制器
+            room = roomController.getRoom();
+            
+            // 创建游戏启动界面
             GameStart gameStart = new GameStart(primaryStage, gameController);
             
-            // Set primary stage scene
+            // 设置主舞台场景
             primaryStage.setScene(gameStart.createScene());
-            primaryStage.setTitle("Forbidden Island - Welcome");
+            primaryStage.setTitle("禁闭岛 - 欢迎");
             primaryStage.setResizable(false);
             
-            // Add window close event handler
+            // 添加窗口关闭事件处理
             primaryStage.setOnCloseRequest((WindowEvent event) -> {
                 try {
-                    // Clean up resources, close network connections, etc.
+                    // 清理资源、关闭网络连接等
                     if (gameController != null) {
                         gameController.shutdown();
                     }
                 } catch (Exception e) {
-                    System.err.println("Error when closing game: " + e.getMessage());
+                    System.err.println("关闭游戏时出错: " + e.getMessage());
                 } finally {
-                    // Ensure application fully exits
+                    // 确保应用完全退出
                     Platform.exit();
                     System.exit(0);
                 }
             });
             
-            // Show primary stage
+            // 显示主舞台
             primaryStage.show();
             
-            // Log output
-            System.out.println("Game started successfully");
+            // 日志输出
+            System.out.println("游戏成功启动");
         } catch (Exception e) {
-            System.err.println("Game startup failed: " + e.getMessage());
+            System.err.println("游戏启动失败: " + e.getMessage());
             e.printStackTrace();
-            // Ensure program exits normally even on error
+            // 即使出错也确保程序正常退出
             Platform.exit();
             System.exit(1);
         }
     }
     
     /**
-     * Program entry method
-     * @param args Command line arguments
+     * 程序入口方法
+     * @param args 命令行参数
      */
     public static void main(String[] args) {
         try {
-            // Launch JavaFX application
+            // 启动JavaFX应用
             launch(args);
         } catch (Exception e) {
-            System.err.println("Program startup failed: " + e.getMessage());
+            System.err.println("程序启动失败: " + e.getMessage());
             e.printStackTrace();
             System.exit(1);
         }
     }
     
     /**
-     * Get game controller instance
-     * @return Game controller instance
+     * 获取游戏控制器实例
+     * @return 游戏控制器实例
      */
     public GameController getGameController() {
         return gameController;
     }
     
     /**
-     * Get room controller instance
-     * @return Room controller instance
+     * 获取房间控制器实例
+     * @return 房间控制器实例
      */
     public RoomController getRoomController() {
         return roomController;
     }
     
     /**
-     * Get game room instance
-     * @return Room instance
+     * 获取游戏房间实例
+     * @return 房间实例
      */
     public Room getRoom() {
         return room;

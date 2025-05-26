@@ -104,16 +104,15 @@ public class IslandController {
         }
     }
 
-    private static TreasureType getTreasureType(String tileNumStr) {
-        int tileNum = Integer.parseInt(tileNumStr);
+    private static TreasureType getTreasureType(String tileName) {
         TreasureType treasureType = null;
-        if (tileNum == 1 || tileNum == 2) {
+        if (tileName.equals("Howling Garden") || tileName.equals("Whispering Garden")) {
             treasureType = TreasureType.EARTH_STONE;
-        } else if (tileNum == 3 || tileNum == 4) {
+        } else if (tileName.equals("Breakers Bridge") || tileName.equals("Bronze Gate")) {
             treasureType = TreasureType.WIND_STATUE;
-        } else if (tileNum == 5 || tileNum == 6) {
+        } else if (tileName.equals("Cave of Embers") || tileName.equals("Cave of Shadows")) {
             treasureType = TreasureType.FIRE_CRYSTAL;
-        } else if (tileNum == 7 || tileNum == 8) {
+        } else if (tileName.equals("Cliffs of Abandon") || tileName.equals("Coral Palace")) {
             treasureType = TreasureType.OCEAN_CHALICE;
         }
         return treasureType;
@@ -127,7 +126,8 @@ public class IslandController {
      * @param type The treasure type associated with the tile, or null for regular tiles
      */
     private void addTile(String name, Position position, TreasureType type) {
-        island.getGameMap().put(position, new Tile(name, position, type));
+        Tile tile = new Tile(name, position, type);
+        island.addTile(position, tile);
     }
 
     /**
@@ -233,7 +233,7 @@ public class IslandController {
      */
     public boolean checkFoolsLanding() {
         for (Tile tile : island.getGameMap().values()) {
-            if (tile.getName().equals("14") && tile.isSunk()) {
+            if (tile.getName().equals("Fool's Landing") && tile.isSunk()) {
                 return false;
             }
         }

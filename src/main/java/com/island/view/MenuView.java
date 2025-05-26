@@ -128,8 +128,8 @@ public class MenuView {
                 System.out.println("Transitioning to Create Room view via GameController");
                 // Future implementation: gameController.showCreateRoomView();
                 
-                // For now, use direct transition
-                CreateRoomView createRoomView = new CreateRoomView(primaryStage);
+                // For now, use direct transition with gameController
+                CreateRoomView createRoomView = new CreateRoomView(primaryStage, gameController);
                 primaryStage.setScene(createRoomView.createScene());
                 primaryStage.setTitle("Forbidden Island - Create Room");
             } else {

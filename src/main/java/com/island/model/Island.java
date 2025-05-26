@@ -197,6 +197,18 @@ public class Island {
             gameController.handleWaterRise();
         }
     }
+    
+    /**
+     * Add a new tile to the island
+     * @param position The position of the tile
+     * @param tile The tile to add
+     */
+    public void addTile(Position position, Tile tile) {
+        gameMap.put(position, tile);
+        if (tile.getName().equals("Fool's Landing")) {
+            foolsLandingPosition = position;
+        }
+    }
 
     /**
      * Get the position of Fool's Landing

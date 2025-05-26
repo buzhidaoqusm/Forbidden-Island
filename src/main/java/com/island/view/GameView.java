@@ -284,9 +284,11 @@ public class GameView {
         // Initialize view components
         islandView = new IslandView(gameController);
         playerView = new PlayerView(gameController);
-        cardView = new CardView(gameController);
+        // cardView is not displayed anymore as per requirement
+        cardView = null; // Set to null to indicate it's not used
         actionBarView = new ActionBarView(gameController);
-        actionLogView = new ActionLogView();
+        // We're not using a separate ActionLogView anymore, using the one integrated in ActionBarView
+        actionLogView = null;
 
         // Register views as observers to be implemented later
         // Currently the observer pattern is not fully implemented in GameController
@@ -294,9 +296,11 @@ public class GameView {
         // Get panes from view components
         islandViewPane = islandView.getView();
         playerViewPane = playerView.getView();
-        cardViewPane = cardView.getView();
+        // cardViewPane is not needed anymore
+        cardViewPane = null;
         actionBarViewPane = actionBarView.getView();
-        actionLogViewPane = actionLogView.getView();
+        // actionLogViewPane is not needed anymore since it's integrated in ActionBarView
+        actionLogViewPane = null;
 
         // Set layout
         // Center: Island view (main game board)
@@ -305,26 +309,18 @@ public class GameView {
         // Left: Player information view
         rootLayout.setLeft(playerViewPane);
 
-        // Right: Card view + Action Log view
-        VBox rightPanel = new VBox(10);
-        rightPanel.getChildren().addAll(cardViewPane, actionLogViewPane);
-        rightPanel.setPrefWidth(250); // 设置右侧面板宽度
-        rootLayout.setRight(rightPanel);
-
-        // Bottom: Action bar view
+        // Bottom: Action Bar only - we'll integrate the log into the action bar view
+        // This eliminates the duplicate logs and reduces vertical space usage
         rootLayout.setBottom(actionBarViewPane);
+        
+        // Add appropriate margin
+        BorderPane.setMargin(actionBarViewPane, new Insets(5, 10, 10, 10));
 
         // Set margins
         BorderPane.setMargin(playerViewPane, new Insets(10));
-        BorderPane.setMargin(rightPanel, new Insets(10));
-        BorderPane.setMargin(actionBarViewPane, new Insets(10));
-        
-        // 设置ActionLog的适当大小
-        actionLogView.setLogAreaHeight(120);
-        actionLogView.setLogAreaWidth(230);
         
         // 记录游戏初始化日志
-        actionLogView.log("游戏界面初始化完成");
+        actionBarView.addLogMessage("游戏界面初始化完成");
     }
 
     public Scene getScene() {
@@ -359,8 +355,8 @@ public class GameView {
             rootLayout.setCenter(gameOverPane); // Replace center content
             
             // 记录游戏结束日志
-            if (actionLogView != null) {
-                actionLogView.error("游戏结束 - 你们失败了！");
+            if (actionBarView != null) {
+                actionBarView.addLogMessage("游戏结束 - 你们失败了！");
             }
             
             System.out.println("Showing game over interface");
@@ -395,8 +391,8 @@ public class GameView {
             rootLayout.setCenter(victoryPane); // Replace center content
             
             // 记录胜利日志
-            if (actionLogView != null) {
-                actionLogView.success("恭喜！你们成功逃离了禁闭岛！");
+            if (actionBarView != null) {
+                actionBarView.addLogMessage("恭喜！你们成功逃离了禁闭岛！");
             }
             
             System.out.println("Showing victory interface");
@@ -427,10 +423,11 @@ public class GameView {
             System.out.println("Update player view");
         }
         
-        if (cardView != null) {
-            cardView.update();
-            System.out.println("Update card view");
-        }
+        // Card view is no longer used
+        // if (cardView != null) {
+        //     cardView.update();
+        //     System.out.println("Update card view");
+        // }
         
         if (actionBarView != null) {
             actionBarView.update();
@@ -482,8 +479,8 @@ public class GameView {
         if (playerView != null) {
             playerView.updatePlayerInfo(player);
         }
-        if (actionLogView != null) {
-            actionLogView.log(player.getName() + " 移动到位置 [" + newPosition.getX() + ", " + newPosition.getY() + "]");
+        if (actionBarView != null) {
+            actionBarView.addLogMessage(player.getName() + " 移动到位置 [" + newPosition.getX() + ", " + newPosition.getY() + "]");
         }
     }
     

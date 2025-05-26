@@ -128,31 +128,35 @@ public class ActionBarView {
         );
 
         // --- Initialize Log View --- 
-        logPane = new VBox(5);
-        logPane.setPadding(new Insets(5, 10, 10, 10)); // Padding for log area
+        logPane = new VBox(2); // Reduce spacing
+        logPane.setPadding(new Insets(2, 10, 2, 10)); // Reduced padding for log area
 
         Label logTitle = new Label("游戏日志");
-        logTitle.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        logTitle.setFont(Font.font("Arial", FontWeight.BOLD, 12)); // Smaller font
 
         logListView = new ListView<>();
-        logListView.setPrefHeight(100); // Adjust height as needed
+        logListView.setPrefHeight(40); // Significantly reduced height
+        logListView.setMaxHeight(40); // Enforce maximum height
         logListView.setMouseTransparent(true); // Make read-only
         logListView.setFocusTraversable(false);
+        // Make the log list view more compact
+        logListView.setStyle("-fx-font-size: 11px; -fx-cell-size: 16px;");
 
         logPane.getChildren().addAll(logTitle, logListView);
         
         // --- 初始化水位计显示 ---
-        waterMeterPane = new VBox(5);
-        waterMeterPane.setPadding(new Insets(5));
+        waterMeterPane = new VBox(2); // 减少间距
+        waterMeterPane.setPadding(new Insets(2)); // 减少内边距
         waterMeterPane.setAlignment(Pos.CENTER);
+        waterMeterPane.setMaxWidth(80); // 限制最大宽度
         
         Label waterMeterTitle = new Label("水位计");
-        waterMeterTitle.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        waterMeterTitle.setFont(Font.font("Arial", FontWeight.BOLD, 12)); // 减小字体大小
         
         // 创建水位计图像视图，默认显示0级
         waterMeterImageView = new ImageView();
-        waterMeterImageView.setFitWidth(100);  // 根据实际图片调整大小
-        waterMeterImageView.setFitHeight(150);
+        waterMeterImageView.setFitWidth(70);  // 减小宽度
+        waterMeterImageView.setFitHeight(120); // 减小高度
         waterMeterImageView.setPreserveRatio(true);
         
         // 设置默认水位计图片
@@ -163,9 +167,13 @@ public class ActionBarView {
         waterMeterPane.getChildren().addAll(waterMeterTitle, waterMeterImageView);
 
         // --- 设置布局 ---
-        viewPane.setTop(actionBarControls);      // 顶部放置动作按钮
-        viewPane.setCenter(logPane);             // 中间放置日志
-        viewPane.setRight(waterMeterPane);       // 右边放置水位计
+        // 创建一个更紧凑的布局
+        BorderPane topSection = new BorderPane();
+        topSection.setCenter(actionBarControls); // 中间放置动作按钮
+        topSection.setRight(waterMeterPane);     // 右边放置水位计
+        
+        viewPane.setTop(topSection);             // 顶部放置按钮和水位计
+        viewPane.setBottom(logPane);             // 底部放置日志（更紧凑）
         
         // 设置边距
         BorderPane.setMargin(actionBarControls, new Insets(5));
@@ -192,6 +200,17 @@ public class ActionBarView {
         if (gameController != null) {
             ActionBarController actionBarController = gameController.getActionBarController();
             Player currentPlayer = actionBarController.getCurrentPlayer();
+            
+            // 检查当前玩家是否为空
+            if (currentPlayer == null) {
+                // 如果没有当前玩家，禁用所有按钮
+                moveButton.setDisable(true);
+                shoreUpButton.setDisable(true);
+                giveCardButton.setDisable(true);
+                captureTreasureButton.setDisable(true);
+                useAbilityButton.setDisable(true);
+                return;
+            }
             
             // Enable/disable buttons based on game state and player abilities
             moveButton.setDisable(!(canAct));

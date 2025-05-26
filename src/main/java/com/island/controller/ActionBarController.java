@@ -181,23 +181,43 @@ public class ActionBarController {
      * Only allows movement to valid adjacent tiles that aren't sunk, following role-specific rules.
      */
     public void handleMoveAction() {
+        // 检查当前玩家是否为空
+        if (currentPlayer == null) {
+            gameController.showErrorToast("No active player!");
+            return;
+        }
+
         Tile chosenTile = gameController.getChosenTile();
+        if (chosenTile == null) {
+            gameController.showErrorToast("Please select a tile first!");
+            return;
+        }
+        
         Tile playerTile = getIsland().getTile(currentPlayer.getPosition());
+        if (playerTile == null) {
+            gameController.showErrorToast("Player position is invalid!");
+            return;
+        }
+        
         if (playerTile.isSunk()) {
             List<Tile> validTilesOnSunk = gameController.getValidTilesOnSunk(currentPlayer);
-            if (chosenTile != null && validTilesOnSunk.contains(chosenTile)) {
+            if (validTilesOnSunk.contains(chosenTile)) {
                 gameController.getRoomController().sendMoveMessage(currentPlayer, chosenTile.getPosition());
             } else {
                 gameController.showErrorToast("Invalid Tile!");
             }
+            return; // 添加return语句，防止执行下面的代码
         }
+        
         if (getRemainingActions() > 0) {
             List<Position> validPositions = currentPlayer.getMovePositions(getIsland().getGameMap());
-            if (chosenTile != null && validPositions.contains(chosenTile.getPosition())) {
+            if (validPositions.contains(chosenTile.getPosition())) {
                 gameController.getRoomController().sendMoveMessage(currentPlayer, chosenTile.getPosition());
             } else {
                 gameController.showErrorToast("Invalid Move!");
             }
+        } else {
+            gameController.showErrorToast("No actions remaining!");
         }
     }
 
@@ -207,14 +227,28 @@ public class ActionBarController {
      * Only allows shoring up flooded tiles that are adjacent or the player's current tile.
      */
     public void handleShoreUpAction() {
-        if (getRemainingActions() > 0) {
-            Tile chosenTile = gameController.getChosenTile();
-            List<Position> validPositions = currentPlayer.getShorePositions(getIsland().getGameMap());
-            if (chosenTile != null && chosenTile.getState() == TileState.FLOODED && validPositions.contains(chosenTile.getPosition())) {
-                gameController.getRoomController().sendShoreUpMessage(currentPlayer, chosenTile.getPosition());
-            } else {
-                gameController.showErrorToast("Invalid Tile!");
-            }
+        // 检查当前玩家是否为空
+        if (currentPlayer == null) {
+            gameController.showErrorToast("No active player!");
+            return;
+        }
+        
+        if (getRemainingActions() <= 0) {
+            gameController.showErrorToast("No actions remaining!");
+            return;
+        }
+        
+        Tile chosenTile = gameController.getChosenTile();
+        if (chosenTile == null) {
+            gameController.showErrorToast("Please select a tile first!");
+            return;
+        }
+        
+        List<Position> validPositions = currentPlayer.getShorePositions(getIsland().getGameMap());
+        if (chosenTile.getState() == TileState.FLOODED && validPositions.contains(chosenTile.getPosition())) {
+            gameController.getRoomController().sendShoreUpMessage(currentPlayer, chosenTile.getPosition());
+        } else {
+            gameController.showErrorToast("Invalid Tile!");
         }
     }
 
@@ -225,8 +259,16 @@ public class ActionBarController {
      * Only treasure cards can be given to other players.
      */
     public void handleGiveCardAction() {
-        if (getRemainingActions() > 0) {
-            Player currentPlayer = gameController.getCurrentPlayer();
+        // 检查当前玩家是否为空
+        if (currentPlayer == null) {
+            gameController.showErrorToast("No active player!");
+            return;
+        }
+        
+        if (getRemainingActions() <= 0) {
+            gameController.showErrorToast("No actions remaining!");
+            return;
+        }
 
             // getting the current player's cards
             List<Card> playerCards = currentPlayer.getCards();
@@ -331,7 +373,6 @@ public class ActionBarController {
                     }
                 }
             });
-        }
     }
 
     /**
@@ -341,8 +382,16 @@ public class ActionBarController {
      * Sets up the Navigator's target for subsequent tile selection.
      */
     public void handleMoveOtherPlayerAction() {
-        if (getRemainingActions() > 0) {
-            Player currentPlayer = gameController.getCurrentPlayer();
+        // 检查当前玩家是否为空
+        if (currentPlayer == null) {
+            gameController.showErrorToast("No active player!");
+            return;
+        }
+        
+        if (getRemainingActions() <= 0) {
+            gameController.showErrorToast("No actions remaining!");
+            return;
+        }
             Room room = gameController.getRoom();
 
             // check if the current player is a Navigator
@@ -420,7 +469,6 @@ public class ActionBarController {
                     }
                 }
             });
-        }
     }
 
     /**
@@ -430,8 +478,16 @@ public class ActionBarController {
      * Discards the required cards and registers the captured treasure.
      */
     public void handleCaptureTreasureAction() {
-        if (getRemainingActions() > 0) {
-            Player currentPlayer = gameController.getCurrentPlayer();
+        // 检查当前玩家是否为空
+        if (currentPlayer == null) {
+            gameController.showErrorToast("No active player!");
+            return;
+        }
+        
+        if (getRemainingActions() <= 0) {
+            gameController.showErrorToast("No actions remaining!");
+            return;
+        }
 
             // getting the current player's position and tile
             Position playerPosition = currentPlayer.getPosition();
@@ -481,13 +537,17 @@ public class ActionBarController {
                     gameController.getRoomController().sendCaptureTreasureMessage(currentPlayer, cardIndices);
                 }
             });
-        }
     }
 
     /**
      * Sends a message to end the current player's turn
      */
     public void handleEndTurnAction() {
+        // 检查当前玩家是否为空
+        if (currentPlayer == null) {
+            gameController.showErrorToast("No active player!");
+            return;
+        }
         gameController.getRoomController().sendEndTurnMessage(currentPlayer);
     }
 
@@ -495,6 +555,11 @@ public class ActionBarController {
      * Initiates the process of playing a special card
      */
     public void handlePlaySpecialAction() {
+        // 检查当前玩家是否为空
+        if (currentPlayer == null) {
+            gameController.showErrorToast("No active player!");
+            return;
+        }
         gameController.handlePlaySpecialAction();
     }
 
@@ -503,6 +568,11 @@ public class ActionBarController {
      * Increments the count of flood cards drawn and sends a message to the room
      */
     public void handleDrawFloodAction() {
+        // 检查当前玩家是否为空
+        if (currentPlayer == null) {
+            gameController.showErrorToast("No active player!");
+            return;
+        }
         gameController.getPlayerController().addDrawnFloodCards(1);
         gameController.getRoomController().sendDrawFloodMessage(1, currentPlayer.getName());
     }

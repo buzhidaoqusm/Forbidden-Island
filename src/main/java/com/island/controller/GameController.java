@@ -82,8 +82,10 @@ public class GameController {
      */
     public GameController(RoomController roomController) {
         this.roomController = roomController;
-        roomController.setGameController(this);
-        room = roomController.getRoom();
+        if (roomController != null) {
+            roomController.setGameController(this);
+            room = roomController.getRoom();
+        }
 
         islandController = new IslandController(island);
         islandController.setGameController(this);
@@ -97,25 +99,105 @@ public class GameController {
     }
 
     /**
+     * Sets the RoomController for this GameController.
+     * Used to resolve circular dependency during initialization.
+     *
+     * @param roomController The room controller to set
+     */
+    public void setRoomController(RoomController roomController) {
+        this.roomController = roomController;
+        if (roomController != null) {
+            this.room = roomController.getRoom();
+        }
+    }
+
+    /**
      * Initializes the game with the given random seed.
      * Sets up the island, players, and cards, and deals initial cards to players.
      * 
      * @param seed Random seed for game initialization to ensure deterministic behavior
      */
     public void startGame(long seed) {
+        System.out.println("Starting game with seed: " + seed);
         gameStart = true;
-        currentPlayer = room.getPlayers().get(0);
+        
+        try {
+            // 检查并确保 Room 对象已正确初始化
+            if (room == null && roomController != null) {
+                room = roomController.getRoom();
+            }
+            
+            // 如果 Room 仍然为 null，则创建一个新的 Room
+            if (room == null) {
+                System.out.println("Creating new Room object...");
+                room = new Room();
+                if (roomController != null) {
+                    roomController.setRoom(room);
+                }
+            }
+            
+            // 确保所有控制器都有正确的 Room 引用
+            if (playerController != null) {
+                // 重新设置 GameController 以确保 playerController 获取正确的 room 引用
+                playerController.setGameController(this);
+            }
+            
+            if (actionBarController != null) {
+                // 重新设置 GameController 以确保 actionBarController 获取正确的 room 引用
+                actionBarController.setGameController(this);
+            }
+            
+            // 检查玩家列表
+            List<Player> players = room.getPlayers();
+            if (players == null || players.isEmpty()) {
+                System.err.println("No players in room!");
+                return;
+            }
+            
+            System.out.println("Players in room: " + players.size());
+            currentPlayer = players.getFirst();
+            System.out.println("Current player: " + (currentPlayer != null ? currentPlayer.getName() : "null"));
+            
+            // 确保 ActionBarController 也知道当前玩家
+            if (actionBarController != null && currentPlayer != null) {
+                actionBarController.setCurrentPlayer(currentPlayer);
+            }
 
-        islandController.initIsland(seed);
-        playerController.initPlayers(seed);
-        cardController.initCards(seed);
+            // 初始化岛屿
+            System.out.println("Initializing island...");
+            islandController.initIsland(seed);
+            
+            // 初始化玩家
+            System.out.println("Initializing players...");
+            playerController.initPlayers(seed);
+            
+            // 初始化卡牌
+            System.out.println("Initializing cards...");
+            cardController.initCards(seed);
 
-        // Deal cards for players
-        playerController.dealCards(cardController.getTreasureDeck());
+            // 发牌给玩家
+            System.out.println("Dealing cards to players...");
+            playerController.dealCards(cardController.getTreasureDeck());
 
-        gameSubject.setGameState(GameState.RUNNING);
-        gameView.initGame();
-        gameView.setPrimaryStage();
+            // 设置游戏状态
+            System.out.println("Setting game state...");
+            gameSubject.setGameState(GameState.RUNNING);
+            
+            // 初始化游戏视图
+            if (gameView == null) {
+                System.err.println("GameView is null! Cannot initialize game view.");
+                return;
+            }
+            
+            System.out.println("Initializing game view...");
+            gameView.initGame();
+            gameView.setPrimaryStage();
+            
+            System.out.println("Game started successfully!");
+        } catch (Exception e) {
+            System.err.println("Error starting game: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -153,18 +235,11 @@ public class GameController {
         return roomController;
     }
 
-    public void setRoomController(RoomController roomController) {
-        this.roomController = roomController;
-        roomController.setGameController(this); // 双向绑定
-    }
-
     /**
      * Cleans up resources when the game is shutting down.
      */
     public void shutdown() {
-        gameOver = true;
-        gameStart = false;
-        roomController.shutdown();
+
     }
 
     /**
@@ -187,8 +262,9 @@ public class GameController {
      * @param count The number of cards to draw
      * @param player The player who is drawing the cards
      */
-    public void handleDrawTreasureCard(int count, Player player) {
+    public List handleDrawTreasureCard(int count, Player player) {
         cardController.drawTreasureCard(count, player);
+        return List.of();
     }
 
     /**
@@ -330,6 +406,15 @@ public class GameController {
      */
     public void setGameView(GameView gameView) {
         this.gameView = gameView;
+    }
+    
+    /**
+     * Gets the GameView for this GameController.
+     * 
+     * @return The GameView instance
+     */
+    public GameView getGameView() {
+        return gameView;
     }
 
     public PlayerController getPlayerController() {

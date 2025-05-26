@@ -1,24 +1,29 @@
 package com.island.view;
 
-import javafx.application.Platform;
-import javafx.geometry.Insets;
-import javafx.scene.control.TextArea;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.paint.Color;
-import javafx.scene.layout.VBox;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
-public class ActionLogView extends VBox {
+import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+
+public class ActionLogView {
     private static final String LOG_FILE_PATH = "game_action.log";
     private final boolean alsoPrintToConsole;
-    private TextArea logTextArea;
-    private int logAreaHeight = 120;
-    private int logAreaWidth = 230;
+    
+    // UI Components
+    private VBox logViewPane;
+    private TextArea logArea;
+    private Label titleLabel;
+    private DateTimeFormatter timeFormatter;
 
     public ActionLogView() {
         this(true); // Default simultaneous output to console
@@ -26,93 +31,96 @@ public class ActionLogView extends VBox {
 
     public ActionLogView(boolean alsoPrintToConsole) {
         this.alsoPrintToConsole = alsoPrintToConsole;
-        initializeLogView();
+        this.timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        initializeView();
     }
-
-    private void initializeLogView() {
-        // Initialize log display area
-        logTextArea = new TextArea();
-        logTextArea.setEditable(false);
-        logTextArea.setBackground(new Background(new BackgroundFill(
-                Color.rgb(30, 30, 30, 0.8),
-                CornerRadii.EMPTY,
-                Insets.EMPTY
-        )));
-        logTextArea.setStyle("""
-            -fx-font-family: 'Monospaced';
-            -fx-font-size: 12px;
-            -fx-text-fill: white;
-            """);
-
-
-        // Set scrollbar
-        this.setPadding(new Insets(5));
-        this.setSpacing(5);
-        this.getChildren().add(logTextArea);
-
+    
+    private void initializeView() {
+        // 创建日志视图面板
+        logViewPane = new VBox(5);
+        logViewPane.setPadding(new Insets(5));
+        
+        // 创建标题标签
+        titleLabel = new Label("游戏日志");
+        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        
+        // 创建日志文本区域
+        logArea = new TextArea();
+        logArea.setEditable(false);
+        logArea.setWrapText(true);
+        logArea.setPrefHeight(150);
+        logArea.setPrefWidth(200);
+        
+        // 添加组件到面板
+        logViewPane.getChildren().addAll(titleLabel, logArea);
     }
 
     public synchronized void log(String message) {
-        String timestampedMessage = "[" + LocalDateTime.now() + "] " + message;
-        writeToLogFile(timestampedMessage);
+        String timestamp = LocalDateTime.now().format(timeFormatter);
+        String timestampedMessage = "[" + timestamp + "] " + message;
 
-        appendToLogArea(timestampedMessage, "white");
-        if (alsoPrintToConsole) {
-            System.out.println(timestampedMessage);
-        }
-
-    }
-
-    public void error(String message) {
-        String timestampedMessage = "[ERROR] [" + LocalDateTime.now() + "] " + message;
-        writeToLogFile(timestampedMessage);
-
-        appendToLogArea(timestampedMessage, "#ff4444"); // red
-        if (alsoPrintToConsole) {
-            System.err.println(timestampedMessage);
-        }
-    }
-
-    public void success(String message) {
-        String timestampedMessage = "[SUCCESS] [" + LocalDateTime.now() + "] " + message;
-        writeToLogFile(timestampedMessage);
-
-        appendToLogArea(timestampedMessage, "#00C851"); // green
-        if (alsoPrintToConsole) {
-            System.out.println(timestampedMessage);
-        }
-    }
-
-    private void appendToLogArea(String message, String color) {
-        Platform.runLater(() -> {
-            logTextArea.appendText(message + "\n");
-            // Apply color to the latest line (requires HTML format support)
-            logTextArea.setStyle(
-                    " -fx-text-fill: " + color + ";"
-            );
-        });
-    }
-
-    public void setLogAreaHeight(int height) {
-        this.logAreaHeight = height;
-        logTextArea.setPrefHeight(height - 10);
-    }
-
-    public void setLogAreaWidth(int width) {
-        this.logAreaWidth = width;
-        logTextArea.setPrefWidth(width - 10);
-    }
-
-    private void writeToLogFile(String message) {
+        // 写入文件
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(LOG_FILE_PATH, true))) {
-            writer.write(message);
+            writer.write(timestampedMessage);
             writer.newLine();
         } catch (IOException e) {
             System.err.println("Failed to write to log file: " + e.getMessage());
         }
-    }
 
+        // 输出到控制台
+        if (alsoPrintToConsole) {
+            System.out.println(timestampedMessage);
+        }
+        
+        // 更新UI
+        appendToLogArea(timestampedMessage, null);
+    }
+    
+    public void success(String message) {
+        log("✓ " + message);
+        appendToLogArea("✓ " + message, Color.GREEN);
+    }
+    
+    public void warning(String message) {
+        log("⚠ " + message);
+        appendToLogArea("⚠ " + message, Color.ORANGE);
+    }
+    
+    public void error(String message) {
+        log("✗ " + message);
+        appendToLogArea("✗ " + message, Color.RED);
+    }
+    
+    private void appendToLogArea(String message, Color color) {
+        if (logArea != null) {
+            Platform.runLater(() -> {
+                if (color != null) {
+                    // 添加带颜色的文本
+                    logArea.appendText(message + "\n");
+                } else {
+                    // 添加普通文本
+                    logArea.appendText(message + "\n");
+                }
+                
+                // 滚动到底部
+                logArea.setScrollTop(Double.MAX_VALUE);
+            });
+        }
+    }
+    
+    public void setLogAreaHeight(double height) {
+        if (logArea != null) {
+            logArea.setPrefHeight(height);
+        }
+    }
+    
+    public void setLogAreaWidth(double width) {
+        if (logArea != null) {
+            logArea.setPrefWidth(width);
+        }
+    }
+    
     public VBox getView() {
-        return this;
+        return logViewPane;
     }
 }

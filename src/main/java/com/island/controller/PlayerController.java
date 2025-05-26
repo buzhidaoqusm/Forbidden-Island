@@ -46,7 +46,9 @@ public class PlayerController {
      */
     public void setGameController(GameController gameController) {
         this.gameController = gameController;
-        room = gameController.getRoomController().getRoom();
+        if (gameController.getRoomController() != null) {
+            room = gameController.getRoomController().getRoom();
+        }
     }
 
     /**
@@ -81,7 +83,28 @@ public class PlayerController {
                 gameController.setCurrentPlayer(player);
             }
             // set initial position according to the player role
-            player.setPosition(island.findTile(PlayerRole.getColor(player.getRole())).getPosition());
+            String roleColor = PlayerRole.getColor(player.getRole());
+            Tile startingTile = island.findTile(roleColor);
+            if (startingTile == null) {
+                System.err.println("Could not find starting tile for " + player.getName() + " with role " + player.getRole() + " (color: " + roleColor + ")");
+                // Try to find any non-sunk tile as a fallback
+                for (Tile tile : island.getGameMap().values()) {
+                    if (!tile.isSunk()) {
+                        startingTile = tile;
+                        break;
+                    }
+                }
+                
+                // If we still couldn't find a tile, use a default position
+                if (startingTile == null) {
+                    Position defaultPosition = new Position(2, 2); // Center of the island
+                    player.setPosition(defaultPosition);
+                } else {
+                    player.setPosition(startingTile.getPosition());
+                }
+            } else {
+                player.setPosition(startingTile.getPosition());
+            }
             room.addPlayer(player);
         }
         // Remove the characters of the first playerCount players from the room
@@ -227,6 +250,9 @@ public class PlayerController {
      * @return true if the player has drawn treasure cards, false otherwise
      */
     public boolean hasDrawnTreasureCards() {
+        if (room == null || room.getCurrentProgramPlayer() == null) {
+            return false;
+        }
         return room.getCurrentProgramPlayer().hasDrawnTreasureCards();
     }
 
@@ -236,6 +262,9 @@ public class PlayerController {
      * @return The number of flood cards drawn
      */
     public int getDrawnFloodCards() {
+        if (room == null || room.getCurrentProgramPlayer() == null) {
+            return 0;
+        }
         return room.getCurrentProgramPlayer().getDrawFloodCards();
     }
 
@@ -245,7 +274,9 @@ public class PlayerController {
      * @param hasDrawnTreasureCards The new status to set
      */
     public void setHasDrawnTreasureCards(boolean hasDrawnTreasureCards) {
-        room.getCurrentProgramPlayer().setHasDrawnTreasureCards(hasDrawnTreasureCards);
+        if (room != null && room.getCurrentProgramPlayer() != null) {
+            room.getCurrentProgramPlayer().setHasDrawnTreasureCards(hasDrawnTreasureCards);
+        }
     }
 
     /**
@@ -254,14 +285,18 @@ public class PlayerController {
      * @param count The number of additional flood cards drawn
      */
     public void addDrawnFloodCards(int count) {
-        room.getCurrentProgramPlayer().addDrawnFloodCards(count);
+        if (room != null && room.getCurrentProgramPlayer() != null) {
+            room.getCurrentProgramPlayer().addDrawnFloodCards(count);
+        }
     }
 
     /**
      * Resets the current player's state at the beginning of a new turn
      */
     public void resetPlayerState() {
-        room.getCurrentProgramPlayer().resetState();
+        if (room != null && room.getCurrentProgramPlayer() != null) {
+            room.getCurrentProgramPlayer().resetState();
+        }
     }
 
     /**

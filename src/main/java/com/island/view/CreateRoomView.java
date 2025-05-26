@@ -16,8 +16,10 @@ import javafx.scene.image.ImageView;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
-// import model.Player;
 import com.island.controller.GameController;
+import com.island.model.Player;
+import com.island.model.Explorer;
+import com.island.view.GameView;
 
 public class CreateRoomView {
 
@@ -166,9 +168,41 @@ public class CreateRoomView {
             // Validate if enough players have joined (usually handled by controller)
             // Notify the controller to start the game
             if (gameController != null) {
-                // The controller's startGame method exists, but takes a seed parameter
-                // that we need to pass directly
-                gameController.startGame(System.currentTimeMillis());  // Use current time as seed
+                // 添加调试信息，检查 gameController 的状态
+                System.out.println("GameController: " + gameController);
+                System.out.println("RoomController: " + gameController.getRoomController());
+                System.out.println("Room: " + gameController.getRoom());
+                if (gameController.getRoom() != null) {
+                    System.out.println("Players in Room: " + gameController.getRoom().getPlayers());
+                }
+                System.out.println("IslandController: " + gameController.getIslandController());
+                System.out.println("PlayerController: " + gameController.getPlayerController());
+                
+                try {
+                    // 确保有玩家在房间里
+                    if (gameController.getRoom() != null && 
+                        (gameController.getRoom().getPlayers() == null || gameController.getRoom().getPlayers().isEmpty())) {
+                        System.out.println("Adding test player to room...");
+                        // 添加一个测试玩家
+                        Player testPlayer = new Explorer("TestPlayer");
+                        gameController.getRoom().addPlayer(testPlayer);
+                    }
+                    
+                    // 创建 GameView 如果它为 null
+                    if (gameController.getGameView() == null) {
+                        System.out.println("Creating GameView...");
+                        GameView gameView = new GameView(primaryStage, gameController);
+                        gameController.setGameView(gameView);
+                    }
+                    
+                    // The controller's startGame method exists, but takes a seed parameter
+                    // that we need to pass directly
+                    System.out.println("Starting game with seed: " + System.currentTimeMillis());
+                    gameController.startGame(System.currentTimeMillis());  // Use current time as seed
+                } catch (Exception e) {
+                    System.err.println("Error starting game: " + e.getMessage());
+                    e.printStackTrace();
+                }
             } else {
                 System.out.println("Starting game setup...");
                 // Fallback when controller is not available
