@@ -210,15 +210,36 @@ public class RoomController {
         return this.messageHandler;
     }
 
-    public GameController setGameController(GameController gameController) {
-        return gameController;
+    public GameController getGameController() {
+        return this.gameController;
     }
 
+    /**
+     * Sets the game controller for this room controller
+     * @param gameController The game controller to set
+     */
+    public void setGameController(GameController gameController) {
+        this.gameController = gameController;
+    }
+
+    /**
+     * Gets the room managed by this controller
+     * @return The room instance
+     */
     public Room getRoom() {
         return this.room;
     }
 
-    public GameController getGameController() {
-        return this.gameController;
+    /**
+     * Sets the room for this controller
+     * @param room The room instance to set
+     */
+    public void setRoom(Room room) {
+        this.room = room;
     }
+
+    /**
+     * Gets the game controller for this room controller
+     * @return The game controller instance
+     */
 }

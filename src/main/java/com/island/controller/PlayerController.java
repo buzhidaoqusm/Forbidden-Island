@@ -6,7 +6,7 @@ import com.island.model.*;
 
 /**
  * The PlayerController class manages all player-related operations and states in the Forbidden Island game.
- * 
+ *
  * This controller:
  * - Handles player initialization and role assignment
  * - Manages player card distributions and interactions
@@ -20,12 +20,12 @@ public class PlayerController {
      * Reference to the main game controller
      */
     private GameController gameController;
-    
+
     /**
      * Reference to the current game room
      */
     private Room room;
-    
+
     /**
      * Currently selected card for actions like discarding
      */
@@ -41,19 +41,21 @@ public class PlayerController {
     /**
      * Establishes a bidirectional link with the game controller and retrieves
      * the room object for player management
-     * 
+     *
      * @param gameController The main controller for the game
      */
     public void setGameController(GameController gameController) {
         this.gameController = gameController;
-        room = gameController.getRoomController().getRoom();
+        if (gameController.getRoomController() != null) {
+            room = gameController.getRoomController().getRoom();
+        }
     }
 
     /**
      * Initializes all players with random roles using the provided seed.
      * Creates specialized player instances based on assigned roles and
      * positions each player on their starting tile based on role color.
-     * 
+     *
      * @param seed The random seed for deterministic role assignment
      */
     public void initPlayers(long seed) {
@@ -81,7 +83,28 @@ public class PlayerController {
                 gameController.setCurrentPlayer(player);
             }
             // set initial position according to the player role
-            player.setPosition(island.findTile(PlayerRole.getColor(player.getRole())).getPosition());
+            String roleColor = PlayerRole.getColor(player.getRole());
+            Tile startingTile = island.findTile(roleColor);
+            if (startingTile == null) {
+                System.err.println("Could not find starting tile for " + player.getName() + " with role " + player.getRole() + " (color: " + roleColor + ")");
+                // Try to find any non-sunk tile as a fallback
+                for (Tile tile : island.getGameMap().values()) {
+                    if (!tile.isSunk()) {
+                        startingTile = tile;
+                        break;
+                    }
+                }
+
+                // If we still couldn't find a tile, use a default position
+                if (startingTile == null) {
+                    Position defaultPosition = new Position(2, 2); // Center of the island
+                    player.setPosition(defaultPosition);
+                } else {
+                    player.setPosition(startingTile.getPosition());
+                }
+            } else {
+                player.setPosition(startingTile.getPosition());
+            }
             room.addPlayer(player);
         }
         // Remove the characters of the first playerCount players from the room
@@ -97,7 +120,7 @@ public class PlayerController {
      * Distributes initial treasure cards to all players.
      * Each player receives two non-water-rise cards.
      * Any water rise cards drawn are returned to the deck.
-     * 
+     *
      * @param treasureDeck The deck of treasure cards to draw from
      */
     public void dealCards(Deque<Card> treasureDeck) {
@@ -116,13 +139,13 @@ public class PlayerController {
 
     /**
      * Determines if a player has a helicopter or sandbags special card that can be played.
-     * 
+     *
      * @param player The player to check for special card availability
      * @return true if the player has a playable special card, false otherwise
      */
     public boolean canPlaySpecialCard(Player player) {
         if (player == null) return false;
-        
+
         // Check if player has any special cards
         for (Card card : player.getCards()) {
             if (card.getType() == CardType.HELICOPTER || card.getType() == CardType.SANDBAGS) {
@@ -134,7 +157,7 @@ public class PlayerController {
 
     /**
      * Determines if a player has at least one flooded tile in range that can be shored up.
-     * 
+     *
      * @param player The player to check for shore-up capability
      * @return true if the player can shore up at least one tile, false otherwise
      */
@@ -146,7 +169,7 @@ public class PlayerController {
     /**
      * Determines if a player can give a card to another player.
      * Messengers can give cards to any player, while other roles must share a tile with the recipient.
-     * 
+     *
      * @param player The player to check for card-giving capability
      * @return true if the player can give a card to at least one other player, false otherwise
      */
@@ -169,7 +192,7 @@ public class PlayerController {
     /**
      * Determines if a player can capture a treasure at their current location.
      * The player must be on a treasure tile and have four matching treasure cards.
-     * 
+     *
      * @param player The player to check for treasure-capturing capability
      * @return true if the player can capture a treasure, false otherwise
      */
@@ -196,7 +219,7 @@ public class PlayerController {
 
     /**
      * Gets the current game room containing all players
-     * 
+     *
      * @return The current Room object
      */
     public Room getRoom() {
@@ -205,7 +228,7 @@ public class PlayerController {
 
     /**
      * Sets the currently selected card for actions like discarding
-     * 
+     *
      * @param chosenCard The card selected by the player
      */
     public void setChosenCard(Card chosenCard) {
@@ -214,7 +237,7 @@ public class PlayerController {
 
     /**
      * Gets the currently selected card
-     * 
+     *
      * @return The currently selected Card object
      */
     public Card getChosenCard() {
@@ -223,45 +246,57 @@ public class PlayerController {
 
     /**
      * Checks if the current player has already drawn treasure cards during their turn
-     * 
+     *
      * @return true if the player has drawn treasure cards, false otherwise
      */
     public boolean hasDrawnTreasureCards() {
+        if (room == null || room.getCurrentProgramPlayer() == null) {
+            return false;
+        }
         return room.getCurrentProgramPlayer().hasDrawnTreasureCards();
     }
 
     /**
      * Gets the number of flood cards drawn by the current player
-     * 
+     *
      * @return The number of flood cards drawn
      */
     public int getDrawnFloodCards() {
+        if (room == null || room.getCurrentProgramPlayer() == null) {
+            return 0;
+        }
         return room.getCurrentProgramPlayer().getDrawFloodCards();
     }
 
     /**
      * Updates the flag indicating whether the current player has drawn treasure cards
-     * 
+     *
      * @param hasDrawnTreasureCards The new status to set
      */
     public void setHasDrawnTreasureCards(boolean hasDrawnTreasureCards) {
-        room.getCurrentProgramPlayer().setHasDrawnTreasureCards(hasDrawnTreasureCards);
+        if (room != null && room.getCurrentProgramPlayer() != null) {
+            room.getCurrentProgramPlayer().setHasDrawnTreasureCards(hasDrawnTreasureCards);
+        }
     }
 
     /**
      * Increases the count of flood cards drawn by the current player
-     * 
+     *
      * @param count The number of additional flood cards drawn
      */
     public void addDrawnFloodCards(int count) {
-        room.getCurrentProgramPlayer().addDrawnFloodCards(count);
+        if (room != null && room.getCurrentProgramPlayer() != null) {
+            room.getCurrentProgramPlayer().addDrawnFloodCards(count);
+        }
     }
 
     /**
      * Resets the current player's state at the beginning of a new turn
      */
     public void resetPlayerState() {
-        room.getCurrentProgramPlayer().resetState();
+        if (room != null && room.getCurrentProgramPlayer() != null) {
+            room.getCurrentProgramPlayer().resetState();
+        }
     }
 
     /**
