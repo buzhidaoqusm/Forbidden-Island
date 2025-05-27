@@ -53,7 +53,7 @@ public class Island {
     private void createTile(Position position, String name, TreasureType treasureType) {
         Tile tile = new Tile(name, position, treasureType);
         gameMap.put(position, tile);
-        if (name.equals("Fool's Landing")) {
+        if (name.equals("Blue")) {
             foolsLandingPosition = position;
         }
     }
@@ -205,7 +205,7 @@ public class Island {
      */
     public void addTile(Position position, Tile tile) {
         gameMap.put(position, tile);
-        if (tile.getName().equals("Fool's Landing")) {
+        if (tile.getName().equals("Blue")) {
             foolsLandingPosition = position;
         }
     }
@@ -225,7 +225,7 @@ public class Island {
      */
     public boolean isFoolsLanding(Position position) {
         Tile tile = gameMap.get(position);
-        return tile != null && tile.getName().equals("Fool's Landing");
+        return tile != null && tile.getName().equals("Blue");
     }
 
     /**

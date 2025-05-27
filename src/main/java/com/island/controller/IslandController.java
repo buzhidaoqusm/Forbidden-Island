@@ -78,10 +78,18 @@ public class IslandController {
 
         // Initialize tiles on the island
         int i = 2, j = 0;
-        for (String tileNumStr : tilesList) {
-            TreasureType treasureType = getTreasureType(tileNumStr);
-
-            addTile(tileNumStr, new Position(i, j), treasureType);
+        for (String tileName : tilesList) {
+            if (tileName.contains("Earth")) {
+                addTile(tileName, new Position(i, j), TreasureType.EARTH_STONE);
+            } else if (tileName.contains("Fire")) {
+                addTile(tileName, new Position(i, j), TreasureType.FIRE_CRYSTAL);
+            } else if (tileName.contains("Ocean")) {
+                addTile(tileName, new Position(i, j), TreasureType.OCEAN_CHALICE);
+            } else if (tileName.contains("Wind")) {
+                addTile(tileName, new Position(i, j), TreasureType.WIND_STATUE);
+            } else {
+                addTile(tileName, new Position(i, j), null);
+            }
 
             // Make the tiles follow a specific pattern
             i++;
@@ -102,20 +110,6 @@ public class IslandController {
             gameController.updateBoard();
             gameController.updateWaterLevel();
         }
-    }
-
-    private static TreasureType getTreasureType(String tileName) {
-        TreasureType treasureType = null;
-        if (tileName.equals("Howling Garden") || tileName.equals("Whispering Garden")) {
-            treasureType = TreasureType.EARTH_STONE;
-        } else if (tileName.equals("Breakers Bridge") || tileName.equals("Bronze Gate")) {
-            treasureType = TreasureType.WIND_STATUE;
-        } else if (tileName.equals("Cave of Embers") || tileName.equals("Cave of Shadows")) {
-            treasureType = TreasureType.FIRE_CRYSTAL;
-        } else if (tileName.equals("Cliffs of Abandon") || tileName.equals("Coral Palace")) {
-            treasureType = TreasureType.OCEAN_CHALICE;
-        }
-        return treasureType;
     }
 
     /**
@@ -233,7 +227,7 @@ public class IslandController {
      */
     public boolean checkFoolsLanding() {
         for (Tile tile : island.getGameMap().values()) {
-            if (tile.getName().equals("Fool's Landing") && tile.isSunk()) {
+            if (tile.getName().equals("Blue") && tile.isSunk()) {
                 return false;
             }
         }
