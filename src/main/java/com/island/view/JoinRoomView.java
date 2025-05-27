@@ -161,6 +161,10 @@ public class JoinRoomView {
         Button joinButton = new Button("Join");
         joinButton.setStyle("-fx-font-size: 14px; -fx-background-radius: 10;");
         joinButton.setOnAction(event -> {
+//            String inputRoomId = roomIdInput.getText();
+//            if (isValidRoomId(inputRoomId)) {
+//                gameController.joinRoom(inputRoomId); // 触发RoomController处理
+//            }
             String roomId = roomIdInput.getText().trim();
             feedbackLabel.setText(""); // Clear previous feedback
             if (isValidRoomId(roomId)) {

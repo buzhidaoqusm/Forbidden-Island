@@ -204,8 +204,6 @@ public class RoomController {
         broadcastAction(MessageType.END_TURN, player);
     }
 
-
-
     public MessageHandler getMessageHandler() {
         return this.messageHandler;
     }
@@ -238,8 +236,22 @@ public class RoomController {
         this.room = room;
     }
 
-    /**
-     * Gets the game controller for this room controller
-     * @return The game controller instance
-     */
+//    public void startBroadcast(String roomId) {
+//        scheduler.scheduleAtFixedRate(() -> {
+//            Message msg = new Message(MessageType.ROOM_ADVERTISEMENT)
+//                    .setRoomId(roomId)
+//                    .setData("difficulty", currentDifficulty);
+//            broadcast(msg); // 通过BroadcastSender周期性发送
+//        }, 0, 5, TimeUnit.SECONDS);
+//    }
+//
+//    public void joinRoom(String roomId) {
+//        // 验证房间存在性（通过已接收的广播消息）
+//        if (knownRooms.containsKey(roomId)) {
+//            Message joinMsg = new Message(MessageType.JOIN_REQUEST)
+//                    .setPlayer(currentPlayer)
+//                    .setRoomId(roomId);
+//            broadcast(joinMsg); // 广播加入请求
+//        }
+//    }
 }

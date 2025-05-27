@@ -704,4 +704,7 @@ public class GameController {
     public void updateWaterLevel() {
         gameSubject.notifyWaterLevelChanged(islandController.getWaterLevel());
     }
+
+    public void createRoom(String roomId, String selectedDifficulty) {
+    }
 }
