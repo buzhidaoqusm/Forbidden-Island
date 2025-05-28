@@ -1,5 +1,7 @@
 package com.island.model;
 
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +13,8 @@ public class Room {
 
     public Room() {
         this.players = new ArrayList<>();
+        // 生成roomId的UUID
+        this.roomId = java.util.UUID.randomUUID().toString();
     }
 
     public List<Player> getPlayers() {

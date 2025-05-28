@@ -132,6 +132,7 @@ public class MenuView {
                 CreateRoomView createRoomView = new CreateRoomView(primaryStage, gameController);
                 primaryStage.setScene(createRoomView.createScene());
                 primaryStage.setTitle("Forbidden Island - Create Room");
+                System.out.println("当前房间ID： " + gameController.getRoom().getRoomId());
             } else {
                 System.out.println("Transitioning to Create Room view...");
                 CreateRoomView createRoomView = new CreateRoomView(primaryStage);
@@ -153,7 +154,7 @@ public class MenuView {
                 // Future implementation: gameController.showJoinRoomView();
                 
                 // For now, use direct transition
-                JoinRoomView joinRoomView = new JoinRoomView(primaryStage);
+                JoinRoomView joinRoomView = new JoinRoomView(primaryStage, gameController);
                 primaryStage.setScene(joinRoomView.createScene());
                 primaryStage.setTitle("Forbidden Island - Join Room");
             } else {

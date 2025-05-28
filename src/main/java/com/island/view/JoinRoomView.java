@@ -1,5 +1,7 @@
 package com.island.view;
 
+import com.island.model.Player;
+import com.island.network.RoomController;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -38,6 +40,8 @@ public class JoinRoomView {
     // Image resources
     private Image roomBackgroundImage;
     private Image roomTitleImage;
+    private Player player;
+    private RoomController roomController;
 
     // Constructor without GameController
     public JoinRoomView(Stage primaryStage) {
@@ -208,9 +212,10 @@ public class JoinRoomView {
                         Platform.runLater(() -> setFeedback("正在尝试加入房间... 尝试 " + (retryCount.get() + 1) + "/" + maxRetries));
                         
                         // 尝试加入房间
-                        Message joinMessage = new Message(MessageType.PLAYER_JOIN, roomId, "system");
-                        gameController.handlePlayerJoin(joinMessage);
-                        
+                        Message joinMessage = new Message(MessageType.PLAYER_JOIN, roomId, "system")
+                                .addExtraData("username", gameController.getCurrentPlayer());
+                        gameController.getRoomController().broadcast(joinMessage);
+
                         // 等待响应
                         Thread.sleep(retryDelay);
                         

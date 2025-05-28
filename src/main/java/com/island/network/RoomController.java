@@ -1,6 +1,7 @@
 package com.island.network;
 
 import com.island.controller.GameController;
+import com.island.launcher.Launcher;
 import com.island.model.Player;
 import com.island.model.Position;
 import com.island.model.Room;
@@ -67,7 +68,7 @@ public class RoomController implements AutoCloseable {
             // 初始化网络组件
             Set<String> broadcastAddresses = BroadcastAddressCalculator.getBroadcastAddresses();
             this.sender = new BroadcastSender(broadcastAddresses, DEFAULT_PORT, logView);
-            this.receiver = new BroadcastReceiver(this, DEFAULT_PORT);
+            this.receiver = new BroadcastReceiver(this, Launcher.networkConfig.getListenPort());
             
             logView.success("Room controller components initialized successfully");
         } catch (BroadcastAddressCalculator.NetworkInterfaceException e) {
@@ -154,7 +155,7 @@ public class RoomController implements AutoCloseable {
             logView.warning("Attempting to restart receiver...");
             try {
                 Thread.sleep(RECONNECT_DELAY_MS);
-                receiver = new BroadcastReceiver(this, DEFAULT_PORT);
+                receiver = new BroadcastReceiver(this, Launcher.networkConfig.getListenPort());
                 CompletableFuture.runAsync(() -> {
                     try {
                         receiver.run();
@@ -371,25 +372,13 @@ public class RoomController implements AutoCloseable {
             // 尝试添加玩家
             boolean joined = room.addPlayer(player);
             logView.log("玩家加入结果: " + (joined ? "成功" : "失败"));
-            
-            // 发送响应
-            sendJoinResponse(player, joined);
-            
-            if (joined) {
-                // 广播玩家加入消息
-                broadcastAction(MessageType.PLAYER_JOIN, player, Map.of("status", "joined"));
-                updatePlayerHeartbeat(player.getName());
-                logView.success("玩家加入成功: " + player.getName());
-                
-                // 更新房间状态
-                broadcastAction(MessageType.UPDATE_ROOM, "system", Map.of(
+
+
+            // 更新房间状态
+            broadcastAction(MessageType.UPDATE_ROOM, "system", Map.of(
                     "players", room.getPlayers(),
                     "roomId", room.getRoomId()
-                ));
-            } else {
-                logView.warning("玩家加入请求被拒绝: " + player.getName());
-                throw new IllegalStateException("玩家加入请求被拒绝");
-            }
+            ));
         } catch (Exception e) {
             logView.error("处理加入请求时发生错误: " + e.getMessage());
             // 将错误信息发送回客户端

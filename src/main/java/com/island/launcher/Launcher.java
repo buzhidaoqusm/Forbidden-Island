@@ -1,5 +1,6 @@
 package com.island.launcher;
 
+import com.island.config.NetworkConfig;
 import com.island.view.ActionLogView;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -16,7 +17,8 @@ import com.island.view.GameStart;
  * Serves as the main entry point for the Forbidden Island game
  */
 public class Launcher extends Application {
-    
+
+    public static NetworkConfig networkConfig;
     private GameController gameController;
     private RoomController roomController;
     private Room room;
@@ -85,13 +87,22 @@ public class Launcher extends Application {
             System.exit(1);
         }
     }
-    
+    private static NetworkConfig parseArgs(String[] args) {
+        int defaultPort = 8888;
+        for (String a : args) {
+            if (a.startsWith("--port=")) {
+                return new NetworkConfig(Integer.parseInt(a.substring(7)));
+            }
+        }
+        return new NetworkConfig(defaultPort);
+    }
     /**
      * 程序入口方法
      * @param args 命令行参数
      */
     public static void main(String[] args) {
         try {
+            networkConfig = parseArgs(args);
             // 启动JavaFX应用
             launch(args);
         } catch (Exception e) {

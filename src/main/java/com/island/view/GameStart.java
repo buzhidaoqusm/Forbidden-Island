@@ -1,5 +1,6 @@
 package com.island.view;
 
+import com.island.model.PendingPlayer;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -126,6 +127,8 @@ public class GameStart {
                     // gameController.showMainMenu();
                     
                     // For now, use direct transition with gameController
+                    Player player = new PendingPlayer(username);
+                    gameController.setCurrentPlayer(player);
                     MenuView menuView = new MenuView(primaryStage, gameController);
                     primaryStage.setScene(menuView.createScene());
                     primaryStage.setTitle("Forbidden Island - Main Menu");
