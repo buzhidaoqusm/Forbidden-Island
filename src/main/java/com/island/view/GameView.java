@@ -1,5 +1,7 @@
 package com.island.view;
 
+import com.island.model.GameState;
+import com.island.util.observer.GameObserver;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
@@ -29,7 +31,7 @@ import com.island.controller.GameController;
 import com.island.model.Player;
 import com.island.model.Position;
 
-public class GameView {
+public class GameView implements GameObserver {
 
     private Stage primaryStage;
     private BorderPane rootLayout;
@@ -528,5 +530,40 @@ public class GameView {
         if (islandView != null) {
             islandView.updateWaterLevelIndicator(level);
         }
+    }
+
+    @Override
+    public void onGameStateChanged(GameState state) {
+
+    }
+
+    @Override
+    public void onBoardChanged() {
+
+    }
+
+    @Override
+    public void onPlayerMoved(Player player, Position newPosition) {
+
+    }
+
+    @Override
+    public void onWaterLevelChanged(int newLevel) {
+
+    }
+
+    @Override
+    public void onCardChanged() {
+
+    }
+
+    @Override
+    public void onPlayerInfoChanged() {
+
+    }
+
+    @Override
+    public void onActionBarChanged() {
+
     }
 }
