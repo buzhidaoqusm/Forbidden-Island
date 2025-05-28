@@ -187,38 +187,40 @@ public class ActionBarController {
             return;
         }
 
-        Tile chosenTile = gameController.getChosenTile();
-        if (chosenTile == null) {
-            gameController.showErrorToast("Please select a tile first!");
-            return;
-        }
+//        Tile chosenTile = gameController.getChosenTile();
+//        if (chosenTile == null) {
+//            gameController.showErrorToast("Please select a tile first!");
+//            return;
+//        }
 
-        Tile playerTile = getIsland().getTile(currentPlayer.getPosition());
-        if (playerTile == null) {
-            gameController.showErrorToast("Player position is invalid!");
-            return;
-        }
+//        Tile playerTile = getIsland().getTile(currentPlayer.getPosition());
+//        if (playerTile == null) {
+//            gameController.showErrorToast("Player position is invalid!");
+//            return;
+//        }11
 
-        if (playerTile.isSunk()) {
-            List<Tile> validTilesOnSunk = gameController.getValidTilesOnSunk(currentPlayer);
-            if (validTilesOnSunk.contains(chosenTile)) {
-                gameController.getRoomController().sendMoveMessage(currentPlayer, chosenTile.getPosition());
-            } else {
-                gameController.showErrorToast("Invalid Tile!");
-            }
-            return; // 添加return语句，防止执行下面的代码
-        }
-
-        if (getRemainingActions() > 0) {
-            List<Position> validPositions = currentPlayer.getMovePositions(getIsland().getGameMap());
-            if (validPositions.contains(chosenTile.getPosition())) {
-                gameController.getRoomController().sendMoveMessage(currentPlayer, chosenTile.getPosition());
-            } else {
-                gameController.showErrorToast("Invalid Move!");
-            }
-        } else {
-            gameController.showErrorToast("No actions remaining!");
-        }
+//        if (playerTile.isSunk()) {
+//            List<Tile> validTilesOnSunk = gameController.getValidTilesOnSunk(currentPlayer);
+//            if (validTilesOnSunk.contains(chosenTile)) {
+//                gameController.getRoomController().sendMoveMessage(currentPlayer, chosenTile.getPosition());
+//            } else {
+//                gameController.showErrorToast("Invalid Tile!");
+//            }
+//            return; // 添加return语句，防止执行下面的代码
+//        }
+//
+//        if (getRemainingActions() > 0) {
+//            List<Position> validPositions = currentPlayer.getMovePositions(getIsland().getGameMap());
+//            if (validPositions.contains(chosenTile.getPosition())) {
+//                gameController.getRoomController().sendMoveMessage(currentPlayer, chosenTile.getPosition());
+//            } else {
+//                gameController.showErrorToast("Invalid Move!");
+//            }
+//        } else {
+//            gameController.showErrorToast("No actions remaining!");
+//        }
+        List<Position> validPositions = currentPlayer.getMovePositions(getIsland().getGameMap());
+        gameController.getGameView().getIslandView().highlightTiles(validPositions, "hightlight-move");
     }
 
     /**
