@@ -239,7 +239,7 @@ public class GameController {
      * Cleans up resources when the game is shutting down.
      */
     public void shutdown() {
-
+        roomController.shutdown();
     }
 
     /**
