@@ -1,0 +1,42 @@
+[20:05:21] 游戏界面初始化完成
+[20:09:24] 游戏界面初始化完成
+[20:17:46] 游戏界面初始化完成
+[20:37:03] 游戏界面初始化完成
+[20:48:09] 游戏界面初始化完成
+[20:57:53] 游戏界面初始化完成
+[21:38:03] 游戏界面初始化完成
+[22:18:25] 游戏界面初始化完成
+[22:29:02] 游戏界面初始化完成
+[22:36:39] 游戏界面初始化完成
+[22:47:36] 游戏界面初始化完成
+[22:50:21] 游戏界面初始化完成
+[22:53:53] 游戏界面初始化完成
+[22:54:37] 游戏界面初始化完成
+[23:02:52] 游戏界面初始化完成
+[23:03:29] 游戏界面初始化完成
+[23:09:15] 游戏界面初始化完成
+[16:52:25] ✓ Room controller components initialized successfully
+[16:55:11] ✓ Room controller components initialized successfully
+[17:03:07] ✓ Message broadcast successfully to 192.168.45.255
+[17:11:57] ✓ Room controller components initialized successfully
+[17:13:44] ✓ Room controller components initialized successfully
+[17:14:06] 准备广播消息: END_TURN
+[17:14:06] 消息序列化成功，大小: 85 字节
+[17:14:06] 消息加密成功
+[17:14:06] 准备发送到 1 个广播地址
+[17:14:06] 正在发送到地址: 192.168.45.255
+[17:14:06] ✓ 成功发送到地址: 192.168.45.255
+[17:14:06] ✓ 消息广播完成
+[17:15:57] ✗ Unexpected error during initialization: Address already in use: bind
+[17:15:57] 正在关闭房间控制器...
+[17:15:57] ✓ Broadcast sender closed successfully
+[17:15:57] ✓ 房间控制器已完全关闭
+[18:24:03] ✓ Room controller components initialized successfully
+[18:24:48] ✓ Room controller components initialized successfully
+[18:25:49] 准备广播消息: MOVE_PLAYER
+[18:25:49] 消息序列化成功，大小: 126 字节
+[18:25:49] 消息加密成功
+[18:25:49] 准备发送到 1 个广播地址
+[18:25:49] 正在发送到地址: 192.168.45.255
+[18:25:49] ✓ 成功发送到地址: 192.168.45.255
+[18:25:49] ✓ 消息广播完成

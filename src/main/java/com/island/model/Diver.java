@@ -55,4 +55,9 @@ public class Diver extends Player {
         }
         return positions;
     }
+
+    @Override
+    public void setRole(PlayerRole playerRole) {
+
+    }
 }

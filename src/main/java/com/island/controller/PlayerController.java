@@ -59,61 +59,101 @@ public class PlayerController {
      * @param seed The random seed for deterministic role assignment
      */
     public void initPlayers(long seed) {
+        if (gameController == null) {
+            System.err.println("GameController is null in PlayerController.initPlayers");
+            return;
+        }
+
         Island island = gameController.getIslandController().getIsland();
+        if (island == null) {
+            System.err.println("Island is null in PlayerController.initPlayers");
+            return;
+        }
+
         ArrayList<PlayerRole> roles = new ArrayList<>(Arrays.asList(PlayerRole.values()));
         Collections.shuffle(roles, new Random(seed));
+        
+        if (room == null) {
+            System.err.println("Room is null in PlayerController.initPlayers");
+            return;
+        }
+
         int playerCount = room.getPlayers().size();
         List<Player> players = room.getPlayers();
+        System.out.println("Initializing " + playerCount + " players");
+
         for (int i = 0; i < playerCount; i++) {
             Player player = players.get(i);
-            switch (roles.get(i)) {
-                case DIVER -> player = new Diver(player.getName());
-                case ENGINEER -> player = new Engineer(player.getName());
-                case EXPLORER -> player = new Explorer(player.getName());
-                case MESSENGER -> player = new Messenger(player.getName());
-                case NAVIGATOR -> player = new Navigator(player.getName());
-                case PILOT -> player = new Pilot(player.getName());
+            PlayerRole role = roles.get(i);
+            System.out.println("Initializing player " + player.getName() + " with role " + role);
+
+            // 创建新的玩家实例
+            Player newPlayer;
+            switch (role) {
+                case DIVER -> newPlayer = new Diver(player.getName());
+                case ENGINEER -> newPlayer = new Engineer(player.getName());
+                case EXPLORER -> newPlayer = new Explorer(player.getName());
+                case MESSENGER -> newPlayer = new Messenger(player.getName());
+                case NAVIGATOR -> newPlayer = new Navigator(player.getName());
+                case PILOT -> newPlayer = new Pilot(player.getName());
+                default -> {
+                    System.err.println("Unknown role: " + role);
+                    continue;
+                }
             }
-            // update the host player
-            if (room.isHost(player.getName())) {
-                room.setHostPlayer(player);
-            }
-            // update the current player
-            if (gameController.getCurrentPlayer().getName().equals(player.getName())) {
-                gameController.setCurrentPlayer(player);
-            }
-            // set initial position according to the player role
-            String roleColor = PlayerRole.getColor(player.getRole());
+
+            // 设置初始位置
+            String roleColor = PlayerRole.getColor(role);
             Tile startingTile = island.findTile(roleColor);
-            if (startingTile == null) {
-                System.err.println("Could not find starting tile for " + player.getName() + " with role " + player.getRole() + " (color: " + roleColor + ")");
-                // Try to find any non-sunk tile as a fallback
-                for (Tile tile : island.getGameMap().values()) {
-                    if (!tile.isSunk()) {
-                        startingTile = tile;
-                        break;
-                    }
-                }
+            Position startPosition;
 
-                // If we still couldn't find a tile, use a default position
-                if (startingTile == null) {
-                    Position defaultPosition = new Position(2, 2); // Center of the island
-                    player.setPosition(defaultPosition);
-                } else {
-                    player.setPosition(startingTile.getPosition());
-                }
+            if (startingTile != null) {
+                startPosition = startingTile.getPosition();
+                System.out.println("Setting " + player.getName() + " to position " + startPosition);
             } else {
-                player.setPosition(startingTile.getPosition());
+                // 如果找不到对应颜色的瓦片，寻找任何未沉没的瓦片
+                System.out.println("Could not find starting tile for " + roleColor + ", looking for any non-sunk tile");
+                startPosition = findAnyNonSunkPosition(island);
             }
-            room.addPlayer(player);
-        }
-        // Remove the characters of the first playerCount players from the room
-        room.getPlayers().subList(0, playerCount).clear();
 
-        // update player info after initialization
+            if (startPosition != null) {
+                newPlayer.setPosition(startPosition);
+            } else {
+                System.err.println("Could not find any valid position for " + player.getName());
+                newPlayer.setPosition(new Position(2, 2)); // 使用默认中心位置
+            }
+
+            // 更新玩家引用
+            if (room.isHost(player.getName())) {
+                room.setHostPlayer(newPlayer);
+            }
+            if (gameController.getCurrentPlayer() != null && 
+                gameController.getCurrentPlayer().getName().equals(player.getName())) {
+                gameController.setCurrentPlayer(newPlayer);
+            }
+
+            // 将新玩家添加到房间
+            room.addPlayer(newPlayer);
+        }
+
+        // 移除原始玩家
+        for (int i = 0; i < playerCount; i++) {
+            room.getPlayers().remove(0);
+        }
+
+        // 更新玩家信息
         if (gameController != null) {
             gameController.updatePlayersInfo();
         }
+    }
+
+    private Position findAnyNonSunkPosition(Island island) {
+        for (Map.Entry<Position, Tile> entry : island.getGameMap().entrySet()) {
+            if (!entry.getValue().isSunk()) {
+                return entry.getKey();
+            }
+        }
+        return null;
     }
 
     /**

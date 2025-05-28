@@ -35,6 +35,7 @@ public abstract class Player {
         this.isReady = false;
         this.inGame = false;
         this.isHost = false;
+        this.position = new Position(2, 2);
     }
 
     public abstract List<Position> getMovePositions(Map<Position, Tile> tiles);
@@ -238,4 +239,5 @@ public abstract class Player {
         this.drawFloodCards = 0;
     }
 
+    public abstract void setRole(PlayerRole playerRole);
 }

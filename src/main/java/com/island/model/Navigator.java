@@ -48,6 +48,11 @@ public class Navigator extends Player {
         return positions;
     }
 
+    @Override
+    public void setRole(PlayerRole playerRole) {
+
+    }
+
     public void setNavigatorTarget(Player player, int moves) {
         this.navigatorTarget = player;
         this.navigatorMoves = moves;

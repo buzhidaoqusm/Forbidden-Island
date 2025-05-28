@@ -15,10 +15,15 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
-// import model.Player;
 import com.island.controller.GameController;
 import com.island.model.Room;
+import com.island.network.Message;
+import com.island.network.MessageType;
+
+// import model.Player;
 
 public class JoinRoomView {
 
@@ -166,24 +171,11 @@ public class JoinRoomView {
 //                gameController.joinRoom(inputRoomId); // 触发RoomController处理
 //            }
             String roomId = roomIdInput.getText().trim();
-            feedbackLabel.setText(""); // Clear previous feedback
+            feedbackLabel.setText(""); // 清除之前的反馈
             if (isValidRoomId(roomId)) {
-                System.out.println("Join button clicked. Attempting to join Room ID: " + roomId);
-                // Send join request to the controller
-                if (gameController != null) {
-                    // This method is not implemented yet in the controller
-                    // gameController.joinRoom(roomId);
-                    // Using placeholder for now
-                    System.out.println("Would join room with ID: " + roomId);
-                    setFeedback("Join function not yet implemented in controller");
-                } else {
-                    // Placeholder action when controller is not available
-                    System.out.println("Sending join request...");
-                    setFeedback("Controller not available. Cannot join room.");
-                }
-                // The controller would handle the response and update the view
+                handleJoinRoom(roomId);
             } else {
-                setFeedback("Invalid Room ID format.");
+                setFeedback("无效的房间ID格式，请输入正确的UUID");
             }
         });
 
@@ -195,8 +187,54 @@ public class JoinRoomView {
     }
     
     private boolean isValidRoomId(String roomId) {
-        // Add actual validation logic here (e.g., check length, characters)
-        return roomId != null && !roomId.isEmpty();
+        // 验证UUID格式
+        try {
+            UUID.fromString(roomId);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    private void handleJoinRoom(String roomId) {
+        if (gameController != null) {
+            final AtomicInteger retryCount = new AtomicInteger(0);
+            final int maxRetries = 3;
+            final long retryDelay = 2000; // 2秒延迟
+
+            new Thread(() -> {
+                while (retryCount.get() < maxRetries) {
+                    try {
+                        Platform.runLater(() -> setFeedback("正在尝试加入房间... 尝试 " + (retryCount.get() + 1) + "/" + maxRetries));
+                        
+                        // 尝试加入房间
+                        Message joinMessage = new Message(MessageType.PLAYER_JOIN, roomId, "system");
+                        gameController.handlePlayerJoin(joinMessage);
+                        
+                        // 等待响应
+                        Thread.sleep(retryDelay);
+                        
+                        // 检查是否成功加入
+                        if (gameController.getRoom() != null && 
+                            gameController.getRoom().getRoomId() != null && 
+                            gameController.getRoom().getRoomId().equals(roomId)) {
+                            Platform.runLater(() -> setFeedback("成功加入房间！"));
+                            return;
+                        }
+                        
+                        retryCount.incrementAndGet();
+                    } catch (Exception e) {
+                        Platform.runLater(() -> setFeedback("加入失败: " + e.getMessage()));
+                        retryCount.incrementAndGet();
+                    }
+                }
+                
+                // 所有重试都失败
+                Platform.runLater(() -> setFeedback("无法加入房间，请检查房间ID是否正确"));
+            }).start();
+        } else {
+            setFeedback("游戏控制器未初始化");
+        }
     }
 
     public void updatePlayerList(java.util.List<String> playerNames) {

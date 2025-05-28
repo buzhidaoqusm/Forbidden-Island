@@ -1,5 +1,6 @@
 package com.island.launcher;
 
+import com.island.view.ActionLogView;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
@@ -19,6 +20,7 @@ public class Launcher extends Application {
     private GameController gameController;
     private RoomController roomController;
     private Room room;
+    private ActionLogView logView;
     
     /**
      * JavaFX application start method
@@ -27,7 +29,10 @@ public class Launcher extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
-            // Initialize room
+            // 初始化日志视图
+            logView = new ActionLogView();
+            
+            // 初始化房间
             room = new Room();
             
             // 更安全的初始化顺序
@@ -35,9 +40,8 @@ public class Launcher extends Application {
             gameController = new GameController(null);
             
             // 2. 创建RoomController并将GameController传入
-            roomController = new RoomController(gameController, room);
-            roomController.start();
-            
+            roomController = new RoomController(gameController, room, logView);
+
             // 3. 将RoomController设置到GameController
             gameController.setRoomController(roomController);
             

@@ -55,6 +55,12 @@ public class Room {
         }
         if (player != null && !players.contains(player)) {
             players.add(player);
+            // 如果是第一个玩家，设置为房主
+            if (players.size() == 1) {
+                setHostPlayer(player);
+                player.setHost(true);
+            }
+            return true;
         }
         return false;
     }
@@ -140,5 +146,15 @@ public class Room {
      */
     public boolean isFull() {
         return players.size() >= 4;
+    }
+
+    /**
+     * 清理房间状态
+     */
+    public void clear() {
+        players.clear();
+        hostPlayer = null;
+        currentProgramPlayer = null;
+        roomId = null;
     }
 }
