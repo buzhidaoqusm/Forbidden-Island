@@ -71,79 +71,6 @@ public class IslandView {
     }
     
     /**
-     * 尝试从多个可能的路径加载图片资源
-     * @param baseName 图片基本名称（不包含路径和扩展名）
-     * @param type 图片类型（如"normal", "flood"等）
-     * @return 加载的图片，如果加载失败则返回null
-     */
-    private Image loadTileImage(String baseName, String type) {
-        // 可能的路径前缀列表
-        String[] pathPrefixes = {
-            "/islands/",
-            "/images/islands/",
-            "/resources/islands/",
-            "/assets/islands/",
-            "/com/island/resources/islands/",
-            "/"
-        };
-        
-        // 可能的文件扩展名
-        String[] extensions = {".png", ".jpg", ".jpeg"};
-        
-        // 根据类型确定文件名后缀
-        String suffix = "";
-        if ("flood".equals(type)) {
-            suffix = "_flood";
-        }
-        
-        // 尝试所有可能的路径组合
-        for (String prefix : pathPrefixes) {
-            for (String ext : extensions) {
-                String path = prefix + baseName + suffix + ext;
-                try {
-                    System.out.println("尝试加载图片: " + path);
-                    Image image = new Image(getClass().getResourceAsStream(path));
-                    if (image != null && !image.isError()) {
-                        System.out.println("成功加载图片: " + path);
-                        return image;
-                    }
-                } catch (Exception e) {
-                    // 继续尝试下一个路径
-                }
-            }
-        }
-        
-        System.err.println("无法加载图片: " + baseName + " (" + type + ")");
-        return null;
-    }
-    
-    /**
-     * 创建默认的矩形瓦片
-     * @param tileType 瓦片类型
-     * @param state 瓦片状态
-     * @return 创建的矩形
-     */
-    private Rectangle createDefaultTileRectangle(String tileType, TileState state) {
-        Rectangle rect = new Rectangle(TILE_SIZE, TILE_SIZE);
-        
-        switch (state) {
-            case NORMAL:
-                rect.setFill(NORMAL_TILE_COLOR);
-                break;
-            case FLOODED:
-                rect.setFill(FLOODED_TILE_COLOR);
-                break;
-            case SUNK:
-                rect.setFill(SUNK_TILE_COLOR);
-                break;
-        }
-        
-        rect.setStroke(Color.BLACK);
-        rect.setStrokeWidth(1);
-        return rect;
-    }
-    
-    /**
      * 加载所有图片资源
      */
     private void loadImages() {
@@ -152,51 +79,33 @@ public class IslandView {
             
             // 加载水位线图片
             try {
-                floodMeterImage = loadTileImage("flood_meter", "normal");
-                if (floodMeterImage == null) {
-                    System.err.println("无法加载水位线图片，将使用默认图片");
-                    // 创建默认水位线图片
-                    javafx.scene.canvas.Canvas canvas = new javafx.scene.canvas.Canvas(80, 350);
-                    javafx.scene.canvas.GraphicsContext gc = canvas.getGraphicsContext2D();
-                    
-                    // 绘制水位线背景
-                    gc.setFill(Color.LIGHTBLUE);
-                    gc.fillRect(0, 0, 80, 350);
-                    
-                    // 绘制水位刻度
-                    gc.setStroke(Color.BLACK);
-                    for (int i = 0; i < 10; i++) {
-                        double y = 35 + i * 30;
-                        gc.strokeLine(0, y, 80, y);
-                        gc.setFill(Color.BLACK);
-                        gc.fillText(String.valueOf(10-i), 5, y - 5);
-                    }
-                    
-                    javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
-                    params.setFill(Color.TRANSPARENT);
-                    floodMeterImage = canvas.snapshot(params, null);
+                floodMeterImage = new Image(getClass().getResourceAsStream("/islands/flood_meter.png"));
+                if (floodMeterImage == null || floodMeterImage.isError()) {
+                    System.err.println("无法加载水位线图片");
                 }
-            } catch (Exception e) {
+                System.out.println("成功加载水位线图片");
+                } catch (Exception e) {
                 System.err.println("加载水位线图片失败: " + e.getMessage());
             }
             
             // 加载不同水位的背景图片
             for (int i = 2; i <= 5; i++) {
                 try {
-                    Image bgImage = loadTileImage("bg_" + i, "normal");
-                    if (bgImage != null) {
+                    Image bgImage = new Image(getClass().getResourceAsStream("/islands/bg_" + i + ".png"));
+                    if (bgImage != null && !bgImage.isError()) {
                         waterLevelBackgrounds.put(i, bgImage);
+                        System.out.println("成功加载水位 " + i + " 的背景图片");
                     }
                 } catch (Exception e) {
                     System.err.println("加载水位 " + i + " 背景图片失败: " + e.getMessage());
                 }
             }
             
-            // 默认使用水位2的背景图片或创建默认背景
+            // 默认使用水位2的背景图片
             if (waterLevelBackgrounds.containsKey(2)) {
                 mapBackgroundImage = waterLevelBackgrounds.get(2);
             } else {
-                // 创建默认背景
+            // 如果背景加载失败，创建默认背景
                 javafx.scene.canvas.Canvas canvas = new javafx.scene.canvas.Canvas(600, 600);
                 javafx.scene.canvas.GraphicsContext gc = canvas.getGraphicsContext2D();
                 
@@ -223,48 +132,33 @@ public class IslandView {
                 "Fire1", "Green", "Red", "Normal8", "Blue", "Wind1", "Earth2", "Normal1", 
                 "Normal10", "Normal2", "White", "Yellow", "Normal3", "Normal5", "Normal9", "Earth1", 
                 "Ocean2", "Fire2", "Black", "Ocean1", "Normal4", "Normal6", "Wind2", "Normal7"
-            };
+                };
                 
             // 加载正常和被淹没的瓦片图片
             for (String tileType : tileTypes) {
-                // 加载正常瓦片图片
-                Image normalImage = loadTileImage(tileType, "normal");
-                if (normalImage != null) {
-                    normalTileImages.put(tileType, normalImage);
-                }
-                
-                // 加载被淹没的瓦片图片
-                Image floodedImage = loadTileImage(tileType, "flood");
-                if (floodedImage != null) {
-                    floodedTileImages.put(tileType, floodedImage);
-                }
-            }
-                
-            // 加载洪水卡背面图片
-            try {
-                String[] floodCardPaths = {
-                    "/Flood/Flood Deck.png",
-                    "/flood/flood_deck.png",
-                    "/cards/flood_deck.png",
-                    "/images/flood/deck.png"
-                };
-                
-                boolean loaded = false;
-                for (String path : floodCardPaths) {
                     try {
-                        Image img = new Image(getClass().getResourceAsStream(path));
-                        if (img != null && !img.isError()) {
-                            floodCardBackImage = img;
-                            System.out.println("成功加载洪水卡背面图片: " + path);
-                            loaded = true;
-                            break;
+                    // 加载正常瓦片图片
+                    Image normalImage = new Image(getClass().getResourceAsStream("/islands/" + tileType + ".png"));
+                    if (normalImage != null && !normalImage.isError()) {
+                        normalTileImages.put(tileType, normalImage);
+                        System.out.println("成功加载正常瓦片图片: " + tileType);
+                    }
+                    
+                    // 加载被淹没的瓦片图片
+                    Image floodedImage = new Image(getClass().getResourceAsStream("/islands/" + tileType + "_flood.png"));
+                    if (floodedImage != null && !floodedImage.isError()) {
+                        floodedTileImages.put(tileType, floodedImage);
+                        System.out.println("成功加载被淹没瓦片图片: " + tileType);
                         }
                     } catch (Exception e) {
-                        // 继续尝试下一个路径
+                    System.err.println("加载瓦片图片失败 " + tileType + ": " + e.getMessage());
                     }
                 }
                 
-                if (!loaded) {
+            // 加载洪水卡背面图片
+            try {
+                floodCardBackImage = new Image(getClass().getResourceAsStream("/Flood/Flood Deck.png"));
+                if (floodCardBackImage == null || floodCardBackImage.isError()) {
                     System.err.println("无法加载洪水卡背面图片");
                     // 创建默认洪水卡背面
                     javafx.scene.canvas.Canvas canvas = new javafx.scene.canvas.Canvas(80, 120);
@@ -283,6 +177,7 @@ public class IslandView {
                     params.setFill(Color.TRANSPARENT);
                     floodCardBackImage = canvas.snapshot(params, null);
                 }
+                System.out.println("成功加载洪水卡背面图片");
             } catch (Exception e) {
                 System.err.println("加载洪水卡背面图片失败: " + e.getMessage());
             }
@@ -296,8 +191,7 @@ public class IslandView {
                     "/treasure/TreasureCardSymbol.png",
                     "/treasurecards/treasurecardsymbol.png",
                     "/TreasureCards/treasurecardsymbol.png",
-                    "/images/TreasureCards/TreasureCardSymbol.png",
-                    "/cards/treasure_symbol.png"
+                    "/images/TreasureCards/TreasureCardSymbol.png"
                 };
                 
                 boolean loaded = false;
@@ -323,10 +217,10 @@ public class IslandView {
                     javafx.scene.canvas.GraphicsContext gc = canvas.getGraphicsContext2D();
                     gc.setFill(Color.GOLD);
                     gc.fillRoundRect(0, 0, 80, 120, 10, 10);
-                    gc.setStroke(Color.BLACK);
+                        gc.setStroke(Color.BLACK);
                     gc.setLineWidth(2);
                     gc.strokeRoundRect(0, 0, 80, 120, 10, 10);
-                    gc.setFill(Color.BLACK);
+                        gc.setFill(Color.BLACK);
                     gc.setFont(Font.font("Arial", FontWeight.BOLD, 14));
                     gc.fillText("宝藏", 25, 50);
                     gc.fillText("卡牌", 25, 70);
@@ -342,9 +236,7 @@ public class IslandView {
             // 加载洪水卡图片
             String[] floodFolderPaths = {
                 "/Flood/",
-                "/flood/",
                 "/image/Flood/",
-                "/images/flood/",
                 "/Design/Cards/Flood/",
                 "/Design/FloodCards/"
             };
@@ -397,36 +289,18 @@ public class IslandView {
                     PlayerRole.DIVER
                 };
                 
-                String[] roleFolderPaths = {
-                    "/adventurers/",
-                    "/images/adventurers/",
-                    "/pawns/",
-                    "/images/pawns/",
-                    "/players/"
-                };
-                
                 for (PlayerRole role : roles) {
                     String roleName = role.toString().toLowerCase();
                     roleName = roleName.substring(0, 1).toUpperCase() + roleName.substring(1);
                     
-                    boolean loaded = false;
-                    for (String folderPath : roleFolderPaths) {
-                        String path = folderPath + roleName + ".png";
                         try {
-                            Image img = new Image(getClass().getResourceAsStream(path));
-                            if (img != null && !img.isError()) {
-                                playerPawnImages.put(role, img);
-                                System.out.println("成功加载角色棋子图片: " + path);
-                                loaded = true;
-                                break;
+                        Image image = new Image(getClass().getResourceAsStream("/adventurers/" + roleName + ".png"));
+                            if (image != null && !image.isError()) {
+                                playerPawnImages.put(role, image);
+                            System.out.println("成功加载角色棋子图片: " + roleName);
                             }
                         } catch (Exception e) {
-                            // 继续尝试下一个路径
-                        }
-                    }
-                    
-                    if (!loaded) {
-                        System.err.println("无法加载角色棋子图片: " + roleName);
+                        System.err.println("加载角色棋子图片失败 " + roleName + ": " + e.getMessage());
                     }
                 }
                 
@@ -479,34 +353,6 @@ public class IslandView {
         
         System.out.println("正在初始化禁闭岛游戏视图...");
         
-        // 按照指定顺序定义瓦片类型
-        String[] tileTypes = {
-            "Fire1", 
-            "Green", 
-            "Red", 
-            "Normal8", 
-            "Blue", 
-            "Wind1", 
-            "Earth2", 
-            "Normal1", 
-            "Normal10", 
-            "Normal2", 
-            "White", 
-            "Yellow", 
-            "Normal3", 
-            "Normal5", 
-            "Normal9", 
-            "Earth1", 
-            "Ocean2", 
-            "Fire2", 
-            "Black", 
-            "Ocean1", 
-            "Normal4", 
-            "Normal6", 
-            "Wind2", 
-            "Normal7"
-        };
-        
         // 创建一个列表来存储所有有效的位置
         List<int[]> validPositions = new ArrayList<>();
         for (int row = 0; row < 6; row++) {
@@ -517,73 +363,50 @@ public class IslandView {
             }
         }
         
-        // 确保有足够的瓦片类型
-        if (tileTypes.length < validPositions.size()) {
-            System.err.println("警告：瓦片类型数量不足，一些瓦片将使用默认类型");
+        // Check if the IslandController has an initialized Island
+        Island island = null;
+        if (gameController != null && gameController.getIslandController() != null) {
+            island = gameController.getIslandController().getIsland();
         }
         
-        // 遍历所有有效位置并按顺序放置瓦片
-        for (int i = 0; i < validPositions.size(); i++) {
-            int row = validPositions.get(i)[0];
-            int col = validPositions.get(i)[1];
+        // Create tiles for all valid positions
+        for (int[] pos : validPositions) {
+            int row = pos[0];
+            int col = pos[1];
             
-            // 获取当前位置应使用的瓦片类型
-            String tileType = (i < tileTypes.length) ? tileTypes[i] : "Normal1";
-            
-            // 创建瓦片表示
-            Pane tilePane = createTileRepresentation(null, row, col);
-            
-            // 尝试加载图片
-            boolean imageLoaded = false;
-            Image tileImage = normalTileImages.get(tileType);
-            
-            if (tileImage != null) {
-                ImageView tileImageView = new ImageView(tileImage);
-                tileImageView.setFitWidth(TILE_SIZE);
-                tileImageView.setFitHeight(TILE_SIZE);
-                tileImageView.setPreserveRatio(true);
-                tilePane.getChildren().add(tileImageView);
-                imageLoaded = true;
-                System.out.println("位置 (" + row + "," + col + ") 加载瓦片: " + tileType);
-            } else {
-                // 如果缓存中没有找到图片，尝试直接加载
-                tileImage = loadTileImage(tileType, "normal");
-                if (tileImage != null) {
-                    ImageView tileImageView = new ImageView(tileImage);
-                    tileImageView.setFitWidth(TILE_SIZE);
-                    tileImageView.setFitHeight(TILE_SIZE);
-                    tileImageView.setPreserveRatio(true);
-                    tilePane.getChildren().add(tileImageView);
-                    imageLoaded = true;
-                    // 添加到缓存
-                    normalTileImages.put(tileType, tileImage);
-                    System.out.println("位置 (" + row + "," + col + ") 加载瓦片: " + tileType);
-                }
+            // Create a tile representation
+            Tile modelTile = null;
+            if (island != null) {
+                modelTile = island.getTile(new Position(row, col));
             }
             
-            // 如果图片加载失败，添加一个占位符
-            if (!imageLoaded) {
-                Rectangle placeholder = createDefaultTileRectangle(tileType, TileState.NORMAL);
+            Pane tilePane = createTileRepresentation(modelTile, row, col);
+            
+            // If we don't have a model tile yet, create a visual placeholder
+            if (modelTile == null) {
+                // Create a visual placeholder for the tile
+                Rectangle placeholder = new Rectangle(TILE_SIZE, TILE_SIZE);
+                placeholder.setFill(NORMAL_TILE_COLOR);
+                placeholder.setStroke(Color.BLACK);
                 tilePane.getChildren().add(placeholder);
-                System.err.println("使用默认矩形替代瓦片: " + tileType);
+                
+                // Add a label for debugging
+                Label posLabel = new Label("(" + row + "," + col + ")");
+                posLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 10px;");
+                posLabel.setLayoutX(5);
+                posLabel.setLayoutY(5);
+                tilePane.getChildren().add(posLabel);
             }
             
-            // 添加瓦片编号标签
-            Label nameLabel = new Label(tileType);
-            nameLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 10px;");
-            nameLabel.setLayoutX(5);
-            nameLabel.setLayoutY(5);
-            tilePane.getChildren().add(nameLabel);
-            
-            // 添加到网格
+            // Add to grid
             gridPane.add(tilePane, col, row);
         }
         
-        // 添加空白位置
+        // Add empty spaces for invalid positions
         for (int row = 0; row < 6; row++) {
             for (int col = 0; col < 6; col++) {
                 if (islandLayout[row][col] == 0) {
-                    // 如果这个位置没有瓦片，添加一个空白的Pane
+                    // If this position has no tile, add an empty Pane
                     Pane emptyPane = new Pane();
                     emptyPane.setPrefSize(TILE_SIZE, TILE_SIZE);
                     gridPane.add(emptyPane, col, row);
@@ -591,53 +414,56 @@ public class IslandView {
             }
         }
 
-        // 添加网格到主视图
+        // Add grid to main view
         viewPane.getChildren().add(gridPane);
         
-        // 调整网格位置，使其位于地图中央
-        gridPane.setLayoutX((800 - 6 * TILE_SIZE - 5 * 5) / 2);  // 居中显示
+        // Adjust grid position to center it on the map
+        gridPane.setLayoutX((800 - 6 * TILE_SIZE - 5 * 5) / 2);
         gridPane.setLayoutY((600 - 6 * TILE_SIZE - 5 * 5) / 2);
         
-        // 添加水位线图片
+        // Add water level meter image
         if (floodMeterImage != null) {
             floodMeterView = new ImageView(floodMeterImage);
-            floodMeterView.setFitWidth(80);  // 减小宽度以节省空间
-            floodMeterView.setFitHeight(350); // 减小高度
+            floodMeterView.setFitWidth(80);
+            floodMeterView.setFitHeight(350);
             floodMeterView.setPreserveRatio(true);
-            floodMeterView.setLayoutX(680);  // 微调位置，与卡片保持适当距离
-            floodMeterView.setLayoutY(100);  // 垂直居中
+            floodMeterView.setLayoutX(680);
+            floodMeterView.setLayoutY(100);
             viewPane.getChildren().add(floodMeterView);
         
-            // 添加水位线指示器
-            updateWaterLevelIndicator(1);  // 初始水位为1
+            // Add water level indicator
+            updateWaterLevelIndicator(1);  // Initial water level is 1
         }
         
-        // 添加洪水卡堆
+        // Add flood card stack
         addFloodCardStack();
         
-        // 添加宝藏卡符号
+        // Add treasure card symbol
         addTreasureCardSymbol();
         
-        System.out.println("IslandView初始化完成，禁闭岛菱形布局");
+        System.out.println("IslandView initialization complete");
     }
 
-    private Pane createTileRepresentation(Object tile, int row, int col) {
+    private Pane createTileRepresentation(Tile tile, int row, int col) {
         Pane tilePane = new Pane();
         tilePane.setPrefSize(TILE_SIZE, TILE_SIZE);
         
-        // 默认使用一个空矩形作为占位符
+        // Store the position as user data for easy access in click handler
+        tilePane.setUserData(new Position(row, col));
+        
+        // Default use a rectangle as placeholder
         Rectangle background = new Rectangle(TILE_SIZE, TILE_SIZE);
         background.setFill(Color.TRANSPARENT);
         background.setStroke(Color.BLACK);
         
-        // 添加到pane中
+        // Add to pane
         tilePane.getChildren().add(background);
 
         // Add click listener
         tilePane.setOnMouseClicked(event -> {
             System.out.println("Clicked on tile at (" + row + ", " + col + ")");
             
-            // 确保所有必要的组件都存在，防止NullPointerException
+            // Make sure all necessary components exist to prevent NullPointerException
             if (gameController != null && gameController.getIslandController() != null) {
                 Island island = gameController.getIslandController().getIsland();
                 if (island != null) {
@@ -645,16 +471,17 @@ public class IslandView {
                     Tile clickedTile = island.getTile(position);
                     
                     if (clickedTile != null) {
-                        // 有效的瓦片点击，传递给控制器处理
+                        // Valid tile click, pass to controller for handling
                         gameController.getIslandController().handleTileClick(clickedTile);
                     } else {
-                        // 这个位置没有有效的瓦片，可能是空的格子或者地图外的区域
-                        System.out.println("无效的瓦片位置: (" + row + ", " + col + ")");
-                        // 可以考虑播放一个无效点击的提示音或显示提示
+                        // This position has no valid tile, might be empty space or off-map area
+                        System.out.println("Invalid tile position: (" + row + ", " + col + ")");
                     }
                 } else {
-                    System.err.println("岛屿对象为空");
+                    System.err.println("Island object is null");
                 }
+            } else {
+                System.err.println("GameController or IslandController is null");
             }
         });
 
@@ -663,21 +490,29 @@ public class IslandView {
 
     public void updateTileView(int row, int col, Tile tile) {
         // Find the corresponding Pane in the gridPane
-        // This requires a way to map row/col back to the Node in the grid
         Platform.runLater(() -> {
             // Example: Get node by row/col (might need adjustment based on gridPane structure)
             Node node = getNodeByRowColumnIndex(row, col, gridPane);
             if (node instanceof Pane) {
                 Pane tilePane = (Pane) node;
-                // 清除现有内容
+                
+                // Store the original click handler before clearing
+                @SuppressWarnings("unchecked")
+                javafx.event.EventHandler<javafx.scene.input.MouseEvent> clickHandler = 
+                    (javafx.event.EventHandler<javafx.scene.input.MouseEvent>) tilePane.getOnMouseClicked();
+                
+                // Clear existing content
                 tilePane.getChildren().clear();
                 
-                // 获取瓦片名称和状态
+                // Restore the click handler
+                tilePane.setOnMouseClicked(clickHandler);
+                
+                // Get tile name and state
                 String tileName = tile.getName();
                 TileState state = tile.getState();
                 boolean isShoredUp = tile.isShoredUp();
                 
-                // 将瓦片名称映射到图片类型
+                // Map tile name to image type
                 String tileType = mapTileNameToImageType(tileName);
                 
                 ImageView tileImageView = new ImageView();
@@ -685,61 +520,52 @@ public class IslandView {
                 tileImageView.setFitHeight(TILE_SIZE);
                 tileImageView.setPreserveRatio(true);
 
-                // 根据瓦片状态选择图片
-                Image tileImage = null;
+                // Choose image path based on tile state
                 boolean imageLoaded = false;
                 
                 try {
-                    // 从缓存中获取图片
+                    Image tileImage = null;
                     switch (state) {
                         case NORMAL:
-                            tileImage = normalTileImages.get(tileType);
+                            tileImage = normalTileImages.getOrDefault(tileType, null);
                             break;
                         case FLOODED:
-                            tileImage = floodedTileImages.get(tileType);
+                            tileImage = floodedTileImages.getOrDefault(tileType, null);
                             break;
                         case SUNK:
-                            tileImage = floodedTileImages.get(tileType);
+                            // For sunken tiles, show flooded image with reduced opacity
+                            tileImage = floodedTileImages.getOrDefault(tileType, null);
+                            tileImageView.setOpacity(0.5); // Reduce opacity to indicate sunken
                             break;
                     }
                     
-                    // 如果缓存中没有，尝试加载
-                    if (tileImage == null) {
-                        String imageType = (state == TileState.NORMAL) ? "normal" : "flood";
-                        tileImage = loadTileImage(tileType, imageType);
-                        
-                        // 将加载的图片添加到缓存
-                        if (tileImage != null) {
-                            if (state == TileState.NORMAL) {
-                                normalTileImages.put(tileType, tileImage);
-                            } else {
-                                floodedTileImages.put(tileType, tileImage);
-                            }
-                        }
-                    }
-                    
-                    if (tileImage != null) {
+                    if (tileImage != null && !tileImage.isError()) {
                         tileImageView.setImage(tileImage);
-                        
-                        // 如果是沉没状态，降低不透明度
-                        if (state == TileState.SUNK) {
-                            tileImageView.setOpacity(0.5);
-                        }
-                        
                         tilePane.getChildren().add(tileImageView);
                         imageLoaded = true;
                     }
                 } catch (Exception e) {
-                    System.err.println("更新瓦片视图时出错: " + e.getMessage());
+                    System.err.println("Failed to load tile image for " + tileType + ": " + e.getMessage());
                 }
                 
-                // 如果图片加载失败，使用默认矩形
+                // If image loading failed, use default rectangle
                 if (!imageLoaded) {
-                    Rectangle rect = createDefaultTileRectangle(tileType, state);
+                    Rectangle rect = new Rectangle(TILE_SIZE, TILE_SIZE);
+                    switch (state) {
+                        case NORMAL:
+                            rect.setFill(NORMAL_TILE_COLOR);
+                            break;
+                        case FLOODED:
+                            rect.setFill(FLOODED_TILE_COLOR);
+                            break;
+                        case SUNK:
+                            rect.setFill(SUNK_TILE_COLOR);
+                            break;
+                    }
                     tilePane.getChildren().add(rect);
                 }
                 
-                // 如果是加固的瓷砖，添加边框
+                // If tile is shored up and not sunk, add border
                 if (isShoredUp && state != TileState.SUNK) {
                     Rectangle shoreUpIndicator = new Rectangle(TILE_SIZE, TILE_SIZE);
                     shoreUpIndicator.setFill(Color.TRANSPARENT);
@@ -748,7 +574,7 @@ public class IslandView {
                     tilePane.getChildren().add(shoreUpIndicator);
                 }
                 
-                // 显示瓦片名称（可以根据需要删除或保留）
+                // Display tile name
                 Label nameLabel = new Label(tileName);
                 nameLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 10px;");
                 nameLabel.setLayoutX(5);
@@ -874,40 +700,30 @@ public class IslandView {
     public void update() {
         if (gameController != null) {
             try {
-                System.out.println("开始更新IslandView...");
+                System.out.println("Starting IslandView update...");
                 IslandController islandController = gameController.getIslandController();
                 
                 // Get island object
                 Island island = islandController.getIsland();
                 if (island == null) {
-                    System.err.println("岛屿对象为空，无法更新视图");
+                    System.err.println("Island object is null, cannot update view");
                     return;
                 }
                 
-                // 获取所有瓦片位置
+                // Get all tile positions
                 Map<Position, Tile> gameMap = island.getGameMap();
                 if (gameMap.isEmpty()) {
-                    System.err.println("游戏地图为空，无法更新视图");
+                    System.err.println("Game map is empty, cannot update view");
                     return;
                 }
                 
-                System.out.println("地图瓦片数量: " + gameMap.size());
+                System.out.println("Map tile count: " + gameMap.size());
                 
-                // 更新水位线
+                // Update water level
                 int waterLevel = island.getWaterLevel();
                 if (waterLevel != currentWaterLevel) {
                     updateWaterLevelIndicator(waterLevel);
                 }
-                
-                // 计算最大行和列
-                int maxRow = 0;
-                int maxCol = 0;
-                for (Position pos : gameMap.keySet()) {
-                    maxRow = Math.max(maxRow, pos.getX());
-                    maxCol = Math.max(maxCol, pos.getY());
-                }
-                
-                System.out.println("地图最大行列: " + maxRow + "x" + maxCol);
                 
                 // Update all tile states
                 for (Map.Entry<Position, Tile> entry : gameMap.entrySet()) {
@@ -925,19 +741,25 @@ public class IslandView {
                     for (Player player : players) {
                         // Ensure player position is updated correctly
                         if (player.getPosition() != null) {
-                            System.out.println("更新玩家位置: " + player.getName() + " 在 " + player.getPosition());
+                            System.out.println("Updating player position: " + player.getName() + " at " + player.getPosition());
                             updatePlayerMarker(player, player.getPosition());
                         }
                     }
                 }
                 
-                System.out.println("IslandView更新完成");
+                // Highlight valid positions if any
+                List<Position> validPositions = islandController.getValidPositions();
+                if (validPositions != null && !validPositions.isEmpty()) {
+                    highlightTiles(validPositions, "valid_move");
+                }
+                
+                System.out.println("IslandView update complete");
             } catch (Exception e) {
-                System.err.println("更新岛屿视图时发生错误: " + e.getMessage());
+                System.err.println("Error updating island view: " + e.getMessage());
                 e.printStackTrace();
             }
         } else {
-            System.err.println("GameController为空，无法更新IslandView");
+            System.err.println("GameController is null, cannot update IslandView");
         }
     }
 
@@ -1100,27 +922,22 @@ public class IslandView {
         // 添加选中的卡片到堆中，稍微错开以显示叠放效果
         for (int i = 0; i < selectedTypes.size(); i++) {
             String tileType = selectedTypes.get(i);
+            String imagePath = "/islands/" + tileType + ".png";
             ImageView cardView;
             
-            // 尝试从缓存获取图片
-            Image cardImage = normalTileImages.get(tileType);
-            
-            // 如果缓存中没有，尝试加载
-            if (cardImage == null) {
-                cardImage = loadTileImage(tileType, "normal");
-                if (cardImage != null) {
-                    // 添加到缓存
-                    normalTileImages.put(tileType, cardImage);
+            // 尝试加载图片
+            try {
+                Image cardImage = new Image(getClass().getResourceAsStream(imagePath));
+                if (cardImage != null && !cardImage.isError()) {
+                    cardView = new ImageView(cardImage);
+                } else {
+                    // 如果找不到图片，使用默认背面
+                    cardView = new ImageView(floodCardBackImage);
                 }
-            }
-            
-            // 如果加载成功，创建ImageView
-            if (cardImage != null) {
-                cardView = new ImageView(cardImage);
-            } else {
+            } catch (Exception e) {
                 // 如果加载失败，使用默认背面
                 cardView = new ImageView(floodCardBackImage);
-                System.err.println("无法加载卡片图片: " + tileType + "，使用默认背面");
+                System.err.println("无法加载卡片图片: " + imagePath + " - " + e.getMessage());
             }
             
             cardView.setFitWidth(cardWidth);
@@ -1153,54 +970,6 @@ public class IslandView {
         double cardHeight = 105; // 减小高度以节省空间
         double symbolX = 800;  // 向左移动一点点
         double symbolY = 250;  // 中间位置
-        
-        // 确保宝藏卡符号图片已加载
-        if (treasureCardSymbolImage == null) {
-            // 尝试从多个可能的路径加载宝藏卡符号图片
-            String[] treasureSymbolPaths = {
-                "/TreasureCards/TreasureCardSymbol.png",
-                "/treasurecards/TreasureCardSymbol.png",
-                "/treasure/TreasureCardSymbol.png",
-                "/treasurecards/treasurecardsymbol.png",
-                "/TreasureCards/treasurecardsymbol.png",
-                "/images/TreasureCards/TreasureCardSymbol.png",
-                "/cards/treasure_symbol.png"
-            };
-            
-            for (String path : treasureSymbolPaths) {
-                try {
-                    Image img = new Image(getClass().getResourceAsStream(path));
-                    if (img != null && !img.isError()) {
-                        treasureCardSymbolImage = img;
-                        System.out.println("成功加载宝藏卡符号图片: " + path);
-                        break;
-                    }
-                } catch (Exception e) {
-                    // 继续尝试下一个路径
-                }
-            }
-            
-            // 如果所有路径都加载失败，创建默认图片
-            if (treasureCardSymbolImage == null) {
-                System.err.println("无法加载宝藏卡符号图片，创建默认图片");
-                // 创建默认宝藏卡符号
-                javafx.scene.canvas.Canvas canvas = new javafx.scene.canvas.Canvas(80, 120);
-                javafx.scene.canvas.GraphicsContext gc = canvas.getGraphicsContext2D();
-                gc.setFill(Color.GOLD);
-                gc.fillRoundRect(0, 0, 80, 120, 10, 10);
-                gc.setStroke(Color.BLACK);
-                gc.setLineWidth(2);
-                gc.strokeRoundRect(0, 0, 80, 120, 10, 10);
-                gc.setFill(Color.BLACK);
-                gc.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-                gc.fillText("宝藏", 25, 50);
-                gc.fillText("卡牌", 25, 70);
-
-                javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
-                params.setFill(Color.TRANSPARENT);
-                treasureCardSymbolImage = canvas.snapshot(params, null);
-            }
-        }
         
         // 创建宝藏卡符号视图
         ImageView treasureSymbolView = new ImageView(treasureCardSymbolImage);

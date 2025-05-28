@@ -36,6 +36,7 @@ public class Launcher extends Application {
             
             // 2. 创建RoomController并将GameController传入
             roomController = new RoomController(gameController, room);
+            roomController.start();
             
             // 3. 将RoomController设置到GameController
             gameController.setRoomController(roomController);

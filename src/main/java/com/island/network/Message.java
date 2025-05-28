@@ -4,9 +4,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper; // 使用 Jackson 的真实实现示例
 
 public class Message {
+
     private static long messageId;
     private MessageType type;
     private String roomId;
@@ -15,6 +17,9 @@ public class Message {
     private boolean isAck;
     private Map<String, Object> data;
 
+    public Message() {
+
+    }
     public Message(MessageType type, String roomId, String from) {
         this.type = type;
         this.roomId = roomId;
@@ -75,10 +80,29 @@ public class Message {
 
     public static long getMessageId() { return messageId; }
     public MessageType getType() { return type; }
+    public void setType(MessageType type) {
+        this.type = type;
+    }
     public String getRoomId() { return roomId; }
+    public void setRoomId(String roomId) {
+        this.roomId = roomId;
+    }
     public String getFrom() { return from; }
+    public void setFrom(String from) {
+        this.from = from;
+    }
     public String getTo() { return to; }
+    public String setTo(String to) {
+        this.to = to;
+        return this.to;
+    }
+    @JsonProperty("isAck")
     public boolean isAck() { return isAck; }
+    @JsonProperty("isAck")
+    public void setAck(boolean isAck) { this.isAck = isAck; }
     public Map<String, Object> getData() { return data; }
+    public void setData(Map<String, Object> data) {
+        this.data = data;
+    }
 }
 

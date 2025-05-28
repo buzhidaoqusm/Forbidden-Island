@@ -155,7 +155,7 @@ public class GameController {
             }
 
             System.out.println("Players in room: " + players.size());
-            currentPlayer = players.getFirst();
+            currentPlayer = players.get(0);
             System.out.println("Current player: " + (currentPlayer != null ? currentPlayer.getName() : "null"));
 
             // 确保 ActionBarController 也知道当前玩家
@@ -170,6 +170,9 @@ public class GameController {
             // 初始化玩家
             System.out.println("Initializing players...");
             playerController.initPlayers(seed);
+
+            currentPlayer = players.get(0);
+            actionBarController.setCurrentPlayer(currentPlayer);
 
             // 初始化卡牌
             System.out.println("Initializing cards...");
@@ -687,6 +690,14 @@ public class GameController {
     public Object updateBoard() {
         gameSubject.notifyBoardChanged();
         return null;
+    }
+
+    public Card getActiveSpecialCard() {
+        return activeSpecialCard;
+    }
+
+    public void setActiveSpecialCard(Card activeSpecialCard) {
+        this.activeSpecialCard = activeSpecialCard;
     }
 
     public void updateActionBar() {

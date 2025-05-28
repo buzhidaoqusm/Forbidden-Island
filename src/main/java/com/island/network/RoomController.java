@@ -41,7 +41,8 @@ public class RoomController {
     public void start() {
         scheduler.scheduleAtFixedRate(this::broadcastHeartbeat, 0, 10, TimeUnit.SECONDS);
         scheduler.scheduleAtFixedRate(this::checkHeartbeats, 0, 15, TimeUnit.SECONDS);
-        receiver.run(); // Directly run the receiving thread
+        // 开启监听线程
+        Executors.newSingleThreadExecutor().submit(receiver);
     }
 
     public void shutdown() {

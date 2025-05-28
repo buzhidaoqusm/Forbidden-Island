@@ -176,9 +176,13 @@ public class IslandController {
             gameController.getRoomController().sendMoveByNavigatorMessage(gameController.getCurrentPlayer(), navigatorTarget, tile);
             return;
         }
-
-        // Handle special card usage
-        gameController.handleUseSpecialCard(tile.getPosition());
+        if (gameController.getActiveSpecialCard() !=null) {
+            // Handle special card usage
+            gameController.handleUseSpecialCard(tile.getPosition());
+        }
+        gameController.getRoomController().sendMoveMessage(gameController.getCurrentPlayer(),chosenTile.getPosition());
+        gameController.getGameSubject().notifyBoardChanged();
+        gameController.getGameSubject().notifyPlayerInfoChanged();
     }
 
     /**
@@ -366,8 +370,8 @@ public class IslandController {
         this.validPositions.clear();
     }
 
-    public List<Position> getValidPositions() {
-        return new ArrayList<>(validPositions);
+    public List<Position> getValidPositions(Player player) {
+        return player.getMovePositions(island.getGameMap());
     }
 
     // New methods for special card handling
