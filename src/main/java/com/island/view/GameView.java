@@ -14,9 +14,11 @@ import javafx.scene.image.ImageView;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.paint.Color;
+import javafx.scene.control.ScrollPane;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 import com.island.view.IslandView;
 import com.island.view.PlayerView;
@@ -41,7 +43,7 @@ public class GameView {
     private ActionLogView actionLogView;
     
     // Sub-view panes
-    private Pane islandViewPane;
+    private ScrollPane islandViewPane;
     private Pane playerViewPane;
     private Pane cardViewPane;
     private Pane actionBarViewPane;
@@ -497,14 +499,24 @@ public class GameView {
     }
 
     /**
-     * 更新水位显示
-     * @param level 新的水位值
+     * Highlights valid positions on the island view.
+     * This is used to show players where they can move, shore up, etc.
+     *
+     * @param positions The list of positions to highlight
+     * @param highlightType The type of highlight to apply (e.g., "move", "shore_up")
      */
-    public void updateWaterLevel(int level) {
-        Platform.runLater(() -> {
-            if (actionBarView != null) {
-                actionBarView.updateWaterLevelIndicator(level);
-            }
-        });
+    public void highlightValidPositions(List<Position> positions, String highlightType) {
+        if (islandView != null) {
+            islandView.highlightTiles(positions, highlightType);
+        }
+    }
+
+    /**
+     * Resets all tile borders, removing any highlights.
+     */
+    public void resetTileBorders() {
+        if (islandView != null) {
+            islandView.clearHighlights();
+        }
     }
 }
