@@ -129,6 +129,11 @@ public class MessageHandler {
     private void handleMovePlayer(Message message) {
         String username = (String) message.getData().get("username");
         Position to = (Position) message.getData().get("to");
+        gameController.getPlayerController().getRoom().getPlayers().stream()
+            .filter(p -> p.getName().equals(username))
+            .findFirst()
+            .ifPresent(player -> player.setPosition(to));
+        gameController.getGameView().getPlayerView().update();
         actionLogView.log(username + " moved to " + to);
     }
 

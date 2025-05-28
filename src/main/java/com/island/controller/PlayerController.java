@@ -303,7 +303,8 @@ public class PlayerController {
      * Cleans up resources when the game is shutting down
      */
     public void shutdown() {
-
+        chosenCard = null;
+        resetPlayerState();
     }
 
     public boolean canPerformAction(Player player) {

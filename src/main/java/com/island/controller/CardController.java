@@ -254,6 +254,18 @@ public class CardController {
      * Cleans up resources when the game is shutting down
      */
     public void shutdown() {
+        if (treasureDeck != null) {
+            treasureDeck.clear();
+        }
+        if (floodDeck != null) {
+            floodDeck.clear();
+        }
+        if (treasureDiscardPile != null) {
+            treasureDiscardPile.clear();
+        }
+        if (floodDiscardPile != null) {
+            floodDiscardPile.clear();
+        }
     }
 
     public void setSeed(long seed) { this.seed = seed; }

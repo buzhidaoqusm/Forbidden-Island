@@ -130,10 +130,7 @@ public class IslandController {
      * Updates the UI to reflect the new water level.
      */
     public void increaseWaterLevel() {
-        int currentLevel = island.getWaterLevel();
-        if (currentLevel < 10) {
-            island.setWaterLevel(currentLevel + 1);
-        }
+        waterLevel++;
         if (gameController != null) {
             gameController.updateWaterLevel();
         }
@@ -179,9 +176,13 @@ public class IslandController {
             gameController.getRoomController().sendMoveByNavigatorMessage(gameController.getCurrentPlayer(), navigatorTarget, tile);
             return;
         }
-
-        // Handle special card usage
-        gameController.handleUseSpecialCard(tile.getPosition());
+        if (gameController.getActiveSpecialCard() !=null) {
+            // Handle special card usage
+            gameController.handleUseSpecialCard(tile.getPosition());
+        }
+        gameController.getRoomController().sendMoveMessage(gameController.getCurrentPlayer(),chosenTile.getPosition());
+        gameController.getGameSubject().notifyBoardChanged();
+        gameController.getGameSubject().notifyPlayerInfoChanged();
     }
 
     /**
@@ -358,7 +359,7 @@ public class IslandController {
      * @return The water level value (1-10)
      */
     public int getWaterLevel() {
-        return island.getWaterLevel();
+        return waterLevel;
     }
 
     public void setValidPositions(List<Position> positions) {
@@ -369,8 +370,8 @@ public class IslandController {
         this.validPositions.clear();
     }
 
-    public List<Position> getValidPositions() {
-        return new ArrayList<>(validPositions);
+    public List<Position> getValidPositions(Player player) {
+        return player.getMovePositions(island.getGameMap());
     }
 
     // New methods for special card handling
