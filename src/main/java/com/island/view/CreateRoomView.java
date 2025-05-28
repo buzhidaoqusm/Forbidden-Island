@@ -1,6 +1,5 @@
 package com.island.view;
 
-import com.island.network.RoomController;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -36,8 +35,6 @@ public class CreateRoomView {
     // Image resources
     private Image roomBackgroundImage;
     private Image roomTitleImage;
-
-    private RoomController roomController;
 
     // Constructor (potentially needs Player and GameController)
     public CreateRoomView(Stage primaryStage /*, Player hostPlayer */) {
@@ -166,14 +163,10 @@ public class CreateRoomView {
         Button startGameButton = new Button("Start Game");
         startGameButton.setStyle("-fx-font-size: 14px; -fx-background-radius: 10;");
         startGameButton.setOnAction(event -> {
-//            String roomId = getView().getId(); // 生成唯一房间ID（如时间戳+随机数）
             String selectedDifficulty = difficultyComboBox.getValue();
-//            gameController.createRoom(roomId, selectedDifficulty);
             System.out.println("Start Game button clicked. Difficulty: " + selectedDifficulty);
             // Validate if enough players have joined (usually handled by controller)
             // Notify the controller to start the game
-            // 启动广播
-//            roomController.startBroadcast(roomId);
             if (gameController != null) {
                 // 添加调试信息，检查 gameController 的状态
                 System.out.println("GameController: " + gameController);
