@@ -130,10 +130,7 @@ public class IslandController {
      * Updates the UI to reflect the new water level.
      */
     public void increaseWaterLevel() {
-        int currentLevel = island.getWaterLevel();
-        if (currentLevel < 10) {
-            island.setWaterLevel(currentLevel + 1);
-        }
+        waterLevel++;
         if (gameController != null) {
             gameController.updateWaterLevel();
         }
@@ -358,7 +355,7 @@ public class IslandController {
      * @return The water level value (1-10)
      */
     public int getWaterLevel() {
-        return island.getWaterLevel();
+        return waterLevel;
     }
 
     public void setValidPositions(List<Position> positions) {
