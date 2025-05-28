@@ -19,5 +19,6 @@ public enum MessageType {
     SANDBAGS_USE,
     GAME_OVER,
     LEAVE_ROOM,
-    MESSAGE_ACK
+    MESSAGE_ACK,
+    RECONNECT_REQUEST
 }

@@ -13,7 +13,10 @@ public class MessageHandler {
     private final RoomController roomController;
     private final Room room;
     private final ActionLogView actionLogView;
-    private final PriorityQueue<Long> messageQueue;
+    private final PriorityBlockingQueue<Long> messageQueue;
+    private final ScheduledExecutorService retryScheduler;
+    private static final int MAX_RETRY_ATTEMPTS = 3;
+    private static final long RETRY_DELAY_MS = 5000;
     private final Object queueLock = new Object();
     private volatile boolean isProcessingQueue = false;
 
@@ -21,23 +24,35 @@ public class MessageHandler {
                           RoomController roomController,
                           Room room,
                           ActionLogView actionLogView) {
-        this.gameController = Objects.requireNonNull(gameController);
-        this.roomController = Objects.requireNonNull(roomController);
-        this.room = Objects.requireNonNull(room);
-        this.actionLogView = Objects.requireNonNull(actionLogView);
+        this.gameController = Objects.requireNonNull(gameController, "GameController cannot be null");
+        this.roomController = Objects.requireNonNull(roomController, "RoomController cannot be null");
+        this.room = Objects.requireNonNull(room, "Room cannot be null");
+        this.actionLogView = Objects.requireNonNull(actionLogView, "ActionLogView cannot be null");
         this.unconfirmedMessages = new ConcurrentHashMap<>();
-        this.messageQueue = new PriorityQueue<>();
+        this.messageQueue = new PriorityBlockingQueue<>();
+        this.retryScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread thread = new Thread(r, "MessageRetryThread");
+            thread.setDaemon(true);
+            return thread;
+        });
     }
 
     public void handleMessage(Message message) {
         try {
+            if (message == null) {
+                actionLogView.error("Received null message");
+                return;
+            }
+
+            actionLogView.log("Processing message: " + message.getType());
+            
             switch (message.getType()) {
-                case LEAVE_ROOM -> roomController.handlePlayerDisconnect((String) message.getData().get("username"));
-                case PLAYER_LEAVE -> room.removePlayer(room.getHostPlayer());
+                case LEAVE_ROOM -> handleLeaveRoom(message);
+                case PLAYER_LEAVE -> handlePlayerLeave(message);
                 case TURN_START -> handleTurnStart(message);
-                case END_TURN -> handleSimple(() -> roomController.sendEndTurnMessage((Player) message.getData().get("username")), message);
-                case SHORE_UP -> handleSimple(() -> roomController.sendShoreUpMessage((Player) message.getData().get("username"), (Position) message.getData().get("position")), message);
-                case DISCARD_CARD -> handleSimple(gameController::handleDiscardAction, message);
+                case END_TURN -> handleEndTurn(message);
+                case SHORE_UP -> handleShoreUp(message);
+                case DISCARD_CARD -> handleDiscardCard(message);
                 case DRAW_FLOOD_CARD -> handleDrawFloodCard(message);
                 case DRAW_TREASURE_CARD -> handleDrawTreasureCard(message);
                 case MOVE_PLAYER -> handleMovePlayer(message);
@@ -49,43 +64,82 @@ public class MessageHandler {
                 case GAME_OVER -> handleGameOver(message);
                 case GAME_START -> handleGameStart(message);
                 case UPDATE_ROOM -> handleUpdateRoom(message);
-                default -> actionLogView.log("Unknown message type: " + message.getType());
+                case MESSAGE_ACK -> handleMessageAck(message);
+                default -> actionLogView.warning("Unknown message type: " + message.getType());
             }
         } catch (Exception e) {
-            actionLogView.log("Message processing error: " + e.getMessage());
+            actionLogView.error("Message processing error: " + e.getMessage());
+            scheduleMessageRetry(Message.getMessageId());
         }
     }
 
+    private void handleLeaveRoom(Message message) {
+        String username = (String) message.getData().get("username");
+        roomController.handlePlayerDisconnect(username);
+    }
+
+    private void handlePlayerLeave(Message message) {
+        room.removePlayer(room.getHostPlayer());
+    }
+
+    private void handleEndTurn(Message message) {
+        handleSimple(() -> 
+            roomController.sendEndTurnMessage((Player) message.getData().get("username")), 
+            message
+        );
+    }
+
+    private void handleShoreUp(Message message) {
+        handleSimple(() -> 
+            roomController.sendShoreUpMessage(
+                (Player) message.getData().get("username"),
+                (Position) message.getData().get("position")
+            ), 
+            message
+        );
+    }
+
+    private void handleDiscardCard(Message message) {
+        handleSimple(gameController::handleDiscardAction, message);
+    }
+
     private void handleDrawFloodCard(Message message) {
-        int count = (int) message.getData().get("count");
         try {
+            int count = (int) message.getData().get("count");
             List<Position> cards = gameController.drawFloodCards(count);
             roomController.sendDrawFloodMessage(count, gameController.getCurrentPlayer().getName());
         } catch (Exception ex) {
-            handleGameOver(new Message(MessageType.GAME_OVER, "system", "Flood pile exhausted"));
+            actionLogView.error("Failed to draw flood cards: " + ex.getMessage());
+            handleGameOver(createGameOverMessage("Flood pile exhausted"));
         }
+    }
+
+    private Message createGameOverMessage(String reason) {
+        return new Message(MessageType.GAME_OVER, room.getRoomId(), "system")
+            .addExtraData("reason", reason);
     }
 
     private void handleSimple(Runnable action, Message message) {
         try {
             action.run();
         } catch (Exception ex) {
-            actionLogView.log("Action failed: " + ex.getMessage());
+            actionLogView.error("Action failed: " + ex.getMessage());
             scheduleMessageRetry(Message.getMessageId());
         }
     }
 
     public void handleMessageAck(Message message) {
         String messageId = String.valueOf(message.getMessageId());
-        if (unconfirmedMessages.remove(messageId) != null) {
-            actionLogView.log("Ack received for: " + messageId);
+        UnconfirmedMessage removed = unconfirmedMessages.remove(messageId);
+        if (removed != null) {
+            actionLogView.success("Acknowledgment received for message: " + messageId);
         }
     }
 
     public void putUnconfirmedMessage(long messageId, UnconfirmedMessage unconfirmedMessage) {
         String key = String.valueOf(messageId);
         unconfirmedMessages.put(key, unconfirmedMessage);
-        messageQueue.add(messageId);
+        messageQueue.offer(messageId);
         processMessageQueue();
     }
 
@@ -93,15 +147,24 @@ public class MessageHandler {
         synchronized (queueLock) {
             if (isProcessingQueue) return;
             isProcessingQueue = true;
+            
             try {
-                while (!messageQueue.isEmpty()) {
-                    long id = messageQueue.poll();
-                    UnconfirmedMessage msg = unconfirmedMessages.get(String.valueOf(id));
-                    if (msg != null && msg.getRetryCount() < 3) {
+                Long messageId;
+                while ((messageId = messageQueue.poll()) != null) {
+                    String key = String.valueOf(messageId);
+                    UnconfirmedMessage msg = unconfirmedMessages.get(key);
+                    
+                    if (msg != null && msg.canRetry()) {
                         roomController.broadcast(msg.getMessage());
                         msg.incrementRetryCount();
+                        if (msg.getRetryCount() < MAX_RETRY_ATTEMPTS) {
+                            scheduleMessageRetry(messageId);
+                        }
                     } else {
-                        unconfirmedMessages.remove(String.valueOf(id));
+                        unconfirmedMessages.remove(key);
+                        if (msg != null) {
+                            actionLogView.error("Message " + key + " exceeded retry limit");
+                        }
                     }
                 }
             } finally {
@@ -111,8 +174,26 @@ public class MessageHandler {
     }
 
     private void scheduleMessageRetry(long messageId) {
-        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.schedule(() -> processMessageRetry(messageId), 5, TimeUnit.SECONDS);
+        retryScheduler.schedule(
+            () -> processMessageRetry(messageId),
+            RETRY_DELAY_MS,
+            TimeUnit.MILLISECONDS
+        );
+    }
+
+    private void processMessageRetry(long messageId) {
+        String key = String.valueOf(messageId);
+        UnconfirmedMessage msg = unconfirmedMessages.get(key);
+        
+        if (msg != null && msg.canRetry()) {
+            roomController.broadcast(msg.getMessage());
+            if (msg.incrementRetryCount() && msg.getRetryCount() < MAX_RETRY_ATTEMPTS) {
+                scheduleMessageRetry(messageId);
+            }
+        } else {
+            unconfirmedMessages.remove(key);
+            actionLogView.warning("Message retry failed for: " + key);
+        }
     }
 
     private void handleTurnStart(Message message) {
@@ -169,7 +250,31 @@ public class MessageHandler {
     }
 
     private void handleGameStart(Message message) {
-        actionLogView.log("Game started.");
+        try {
+            // 1. 获取玩家信息
+            Map<String, Object> data = message.getData();
+            if (data == null || !data.containsKey("players")) {
+                throw new IllegalArgumentException("Invalid game start message: missing player data");
+            }
+
+            // 2. 更新房间状态
+            Player startingPlayer = (Player) data.get("players");
+            if (startingPlayer != null) {
+                room.setHostPlayer(startingPlayer);
+                startingPlayer.setHost(true);
+            }
+
+            // 3. 启动游戏
+            if (!gameController.isGameStart()) {
+                gameController.startGame(System.currentTimeMillis());
+            }
+
+            // 4. 记录日志
+            actionLogView.success("Game started successfully");
+        } catch (Exception e) {
+            actionLogView.error("Failed to handle game start: " + e.getMessage());
+            throw new RuntimeException("Game start failed", e);
+        }
     }
 
     private void handleUpdateRoom(Message message) {
@@ -177,17 +282,15 @@ public class MessageHandler {
         // 可选：room.updateFrom(message.getData());
     }
 
-    private void processMessageRetry(long messageId) {
-        String key = String.valueOf(messageId);
-        UnconfirmedMessage msg = unconfirmedMessages.get(key);
-        if (msg != null && msg.getRetryCount() < 3) {
-            roomController.broadcast(msg.getMessage());
-            msg.incrementRetryCount();
-            scheduleMessageRetry(messageId);
-        } else {
-            unconfirmedMessages.remove(key);
-            actionLogView.log("Message retry failed for: " + key);
+    public void shutdown() {
+        retryScheduler.shutdownNow();
+        try {
+            if (!retryScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                actionLogView.warning("Retry scheduler did not terminate in time");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            actionLogView.error("Retry scheduler shutdown interrupted");
         }
     }
-
 }

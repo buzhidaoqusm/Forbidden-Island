@@ -55,6 +55,11 @@ public class Pilot extends Player {
         return positions;
     }
 
+    @Override
+    public void setRole(PlayerRole playerRole) {
+
+    }
+
     public void resetFlightStatus() {
         this.hasFlownThisTurn = false;
     }

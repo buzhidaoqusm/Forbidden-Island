@@ -495,4 +495,16 @@ public class GameView {
     public Stage getPrimaryStage() {
         return primaryStage;
     }
+
+    /**
+     * 更新水位显示
+     * @param level 新的水位值
+     */
+    public void updateWaterLevel(int level) {
+        Platform.runLater(() -> {
+            if (actionBarView != null) {
+                actionBarView.updateWaterLevelIndicator(level);
+            }
+        });
+    }
 }

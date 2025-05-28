@@ -49,4 +49,9 @@ public class Messenger extends Player {
             targetPlayer.addCard(card);
         }
     }
+
+    @Override
+    public void setRole(PlayerRole playerRole) {
+
+    }
 }

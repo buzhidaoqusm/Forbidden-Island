@@ -20,6 +20,7 @@ import com.island.controller.GameController;
 import com.island.model.Player;
 import com.island.model.Explorer;
 import com.island.view.GameView;
+import java.util.UUID;
 
 public class CreateRoomView {
 
@@ -275,6 +276,48 @@ public class CreateRoomView {
                 // });
                 System.out.println("CreateRoomView updated - would display player list here");
             });
+        }
+    }
+
+    private void handleCreateRoom() {
+        if (gameController != null) {
+            try {
+                // 生成唯一的房间ID
+                String roomId = UUID.randomUUID().toString();
+                
+                // 设置房间ID
+                if (gameController.getRoom() != null) {
+                    gameController.getRoom().setRoomId(roomId);
+                    
+                    // 更新玩家列表显示
+                    Platform.runLater(() -> {
+                        playerListView.getItems().clear();
+                        for (Player player : gameController.getRoom().getPlayers()) {
+                            String displayName = player.getName();
+                            if (gameController.getRoom().isHost(player.getName())) {
+                                displayName += " (房主)";
+                            }
+                            playerListView.getItems().add(displayName);
+                        }
+                    });
+                    
+                    // 显示房间ID
+                    Platform.runLater(() -> {
+                        Label roomIdLabel = new Label("房间ID: " + roomId);
+                        roomIdLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+                        // 将房间ID标签添加到界面上
+                        // 这里需要根据实际布局调整添加位置
+                    });
+                }
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("创建房间失败");
+                    alert.setHeaderText(null);
+                    alert.setContentText("创建房间时发生错误: " + e.getMessage());
+                    alert.showAndWait();
+                });
+            }
         }
     }
 }

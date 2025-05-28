@@ -66,6 +66,9 @@ public class GameController {
     // Game over flag
     private boolean gameOver = false;
 
+    // Water level
+    private int waterLevel = 1;
+
     // Players selected for helicopter lift
     private List<Player> selectedPlayers;
     // Target position for helicopter lift
@@ -119,15 +122,12 @@ public class GameController {
      */
     public void startGame(long seed) {
         System.out.println("Starting game with seed: " + seed);
-        gameStart = true;
-
+        
         try {
-            // 检查并确保 Room 对象已正确初始化
+            // 1. 初始化基本组件
             if (room == null && roomController != null) {
                 room = roomController.getRoom();
             }
-
-            // 如果 Room 仍然为 null，则创建一个新的 Room
             if (room == null) {
                 System.out.println("Creating new Room object...");
                 room = new Room();
@@ -136,67 +136,81 @@ public class GameController {
                 }
             }
 
-            // 确保所有控制器都有正确的 Room 引用
+            // 2. 确保所有控制器都有正确的引用
             if (playerController != null) {
-                // 重新设置 GameController 以确保 playerController 获取正确的 room 引用
                 playerController.setGameController(this);
             }
-
             if (actionBarController != null) {
-                // 重新设置 GameController 以确保 actionBarController 获取正确的 room 引用
                 actionBarController.setGameController(this);
             }
-
-            // 检查玩家列表
-            List<Player> players = room.getPlayers();
-            if (players == null || players.isEmpty()) {
-                System.err.println("No players in room!");
-                return;
+            if (islandController != null) {
+                islandController.setGameController(this);
             }
 
+            // 3. 验证玩家列表
+            List<Player> players = room.getPlayers();
+            if (players == null || players.isEmpty()) {
+                throw new IllegalStateException("No players in room!");
+            }
             System.out.println("Players in room: " + players.size());
+
+            // 4. 初始化玩家状态
+            for (Player player : players) {
+                player.setInGame(true);
+                player.resetState();
+                player.setGameController(this);
+            }
+
+            // 5. 设置当前玩家
             currentPlayer = players.getFirst();
             System.out.println("Current player: " + (currentPlayer != null ? currentPlayer.getName() : "null"));
-
-            // 确保 ActionBarController 也知道当前玩家
             if (actionBarController != null && currentPlayer != null) {
                 actionBarController.setCurrentPlayer(currentPlayer);
             }
 
-            // 初始化岛屿
+            // 6. 初始化游戏组件
             System.out.println("Initializing island...");
             islandController.initIsland(seed);
 
-            // 初始化玩家
             System.out.println("Initializing players...");
             playerController.initPlayers(seed);
 
-            // 初始化卡牌
             System.out.println("Initializing cards...");
             cardController.initCards(seed);
 
-            // 发牌给玩家
+            // 7. 发牌给玩家
             System.out.println("Dealing cards to players...");
             playerController.dealCards(cardController.getTreasureDeck());
 
-            // 设置游戏状态
+            // 8. 设置游戏状态
+            gameStart = true;
             System.out.println("Setting game state...");
-            gameSubject.setGameState(GameState.RUNNING);
-
-            // 初始化游戏视图
-            if (gameView == null) {
-                System.err.println("GameView is null! Cannot initialize game view.");
-                return;
+            if (gameSubject != null) {
+                gameSubject.setGameState(GameState.RUNNING);
+                gameSubject.notifyObservers();
+                gameSubject.notifyBoardChanged();
+                gameSubject.notifyPlayerInfoChanged();
+                gameSubject.notifyActionBarChanged();
+            } else {
+                System.err.println("Warning: gameSubject is null, cannot set game state");
             }
 
-            System.out.println("Initializing game view...");
-            gameView.initGame();
-            gameView.setPrimaryStage();
+            // 9. 初始化游戏视图
+            if (gameView != null) {
+                System.out.println("Initializing game view...");
+                gameView.initGame();
+                gameView.setPrimaryStage();
+            }
 
             System.out.println("Game started successfully!");
         } catch (Exception e) {
+            gameStart = false;
+            if (gameSubject != null) {
+                gameSubject.setGameState(GameState.INITIALIZING);
+            }
             System.err.println("Error starting game: " + e.getMessage());
             e.printStackTrace();
+            throw e;
         }
     }
 
@@ -665,8 +679,11 @@ public class GameController {
         this.gameOver = gameOver;
     }
 
-    public void setWaterLevel(int waterLevel) {
-        islandController.setWaterLevel(waterLevel);
+    public void setWaterLevel(int level) {
+        this.waterLevel = level;
+        if (gameView != null) {
+            gameView.updateWaterLevel(level);
+        }
     }
 
     public void returnToMainMenu() {
@@ -703,5 +720,13 @@ public class GameController {
 
     public void updateWaterLevel() {
         gameSubject.notifyWaterLevelChanged(islandController.getWaterLevel());
+    }
+
+    /**
+     * 获取当前水位
+     * @return 当前水位值
+     */
+    public int getWaterLevel() {
+        return waterLevel;
     }
 }

@@ -44,4 +44,9 @@ public class Explorer extends Player {
         }
         return positions;
     }
+
+    @Override
+    public void setRole(PlayerRole playerRole) {
+
+    }
 }

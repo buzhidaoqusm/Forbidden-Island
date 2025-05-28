@@ -46,6 +46,11 @@ public class Engineer extends Player {
         return positions;
     }
 
+    @Override
+    public void setRole(PlayerRole playerRole) {
+
+    }
+
     public boolean isFirstShoreUp() {
         return firstShoreUp;
     }
