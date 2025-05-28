@@ -519,4 +519,14 @@ public class GameView {
             islandView.clearHighlights();
         }
     }
+
+    /**
+     * 更新水位显示
+     * @param level 新的水位值
+     */
+    public void updateWaterLevel(int level) {
+        if (islandView != null) {
+            islandView.updateWaterLevelIndicator(level);
+        }
+    }
 }

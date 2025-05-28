@@ -16,6 +16,8 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 
 import java.util.List;
 import java.util.HashMap;
@@ -80,13 +82,13 @@ public class IslandView {
             System.out.println("开始加载 IslandView 图片资源...");
             
             // 加载水位线图片
-                try {
+            try {
                 floodMeterImage = new Image(getClass().getResourceAsStream("/islands/flood_meter.png"));
                 if (floodMeterImage == null || floodMeterImage.isError()) {
                     System.err.println("无法加载水位线图片");
-                }
+                    }
                 System.out.println("成功加载水位线图片");
-                } catch (Exception e) {
+            } catch (Exception e) {
                 System.err.println("加载水位线图片失败: " + e.getMessage());
             }
             
@@ -97,7 +99,7 @@ public class IslandView {
                     if (bgImage != null && !bgImage.isError()) {
                         waterLevelBackgrounds.put(i, bgImage);
                         System.out.println("成功加载水位 " + i + " 的背景图片");
-                }
+                    }
                 } catch (Exception e) {
                     System.err.println("加载水位 " + i + " 背景图片失败: " + e.getMessage());
                 }
@@ -134,22 +136,22 @@ public class IslandView {
                 "Fire1", "Green", "Red", "Normal8", "Blue", "Wind1", "Earth2", "Normal1", 
                 "Normal10", "Normal2", "White", "Yellow", "Normal3", "Normal5", "Normal9", "Earth1", 
                 "Ocean2", "Fire2", "Black", "Ocean1", "Normal4", "Normal6", "Wind2", "Normal7"
-                };
+            };
                 
             // 加载正常和被淹没的瓦片图片
             for (String tileType : tileTypes) {
                     try {
-                    // 加载正常瓦片图片
+                // 加载正常瓦片图片
                     Image normalImage = new Image(getClass().getResourceAsStream("/islands/" + tileType + ".png"));
                     if (normalImage != null && !normalImage.isError()) {
-                        normalTileImages.put(tileType, normalImage);
+                    normalTileImages.put(tileType, normalImage);
                         System.out.println("成功加载正常瓦片图片: " + tileType);
-                    }
-                    
-                    // 加载被淹没的瓦片图片
+                }
+                
+                // 加载被淹没的瓦片图片
                     Image floodedImage = new Image(getClass().getResourceAsStream("/islands/" + tileType + "_flood.png"));
                     if (floodedImage != null && !floodedImage.isError()) {
-                        floodedTileImages.put(tileType, floodedImage);
+                    floodedTileImages.put(tileType, floodedImage);
                         System.out.println("成功加载被淹没瓦片图片: " + tileType);
                         }
                     } catch (Exception e) {
@@ -214,10 +216,10 @@ public class IslandView {
                     javafx.scene.canvas.GraphicsContext gc = canvas.getGraphicsContext2D();
                     gc.setFill(Color.GOLD);
                     gc.fillRoundRect(0, 0, 80, 120, 10, 10);
-                        gc.setStroke(Color.BLACK);
+                    gc.setStroke(Color.BLACK);
                     gc.setLineWidth(2);
                     gc.strokeRoundRect(0, 0, 80, 120, 10, 10);
-                        gc.setFill(Color.BLACK);
+                    gc.setFill(Color.BLACK);
                     gc.setFont(Font.font("Arial", FontWeight.BOLD, 14));
                     gc.fillText("宝藏", 25, 50);
                     gc.fillText("卡牌", 25, 70);
@@ -231,33 +233,62 @@ public class IslandView {
             }
             
             // 加载洪水卡图片
-            String[] floodFolderPaths = {
-                "/Flood/",
-                "/image/Flood/",
-                "/Design/Cards/Flood/",
-                "/Design/FloodCards/"
+            String[] floodCardTypes = {
+                "Black", "Blue", "Earth1", "Earth2", "Fire1", "Fire2", "Green",
+                "Normal1", "Normal2", "Normal3", "Normal4", "Normal5", "Normal6",
+                "Normal7", "Normal8", "Normal9", "Normal10", "Ocean1", "Ocean2",
+                "Red", "White", "Wind1", "Wind2", "Yellow"
             };
             
-            for (int i = 1; i <= 24; i++) {
+            // 只尝试从 flood cards 目录加载
+            String floodCardPath = "/flood cards/";
+            
+            for (int i = 0; i < floodCardTypes.length; i++) {
                 boolean loaded = false;
-                for (String folderPath : floodFolderPaths) {
-                    String path = folderPath + i + ".png";
-                    try {
-                        Image img = new Image(getClass().getResourceAsStream(path));
-                        if (img != null && !img.isError()) {
-                            floodCardImages.add(img);
-                            System.out.println("成功加载洪水卡图片: " + path);
-                            loaded = true;
-                            break;
-                        }
-                    } catch (Exception e) {
-                        // 继续尝试下一个路径
+                String path = floodCardPath + floodCardTypes[i] + ".png";
+                try {
+                    Image img = new Image(getClass().getResourceAsStream(path));
+                    if (img != null && !img.isError()) {
+                        floodCardImages.add(img);
+                        System.out.println("成功加载洪水卡图片: " + path);
+                        loaded = true;
                     }
+                } catch (Exception e) {
+                    System.err.println("加载洪水卡图片失败: " + path + " - " + e.getMessage());
                 }
                 
-                // 如果没有找到图片，直接跳过
+                // 如果没有找到图片，创建默认图片
                 if (!loaded) {
-                    System.out.println("无法加载洪水卡图片 #" + i + "，使用默认背面图片替代");
+                    System.out.println("无法加载洪水卡图片 " + floodCardTypes[i] + "，创建默认图片");
+                    Canvas canvas = new Canvas(80, 120);
+                    GraphicsContext gc = canvas.getGraphicsContext2D();
+                    
+                    // 绘制卡片背景
+                    gc.setFill(Color.LIGHTBLUE);
+                    gc.fillRoundRect(0, 0, 80, 120, 10, 10);
+                    gc.setStroke(Color.BLACK);
+                    gc.setLineWidth(2);
+                    gc.strokeRoundRect(0, 0, 80, 120, 10, 10);
+                    
+                    // 添加水纹图案
+                    gc.setStroke(Color.BLUE);
+                    gc.setLineWidth(1);
+                    for (int y = 20; y < 120; y += 20) {
+                        for (int x = 5; x < 80; x += 15) {
+                            gc.strokeLine(x, y, x + 10, y + 5);
+                        }
+                    }
+                    
+                    // 添加文本
+                    gc.setFill(Color.BLACK);
+                    gc.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+                    gc.fillText("洪水卡", 15, 40);
+                    gc.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+                    gc.fillText(floodCardTypes[i], 15, 80);
+                    
+                    javafx.scene.SnapshotParameters params = new javafx.scene.SnapshotParameters();
+                    params.setFill(Color.TRANSPARENT);
+                    floodCardImages.add(canvas.snapshot(params, null));
                 }
             }
 
@@ -391,7 +422,7 @@ public class IslandView {
                         Rectangle placeholder = new Rectangle(TILE_SIZE, TILE_SIZE);
                         placeholder.setFill(NORMAL_TILE_COLOR);
                         placeholder.setStroke(Color.BLACK);
-                        tilePane.getChildren().add(placeholder);
+                tilePane.getChildren().add(placeholder);
                         
                 // Add a label for debugging
                 Label posLabel = new Label("(" + row + "," + col + ")");
@@ -400,9 +431,9 @@ public class IslandView {
                 posLabel.setLayoutY(5);
                 tilePane.getChildren().add(posLabel);
                     }
-                    
+            
             // Add to grid
-                    gridPane.add(tilePane, col, row);
+            gridPane.add(tilePane, col, row);
         }
         
         // Add empty spaces for invalid positions
@@ -547,8 +578,8 @@ public class IslandView {
                 
                 try {
                     Image tileImage = null;
-                switch (state) {
-                    case NORMAL:
+                    switch (state) {
+                        case NORMAL:
                             tileImage = normalTileImages.getOrDefault(tileType, null);
                             break;
                         case FLOODED:
@@ -598,7 +629,12 @@ public class IslandView {
                 
                 // Display tile name
                 Label nameLabel = new Label(tileName);
-                nameLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 10px;");
+                // 根据瓦片名称长度设置不同的字体大小
+                if (tileName.length() > 10) {
+                    nameLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 8px;");
+                } else {
+                    nameLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 10px;");
+                }
                 nameLabel.setLayoutX(5);
                 nameLabel.setLayoutY(5);
                 tilePane.getChildren().add(nameLabel);
@@ -751,28 +787,31 @@ public class IslandView {
                 for (Map.Entry<Position, Tile> entry : gameMap.entrySet()) {
                     Position pos = entry.getKey();
                     Tile tile = entry.getValue();
-                    if (tile != null) {
                         updateTileView(pos.getX(), pos.getY(), tile);
-                    }
                 }
                 
-                // Update player position markers
+                // Update player positions
                 PlayerController playerController = gameController.getPlayerController();
                 if (playerController != null) {
                     List<Player> players = playerController.getRoom().getPlayers();
+                    if (players != null) {
                     for (Player player : players) {
                         // Ensure player position is updated correctly
                         if (player.getPosition() != null) {
-                            System.out.println("Updating player position: " + player.getName() + " at " + player.getPosition());
+                                System.out.println("Updating player position: " + player.getName() + " at " + player.getPosition());
                             updatePlayerMarker(player, player.getPosition());
+                        }
                         }
                     }
                 }
                 
                 // Highlight valid positions if any
-                List<Position> validPositions = islandController.getValidPositions();
-                if (validPositions != null && !validPositions.isEmpty()) {
-                    highlightTiles(validPositions, "valid_move");
+                Player currentPlayer = gameController.getCurrentPlayer();
+                if (currentPlayer != null) {
+                    List<Position> validPositions = islandController.getValidPositions(currentPlayer);
+                    if (validPositions != null && !validPositions.isEmpty()) {
+                        highlightTiles(validPositions, "valid_move");
+                    }
                 }
                 
                 System.out.println("IslandView update complete");
@@ -804,45 +843,42 @@ public class IslandView {
      * @return 对应的图片类型
      */
     private String mapTileNameToImageType(String tileName) {
-        // 直接映射瓦片名称到我们使用的图片类型
-        // 首先检查是否是我们直接使用的类型之一
-        String[] directTypes = {
-            "Fire1", "Green", "Red", "Normal8", "Blue", "Wind1", "Earth2", "Normal1", 
-            "Normal10", "Normal2", "White", "Yellow", "Normal3", "Normal5", "Normal9", 
-            "Earth1", "Ocean2", "Fire2", "Black", "Ocean1", "Normal4", "Normal6", "Wind2", "Normal7"
-        };
-        
-        for (String type : directTypes) {
-            if (tileName.equals(type)) {
-                return type;
-            }
+        // 创建一个映射表来存储瓦片名称到图片类型的对应关系
+        Map<String, String> tileMap = new HashMap<>();
+        tileMap.put("FOOL'S LANDING", "Blue");
+        tileMap.put("BRONZE GATE", "Wind1");
+        tileMap.put("CAVE OF EMBERS", "Fire1");
+        tileMap.put("CAVE OF SHADOWS", "Fire2");
+        tileMap.put("COPPER GATE", "Green");
+        tileMap.put("CORAL PALACE", "Ocean1");
+        tileMap.put("CRIMSON FOREST", "Red");
+        tileMap.put("DUNES OF DECEPTION", "Normal1");
+        tileMap.put("GOLD GATE", "Yellow");
+        tileMap.put("IRON GATE", "Black");
+        tileMap.put("LOST LAGOON", "Ocean2");
+        tileMap.put("MISTY MARSH", "Normal2");
+        tileMap.put("OBSERVATORY", "Normal3");
+        tileMap.put("PHANTOM ROCK", "Normal4");
+        tileMap.put("SILVER GATE", "White");
+        tileMap.put("TEMPLE OF THE MOON", "Earth1");
+        tileMap.put("TEMPLE OF THE SUN", "Earth2");
+        tileMap.put("TIDAL PALACE", "Normal5");
+        tileMap.put("TWILIGHT HOLLOW", "Normal6");
+        tileMap.put("WATCHTOWER", "Normal7");
+        tileMap.put("WHISPERING GARDEN", "Wind2");
+        tileMap.put("HOWLING GARDEN", "Normal8");
+        tileMap.put("BREAKERS BRIDGE", "Normal9");
+        tileMap.put("CLIFFS OF ABANDON", "Normal10");
+
+        // 如果找到映射关系，返回对应的图片类型
+        if (tileMap.containsKey(tileName)) {
+            System.out.println("映射瓦片 " + tileName + " 到图片类型: " + tileMap.get(tileName));
+            return tileMap.get(tileName);
         }
-        
-        // 如果不是直接类型，根据名称特征匹配
-        if (tileName.contains("Earth") || tileName.equals("Howling Garden") || tileName.equals("Whispering Garden")) {
-            return "Earth1";
-        } else if (tileName.contains("Fire") || tileName.equals("Cave of Embers") || tileName.equals("Cave of Shadows")) {
-            return "Fire1";
-        } else if (tileName.contains("Wind") || tileName.equals("Breakers Bridge") || tileName.equals("Bronze Gate")) {
-            return "Wind1";
-        } else if (tileName.contains("Ocean") || tileName.equals("Cliffs of Abandon") || tileName.equals("Coral Palace")) {
-            return "Ocean1";
-        } else if (tileName.equals("Fool's Landing")) {
-            return "Blue";
-        } else if (tileName.equals("Temple of the Moon") || tileName.equals("Temple of the Sun")) {
-            return "Yellow";
-        } else if (tileName.equals("Silver Gate") || tileName.equals("Gold Gate")) {
-            return "White";
-        } else if (tileName.equals("Iron Gate") || tileName.equals("Bronze Gate") || tileName.equals("Copper Gate")) {
-            return "Green";
-        } else if (tileName.equals("Crimson Forest") || tileName.equals("Dunes of Deception")) {
-            return "Red";
-        } else if (tileName.equals("Lost Lagoon") || tileName.equals("Misty Marsh")) {
-            return "Black";
-        } else {
-            // 默认使用普通瓦片
-            return "Normal1";
-        }
+
+        // 如果没有找到映射关系，输出警告并返回默认类型
+        System.err.println("警告：未找到瓦片 " + tileName + " 的图片类型映射，使用默认类型 Normal1");
+        return "Normal1";
     }
 
     /**
@@ -1037,5 +1073,26 @@ public class IslandView {
     // 新增成员变量
     private ScrollPane scrollPane;
     private VBox logContent;
+
+    /**
+     * 根据洪水卡编号获取对应的瓦片名称
+     * @param cardNumber 洪水卡编号
+     * @return 瓦片名称
+     */
+    private String getTileNameForFloodCard(int cardNumber) {
+        String[] tileNames = {
+            "Fool's Landing", "Bronze Gate", "Cave of Embers", "Cave of Shadows",
+            "Copper Gate", "Coral Palace", "Crimson Forest", "Dunes of Deception",
+            "Gold Gate", "Iron Gate", "Lost Lagoon", "Misty Marsh",
+            "Observatory", "Phantom Rock", "Silver Gate", "Temple of the Moon",
+            "Temple of the Sun", "Tidal Palace", "Twilight Hollow", "Watchtower",
+            "Whispering Garden", "Howling Garden", "Breakers Bridge", "Cliffs of Abandon"
+        };
+        
+        if (cardNumber >= 1 && cardNumber <= tileNames.length) {
+            return tileNames[cardNumber - 1];
+        }
+        return "Tile " + cardNumber;
+    }
 }
 

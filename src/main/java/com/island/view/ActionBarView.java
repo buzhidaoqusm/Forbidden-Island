@@ -62,7 +62,7 @@ public class ActionBarView {
         try {
             // 加载所有的水位计图片（0到10）
             for (int i = 0; i <= 10; i++) {
-                String path = "/image/WaterMeter/" + i + ".png";
+                String path = "/WaterMeter/" + i + ".png";
                 waterMeterImages.put(i, new Image(getClass().getResourceAsStream(path)));
             }
         } catch (Exception e) {

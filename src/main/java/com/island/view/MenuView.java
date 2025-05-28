@@ -18,6 +18,8 @@ import javafx.scene.control.Label;
 import com.island.model.Player;
 import com.island.controller.GameController;
 
+import java.util.Objects;
+
 public class MenuView {
 
     private Stage primaryStage;
@@ -60,9 +62,7 @@ public class MenuView {
     private void loadImages() {
         try {
             // Load menu background
-            menuBackgroundImage = new Image(getClass().getResourceAsStream("/image/UI/menu_background.jpg"));
-            // Load game logo
-            gameLogo = new Image(getClass().getResourceAsStream("/image/UI/game_logo.png"));
+            menuBackgroundImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/image/UI/menu_background.jpg")));
         } catch (Exception e) {
             System.err.println("Menu image resources loading failed: " + e.getMessage());
             e.printStackTrace();

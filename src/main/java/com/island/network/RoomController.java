@@ -190,7 +190,7 @@ public class RoomController implements AutoCloseable {
             
             // 2. 关闭调度器
             if (scheduler != null) {
-                scheduler.shutdownNow();
+        scheduler.shutdownNow();
                 try {
                     if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
                         logView.warning("调度器未能在预期时间内关闭");
@@ -203,10 +203,10 @@ public class RoomController implements AutoCloseable {
             
             // 3. 关闭网络组件
             if (receiver != null) {
-                receiver.stop();
+        receiver.stop();
             }
             if (sender != null) {
-                sender.close();
+        sender.close();
             }
             if (messageHandler != null) {
                 messageHandler.shutdown();
@@ -233,8 +233,8 @@ public class RoomController implements AutoCloseable {
         if (!isRunning.get()) return;
         
         try {
-            Message msg = new Message(MessageType.MESSAGE_ACK, room.getRoomId(), "system");
-            broadcast(msg);
+        Message msg = new Message(MessageType.MESSAGE_ACK, room.getRoomId(), "system");
+        broadcast(msg);
         } catch (Exception e) {
             logView.error("Failed to broadcast heartbeat: " + e.getMessage());
         }
@@ -295,8 +295,8 @@ public class RoomController implements AutoCloseable {
                 logView.warning("Player disconnected: " + username + " (Attempt " + (attempts + 1) + "/" + MAX_RECONNECT_ATTEMPTS + ")");
                 handleReconnectAttempt(player);
             } else {
-                room.removePlayer(player);
-                broadcastAction(MessageType.PLAYER_LEAVE, player, Map.of("status", "disconnected"));
+            room.removePlayer(player);
+            broadcastAction(MessageType.PLAYER_LEAVE, player, Map.of("status", "disconnected"));
                 removeHeartbeat(username);
                 reconnectAttempts.remove(username);
                 logView.warning("Player permanently disconnected: " + username);
@@ -411,7 +411,7 @@ public class RoomController implements AutoCloseable {
         }
         
         try {
-            messageHandler.handleMessage(message);
+        messageHandler.handleMessage(message);
         } catch (Exception e) {
             logView.error("Error handling game message: " + e.getMessage());
         }
@@ -424,7 +424,7 @@ public class RoomController implements AutoCloseable {
             "system"
         )
         .addExtraData("username", player)
-        .addExtraData("status", success);
+                .addExtraData("status", success);
         
         handleGameMessage(response);
     }
@@ -457,7 +457,7 @@ public class RoomController implements AutoCloseable {
     public void sendGameStartMessage(Message message) {
         try {
             // 1. 获取玩家信息
-            String username = (String) message.getData().get("username");
+        String username = (String) message.getData().get("username");
             Player player = room.getPlayerByName(username);
             if (player == null) {
                 throw new IllegalStateException("Player not found: " + username);
@@ -508,8 +508,8 @@ public class RoomController implements AutoCloseable {
 
     public void sendMoveByNavigatorMessage(Player navigator, Player target, Tile tile) {
         broadcastAction(MessageType.MOVE_PLAYER_BY_NAVIGATOR, navigator, Map.of(
-            "target", target,
-            "tile", tile
+                "target", target,
+                "tile", tile
         ));
     }
 
@@ -523,8 +523,8 @@ public class RoomController implements AutoCloseable {
 
     public void sendGiveCardMessage(Player from, Player to, int cardIndex) {
         broadcastAction(MessageType.GIVE_CARD, from, Map.of(
-            "to", to,
-            "cardIndex", cardIndex
+                "to", to,
+                "cardIndex", cardIndex
         ));
     }
 

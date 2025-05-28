@@ -729,4 +729,12 @@ public class GameController {
     public int getWaterLevel() {
         return waterLevel;
     }
+
+    /**
+     * 获取当前激活的特殊卡牌
+     * @return 当前激活的特殊卡牌，如果没有则返回null
+     */
+    public Card getActiveSpecialCard() {
+        return activeSpecialCard;
+    }
 }
