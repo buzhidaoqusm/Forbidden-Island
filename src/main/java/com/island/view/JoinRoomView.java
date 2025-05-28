@@ -69,9 +69,7 @@ public class JoinRoomView {
     private void loadImages() {
         try {
             // Load room background image
-            roomBackgroundImage = new Image(getClass().getResourceAsStream("/image/UI/room_background.jpg"));
-            // Load room title image
-            roomTitleImage = new Image(getClass().getResourceAsStream("/image/UI/join_room_title.png"));
+            roomBackgroundImage = new Image(getClass().getResourceAsStream("/image/UI/start_background.jpg"));
         } catch (Exception e) {
             System.err.println("Room image resources loading failed: " + e.getMessage());
             e.printStackTrace();

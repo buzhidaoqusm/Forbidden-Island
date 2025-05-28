@@ -73,7 +73,7 @@ public class BroadcastAddressCalculator {
                     } else {
                         log("接口 " + ni.getDisplayName() + " 没有找到广播地址");
                     }
-                } catch (SocketException e) {
+                        } catch (SocketException e) {
                     hasPermissionIssue = true;
                     log("访问网络接口 " + ni.getDisplayName() + " 时出现权限问题: " + e.getMessage());
                 }

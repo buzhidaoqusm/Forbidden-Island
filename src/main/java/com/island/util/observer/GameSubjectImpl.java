@@ -30,7 +30,7 @@ public class GameSubjectImpl implements GameSubject {
     @Override
     public void removeObserver(GameObserver observer) {
         if (observer != null) {
-            observers.remove(observer);
+        observers.remove(observer);
         }
     }
     
@@ -49,7 +49,7 @@ public class GameSubjectImpl implements GameSubject {
     public void notifyBoardChanged() {
         for (GameObserver observer : observers) {
             try {
-                observer.onBoardChanged();
+            observer.onBoardChanged();
             } catch (Exception e) {
                 System.err.println("Error notifying board change: " + e.getMessage());
             }
@@ -59,7 +59,7 @@ public class GameSubjectImpl implements GameSubject {
     public void notifyPlayerMoved(Player player, Position newPosition) {
         for (GameObserver observer : observers) {
             try {
-                observer.onPlayerMoved(player, newPosition);
+            observer.onPlayerMoved(player, newPosition);
             } catch (Exception e) {
                 System.err.println("Error notifying player move: " + e.getMessage());
             }
@@ -69,7 +69,7 @@ public class GameSubjectImpl implements GameSubject {
     public void notifyWaterLevelChanged(int newLevel) {
         for (GameObserver observer : observers) {
             try {
-                observer.onWaterLevelChanged(newLevel);
+            observer.onWaterLevelChanged(newLevel);
             } catch (Exception e) {
                 System.err.println("Error notifying water level change: " + e.getMessage());
             }
@@ -79,7 +79,7 @@ public class GameSubjectImpl implements GameSubject {
     public void notifyCardChanged() {
         for (GameObserver observer : observers) {
             try {
-                observer.onCardChanged();
+            observer.onCardChanged();
             } catch (Exception e) {
                 System.err.println("Error notifying card change: " + e.getMessage());
             }
@@ -89,7 +89,7 @@ public class GameSubjectImpl implements GameSubject {
     public void notifyPlayerInfoChanged() {
         for (GameObserver observer : observers) {
             try {
-                observer.onPlayerInfoChanged();
+            observer.onPlayerInfoChanged();
             } catch (Exception e) {
                 System.err.println("Error notifying player info change: " + e.getMessage());
             }
@@ -99,7 +99,7 @@ public class GameSubjectImpl implements GameSubject {
     public void notifyActionBarChanged() {
         for (GameObserver observer : observers) {
             try {
-                observer.onActionBarChanged();
+            observer.onActionBarChanged();
             } catch (Exception e) {
                 System.err.println("Error notifying action bar change: " + e.getMessage());
             }
@@ -109,12 +109,12 @@ public class GameSubjectImpl implements GameSubject {
     public GameState getGameState() {
         return gameState;
     }
-
+    
     public void setGameState(GameState newState) {
         if (newState != null && this.gameState != newState) {
             this.gameState = newState;
             System.out.println("Game state changed to: " + newState);
-            notifyObservers();
+        notifyObservers();
         }
     }
 
