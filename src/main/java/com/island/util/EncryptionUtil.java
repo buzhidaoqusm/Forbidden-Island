@@ -1,70 +1,70 @@
 package com.island.util;
 
 import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
+/**
+ * Encryption utility class that provides message encryption and decryption functionality
+ */
 public class EncryptionUtil {
-    private EncryptionUtil() {
-        throw new AssertionError("Tool class prohibits instantiation");
-    }
+    /** The encryption algorithm to be used (AES) */
+    private static final String ALGORITHM = "AES";
+    
+    /** The encryption key string (should be stored more securely in production) */
+    private static final String KEY = "ForbiddenIsland2025"; // Fixed key, should be stored more securely in production
+    
+    /** The secret key instance used for encryption/decryption */
+    private static SecretKey secretKey;
 
-    // AES configuration
-    private static final String ALGORITHM = "AES/CBC/PKCS5Padding";
-    private static final String SECRET_KEY = "ThisIsASecretKey"; // In actual projects, it should be read from the security configuration
-    private static final int IV_LENGTH = 16; // AES block size
-
-    // Encryption method
-    public static String encrypt(String plainText) {
+    static {
         try {
-            // 1. Generate Random Initialization Vector (IV)
-            byte[] iv = new byte[IV_LENGTH];
-            new SecureRandom().nextBytes(iv);
-            IvParameterSpec ivSpec = new IvParameterSpec(iv);
-
-            // 2. Create keys and encryptors
-            SecretKeySpec keySpec = new SecretKeySpec(SECRET_KEY.getBytes(), "AES");
-            Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
-
-            // 3. Perform encryption and concatenate IV+ciphertext
-            byte[] encrypted = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
-            byte[] combined = new byte[iv.length + encrypted.length];
-            System.arraycopy(iv, 0, combined, 0, iv.length);
-            System.arraycopy(encrypted, 0, combined, iv.length, encrypted.length);
-
-            // 4. Return Base64 encoding result
-            return Base64.getEncoder().encodeToString(combined);
+            // Initialize with fixed key
+            byte[] keyBytes = KEY.getBytes(StandardCharsets.UTF_8);
+            // Ensure key length is 16 bytes (128 bits)
+            byte[] paddedKey = new byte[16];
+            System.arraycopy(keyBytes, 0, paddedKey, 0, Math.min(keyBytes.length, paddedKey.length));
+            secretKey = new SecretKeySpec(paddedKey, ALGORITHM);
         } catch (Exception e) {
-            throw new RuntimeException("Encryption failed", e);
+            e.printStackTrace();
         }
     }
 
-    // Decryption method
-    public static String decrypt(String encryptedText) {
+    /**
+     * Encrypts a message
+     * @param message The message to encrypt
+     * @return Base64 encoded encrypted string
+     */
+    public static String encrypt(String message) {
         try {
-            // 1. Decoding Base64 and separating IV and ciphertext
-            byte[] combined = Base64.getDecoder().decode(encryptedText);
-            byte[] iv = new byte[IV_LENGTH];
-            byte[] encrypted = new byte[combined.length - IV_LENGTH];
-            System.arraycopy(combined, 0, iv, 0, IV_LENGTH);
-            System.arraycopy(combined, IV_LENGTH, encrypted, 0, encrypted.length);
-
-            // 2. Create keys and decrypts
-            IvParameterSpec ivSpec = new IvParameterSpec(iv);
-            SecretKeySpec keySpec = new SecretKeySpec(SECRET_KEY.getBytes(), "AES");
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
-
-            // 3. Execute decryption
-            byte[] decrypted = cipher.doFinal(encrypted);
-            return new String(decrypted, StandardCharsets.UTF_8);
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            byte[] encryptedBytes = cipher.doFinal(message.getBytes());
+            return Base64.getEncoder().encodeToString(encryptedBytes);
         } catch (Exception e) {
-            throw new RuntimeException("Decryption failed", e);
+            e.printStackTrace();
+            return message; // Return original message if encryption fails
         }
     }
 
-}
+    /**
+     * Decrypts a message
+     * @param encryptedMessage The Base64 encoded encrypted string
+     * @return Decrypted message
+     */
+    public static String decrypt(String encryptedMessage) {
+        try {
+            Cipher cipher = Cipher.getInstance(ALGORITHM);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedMessage));
+            return new String(decryptedBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return encryptedMessage; // Return original message if decryption fails
+        }
+    }
+} 

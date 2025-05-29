@@ -1,155 +1,122 @@
 package com.island.network;
 
 import java.net.*;
-import java.util.*;
-import java.util.stream.Collectors;
-import com.island.view.ActionLogView;
+import java.util.Enumeration;
 
+/**
+ * Utility class for calculating broadcast addresses and managing network interfaces.
+ * This class provides functionality to determine the appropriate network interface
+ * and calculate broadcast addresses for network communication.
+ */
 public class BroadcastAddressCalculator {
-    private static final String FALLBACK_BROADCAST = "255.255.255.255";
-    private static ActionLogView logView; // 可以通过静态方法设置
 
-    private BroadcastAddressCalculator() {
-        throw new AssertionError("工具类禁止实例化");
+    /**
+     * Calculate the broadcast address using IP address and subnet mask
+     * @param ipAddress The IP address to use for calculation
+     * @param subnetMask The subnet mask to use for calculation
+     * @return The calculated broadcast address
+     * @throws Exception If there's an error during address calculation
+     */
+    public static InetAddress calculateBroadcastAddress(InetAddress ipAddress, InetAddress subnetMask) throws Exception {
+        byte[] ipBytes = ipAddress.getAddress();
+        byte[] maskBytes = subnetMask.getAddress();
+
+        byte[] broadcastBytes = new byte[ipBytes.length];
+
+        // Calculate broadcast address by performing bitwise operations
+        for (int i = 0; i < ipBytes.length; i++) {
+            broadcastBytes[i] = (byte) (ipBytes[i] | (~maskBytes[i] & 0xFF));
+        }
+
+        return InetAddress.getByAddress(broadcastBytes);
     }
 
     /**
-     * 设置日志视图
-     * @param view 日志视图实例
+     * Get the local IPv4 address and subnet mask by selecting an appropriate network interface.
+     * This method filters out unsuitable interfaces such as loop-back, disconnected, and virtual interfaces.
+     * @return The broadcast address as a string, or null if no suitable interface is found
+     * @throws Exception If there's an error accessing network interfaces
      */
-    public static void setLogView(ActionLogView view) {
-        logView = view;
-    }
+    public static String getLocalIpAndSubnet() throws Exception {
+        // Get all network interfaces on the local machine
+        Enumeration<NetworkInterface> networks = NetworkInterface.getNetworkInterfaces();
 
-    private static void log(String message) {
-        if (logView != null) {
-            logView.warning(message);
+        NetworkInterface selectedInterface = null;
+        InetAddress selectedInetAddress = null;
+        InetAddress selectedSubnetMask = null;
+
+        while (networks.hasMoreElements()) {
+            NetworkInterface network = networks.nextElement();
+
+            // Only select active interfaces, exclude loopback and disconnected interfaces
+            if (network.isUp() && !network.isLoopback() && !isDisconnected(network)) {
+
+                // Get all IP addresses for this network interface
+                Enumeration<InetAddress> addresses = network.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    InetAddress inetAddress = addresses.nextElement();
+
+                    // Only process IPv4 addresses
+                    if (inetAddress instanceof Inet4Address) {
+                        short netmask = 0;
+                        boolean validInterface = false;
+
+                        for (InterfaceAddress address : network.getInterfaceAddresses()) {
+                            if (address.getAddress().equals(inetAddress)) {
+                                netmask = (short) address.getNetworkPrefixLength();
+                                // Exclude interfaces with subnet mask 255.255.255.255
+                                if (netmask != 32) {
+                                    validInterface = true;
+                                }
+                                break;
+                            }
+                        }
+
+                        if (validInterface) {
+                            // Construct subnet mask from prefix length
+                            int mask = 0xffffffff << (32 - netmask);
+                            InetAddress subnetMask = InetAddress.getByAddress(new byte[] {
+                                    (byte) ((mask >> 24) & 0xFF),
+                                    (byte) ((mask >> 16) & 0xFF),
+                                    (byte) ((mask >> 8) & 0xFF),
+                                    (byte) (mask & 0xFF)
+                            });
+
+                            // Ensure we select a valid interface with correct IP address
+                            if (selectedInterface == null || !network.getName().contains("vmnet")) {  // Exclude virtual network adapters
+                                selectedInterface = network;
+                                selectedInetAddress = inetAddress;
+                                selectedSubnetMask = subnetMask;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Ensure a valid interface was selected
+        if (selectedInterface != null && selectedInetAddress != null && selectedSubnetMask != null) {
+            // Calculate the broadcast address
+            InetAddress broadcastAddress = calculateBroadcastAddress(selectedInetAddress, selectedSubnetMask);
+
+            // Output selected interface details and calculated broadcast address
+            System.out.println("Selected Local IP: " + selectedInetAddress.getHostAddress());
+            System.out.println("Selected Subnet Mask: " + selectedSubnetMask.getHostAddress());
+            System.out.println("Calculated Broadcast Address: " + broadcastAddress.getHostAddress());
+            return broadcastAddress.getHostAddress();
         } else {
-            System.err.println(message);
-        }
-    }
-
-    public static class NetworkInterfaceException extends Exception {
-        public NetworkInterfaceException(String message) {
-            super(message);
-        }
-
-        public NetworkInterfaceException(String message, Throwable cause) {
-            super(message, cause);
+            System.out.println("No suitable network interface found.");
+            return null;
         }
     }
 
     /**
-     * 获取所有有效的IPv4广播地址
-     * @return 广播地址字符串集合（如["192.168.1.255", "192.168.255.255"]）
-     * @throws NetworkInterfaceException 当无法获取任何有效的网络接口时
+     * Check if a network interface is in disconnected state
+     * @param network The network interface to check
+     * @return true if the interface is disconnected, false otherwise
+     * @throws SocketException If there's an error accessing the network interface
      */
-    public static Set<String> getBroadcastAddresses() throws NetworkInterfaceException {
-        Set<String> broadcastAddresses = new HashSet<>();
-        boolean hasPermissionIssue = false;
-        boolean hasAnyValidInterface = false;
-
-        try {
-            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-            if (interfaces == null) {
-                throw new NetworkInterfaceException("无法获取网络接口列表");
-            }
-
-            while (interfaces.hasMoreElements()) {
-                NetworkInterface ni = interfaces.nextElement();
-                try {
-                    // 检查接口是否有效
-                    if (!isValidInterface(ni)) {
-                        continue;
-                    }
-                    
-                    hasAnyValidInterface = true;
-                    log("找到有效网络接口: " + ni.getDisplayName());
-                    
-                    Set<String> interfaceBroadcasts = getBroadcastAddresses(ni);
-                    if (!interfaceBroadcasts.isEmpty()) {
-                        log("接口 " + ni.getDisplayName() + " 的广播地址: " + interfaceBroadcasts);
-                        broadcastAddresses.addAll(interfaceBroadcasts);
-                    } else {
-                        log("接口 " + ni.getDisplayName() + " 没有找到广播地址");
-                    }
-                        } catch (SocketException e) {
-                    hasPermissionIssue = true;
-                    log("访问网络接口 " + ni.getDisplayName() + " 时出现权限问题: " + e.getMessage());
-                }
-            }
-
-            // 处理特殊情况
-            if (broadcastAddresses.isEmpty()) {
-                if (!hasAnyValidInterface) {
-                    if (hasPermissionIssue) {
-                        throw new NetworkInterfaceException("无法访问网络接口，可能是权限问题");
-                    } else {
-                        log("未找到有效的网络接口，使用默认广播地址");
-                    }
-                } else {
-                    log("未找到广播地址，使用默认广播地址");
-                }
-                broadcastAddresses.add(FALLBACK_BROADCAST);
-                log("使用默认广播地址: " + FALLBACK_BROADCAST);
-            }
-
-            log("最终使用的广播地址: " + broadcastAddresses);
-            return broadcastAddresses;
-
-        } catch (SocketException e) {
-            throw new NetworkInterfaceException("获取网络接口列表失败", e);
-        }
-    }
-
-    /**
-     * 检查网络接口是否有效
-     * @param ni 网络接口
-     * @return 如果接口有效返回true
-     * @throws SocketException 如果检查接口状态时出错
-     */
-    private static boolean isValidInterface(NetworkInterface ni) throws SocketException {
-        if (ni == null) return false;
-        
-        // 检查基本条件
-        if (!ni.isUp() || ni.isLoopback() || ni.isVirtual()) {
-            return false;
-        }
-
-        // 检查是否是点对点接口
-        if (ni.isPointToPoint()) {
-            log("跳过点对点接口: " + ni.getDisplayName());
-            return false;
-        }
-
-        // 检查是否支持广播
-        if (!ni.supportsMulticast()) {
-            log("跳过不支持广播的接口: " + ni.getDisplayName());
-            return false;
-        }
-
-        // 检查是否有IPv4地址
-        boolean hasIPv4 = ni.getInterfaceAddresses().stream()
-                .anyMatch(addr -> addr.getAddress() instanceof Inet4Address);
-        if (!hasIPv4) {
-            log("跳过没有IPv4地址的接口: " + ni.getDisplayName());
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * 获取指定网络接口的广播地址（私有方法）
-     * @param networkInterface 网络接口对象
-     * @return 该接口的广播地址集合
-     */
-    private static Set<String> getBroadcastAddresses(NetworkInterface networkInterface) {
-        return networkInterface.getInterfaceAddresses().stream()
-                .map(InterfaceAddress::getBroadcast)
-                .filter(Objects::nonNull)
-                .filter(addr -> addr instanceof Inet4Address) // 只保留IPv4地址
-                .map(InetAddress::getHostAddress)
-                .collect(Collectors.toSet());
+    private static boolean isDisconnected(NetworkInterface network) throws SocketException {
+        return !network.isUp();
     }
 }

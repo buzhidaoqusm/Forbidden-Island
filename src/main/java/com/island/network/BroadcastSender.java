@@ -1,61 +1,76 @@
 package com.island.network;
 
-import java.io.IOException;
-import java.net.*;
-import java.util.*;
-import java.util.concurrent.*;
-import com.island.view.ActionLogView;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+
 import com.island.util.EncryptionUtil;
 
+/**
+ * BroadcastSender handles sending UDP broadcast messages for game communication.
+ * It manages the broadcast socket and encrypts messages before transmission.
+ */
 public class BroadcastSender {
-    private DatagramSocket socket;
-    private final String broadcastAddress;
-    private final int port;
+    /** UDP socket for sending broadcast messages */
+    private final DatagramSocket socket;
     
+    /** Network broadcast address for message distribution */
+    private final String broadcastAddress;
 
-    // Constructor (requires specifying broadcast address and port)
-    public BroadcastSender(String broadcastAddress, int port) throws SocketException {
-        this.broadcastAddress = broadcastAddress;
-        this.port = port;
-        this.socket = new DatagramSocket();
-        this.socket.setBroadcast(true); // Enable broadcast mode
-    }
-
-
-
-    // Core broadcast method
-    public void broadcast(Message message) {
+    /**
+     * Constructor that initializes the broadcast sender
+     * Creates a broadcast-enabled socket and calculates the broadcast address
+     * @throws RuntimeException if the broadcast sender cannot be created
+     */
+    public BroadcastSender() {
         try {
-            // 1. serialize messages into bytes
-            byte[] data = message.toBytes();
-
-            // 2. Create a broadcast packet
-            InetAddress address = InetAddress.getByName(broadcastAddress);
-            DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
-
-            // 3. Send a broadcast
-            socket.send(packet);
-        } catch (UnknownHostException e) {
-            System.err.println("Invalid broadcast address: " + broadcastAddress);
-        } catch (IOException e) {
-            System.err.println("Broadcast transmission failed: " + e.getMessage());
+            this.socket = new DatagramSocket();
+            this.socket.setBroadcast(true);
+            this.broadcastAddress = BroadcastAddressCalculator.getLocalIpAndSubnet();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create broadcast sender", e);
         }
     }
 
-    // Resource cleaning methods
+    /**
+     * Broadcasts a string message to all listeners on the network
+     * @param message The message to broadcast
+     * @throws Exception if broadcasting fails
+     * @throws IllegalStateException if broadcast address is not available
+     */
+    public void broadcast(String message) throws Exception {
+        if (broadcastAddress == null) {
+            throw new IllegalStateException("Unable to get broadcast address");
+        }
+        
+        // Encrypt the message before sending
+        String encryptedMessage = EncryptionUtil.encrypt(message);
+        
+        InetAddress address = InetAddress.getByName(broadcastAddress);
+        DatagramPacket packet = new DatagramPacket(
+                encryptedMessage.getBytes(),
+                encryptedMessage.length(),
+                address,
+                8888
+        );
+        socket.send(packet);
+    }
+
+    /**
+     * Broadcasts a Message object to all listeners on the network
+     * @param message The Message object to broadcast
+     * @throws Exception if broadcasting fails
+     */
+    public void broadcast(Message message) throws Exception {
+        broadcast(message.toString());
+    }
+
+    /**
+     * Closes the broadcast socket and releases resources
+     */
     public void close() {
         if (socket != null && !socket.isClosed()) {
             socket.close();
-        }
-    }
-
-    // Optional tool method
-    public static boolean isValidBroadcastAddress(String ip) {
-        try {
-            InetAddress address = InetAddress.getByName(ip);
-            return address.isAnyLocalAddress() || address.isMulticastAddress();
-        } catch (UnknownHostException e) {
-            return false;
         }
     }
 }

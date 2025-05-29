@@ -1,73 +1,130 @@
 package com.island.network;
 
 import com.island.util.EncryptionUtil;
+import javafx.application.Platform;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * BroadcastReceiver handles UDP broadcast messages for game communication.
+ * It listens for both heartbeat messages and game-specific messages on a dedicated port.
+ */
 public class BroadcastReceiver implements Runnable {
-    private volatile boolean running = true;
-    private DatagramSocket socket;
+    /** UDP socket for receiving broadcast messages */
+    private final DatagramSocket socket;
+    
+    /** Reference to the room controller for handling received messages */
     private final RoomController roomController;
-    private final byte[] buffer = new byte[1024]; // Receive buffer
+    
+    /** Flag indicating whether the receiver is currently running */
+    private volatile boolean running;
+
     /**
-     * 构造函数
-     * @param roomController 房间控制器
-     * @param port 监听端口
-     * @throws SocketException 如果socket创建失败
+     * Constructor that initializes the broadcast receiver
+     * @param roomController The room controller to handle received messages
+     * @throws RuntimeException if socket creation fails
      */
-    // Constructor (requires passing RoomController and port)
-    public BroadcastReceiver(RoomController roomController, int port) throws SocketException {
-        this.roomController = roomController;
-        this.socket = new DatagramSocket(port);
+    public BroadcastReceiver(RoomController roomController) {
+        try {
+            this.socket = new DatagramSocket(null);  // Create unbound socket
+            this.socket.setReuseAddress(true);       // Enable address reuse
+            this.socket.bind(new java.net.InetSocketAddress(8888));  // Bind to specific port
+            this.roomController = roomController;
+            this.running = true;
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
+        }
     }
 
+    /**
+     * Main loop that continuously listens for incoming broadcast messages
+     * Handles message decryption and processing
+     */
     @Override
     public void run() {
-        try {
-            while (running) {
+        byte[] buffer = new byte[1024];
+        while (running) {
+            try {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                socket.receive(packet); // Block receiving data
-                String received = new String(packet.getData(), 0, packet.getLength());
-                handleMessage(received); // process Messages
-            }
-        } catch (IOException e) {
-            if (running) { // Printing errors only when not actively stopped
-                System.err.println("Receiving error: " + e.getMessage());
-            }
-        } finally {
-            if (socket != null && !socket.isClosed()) {
-                socket.close();
+                socket.receive(packet);
+                String encryptedMessage = new String(packet.getData(), 0, packet.getLength());
+                
+                // Decrypt the received message
+                String message = EncryptionUtil.decrypt(encryptedMessage);
+                
+                handleMessage(message, packet.getAddress());
+            } catch (IOException e) {
+                if (running) {
+                    e.printStackTrace();
+                }
             }
         }
     }
 
     /**
-     * 处理接收到的消息
-     * @param messageStr 消息字符串
+     * Processes received messages and routes them to appropriate handlers
+     * @param message The decrypted message content
+     * @param sender The address of the message sender
      */
-    private void handleMessage(String messageStr) {
-        try {
-            Message message = Message.fromString(messageStr);
-            
-            // 3. 处理消息
-            roomController.getMessageHandler().handleMessage(message);
-        } catch (Exception e) {
-            System.err.println("Message processing failed: " + e.getMessage());
+    private void handleMessage(String message, InetAddress sender) {
+        String[] parts = message.split("\\|");
+        if (parts[0].equals("HEARTBEAT")) {
+            // Handle heartbeat messages
+            int roomId = Integer.parseInt(parts[1]);
+            // Check if room ID matches
+            if (roomId != roomController.getRoomId()) {
+                return;
+            }
+            String username = parts[2];
+            roomController.updatePlayerHeartbeat(username);
+        } else {
+            // Handle game messages
+            try {
+                Message gameMessage = Message.fromString(message);
+                // Check if room ID matches
+                if (gameMessage.getRoomId() != roomController.getRoomId()) {
+                    return;
+                }
+                if (gameMessage.getTo() != null && !gameMessage.getTo().equals(roomController.getRoom().getCurrentProgramPlayer().getName())) {
+                    return;
+                }
+                // Notify game manager to process message
+                Platform.runLater(() -> {
+                    // Update UI in JavaFX thread
+                    try {
+                        handleGameMessage(gameMessage);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
     /**
-     * 停止接收
+     * Forwards game messages to the RoomController for processing
+     * @param message The game message to be processed
+     * @throws Exception if message handling fails
      */
-    // Stop receiving
+    private void handleGameMessage(Message message) throws Exception {
+        // Forward message to RoomManager for processing
+        roomController.handleGameMessage(message);
+    }
+
+    /**
+     * Stops the broadcast receiver and cleans up resources
+     * Ensures proper socket disconnection and closure
+     */
     public void stop() {
         running = false;
-        if (socket != null && !socket.isClosed()) {
-            socket.close(); // Close socket to unblock
+        if (socket != null) {
+            socket.disconnect();  // Disconnect first
+            socket.close();       // Then close the socket
         }
     }
 }

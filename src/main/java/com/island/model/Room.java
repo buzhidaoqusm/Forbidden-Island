@@ -1,4 +1,4 @@
-package com.forbiddenisland.models;
+package com.island.model;
 
 import com.forbiddenisland.models.adventurers.Player;
 

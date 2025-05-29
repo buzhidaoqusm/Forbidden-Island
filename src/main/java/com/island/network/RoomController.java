@@ -1,346 +1,645 @@
 package com.island.network;
 
 import com.island.controller.GameController;
-import com.island.launcher.Launcher;
-import com.island.model.Player;
-import com.island.model.Position;
+import com.island.model.*;
+import com.island.model.adventurers.Player;
+import com.island.model.card.Card;
+import com.island.model.island.Island;
+import com.island.model.island.Position;
+import com.island.model.island.Tile;
+import com.island.model.treasure.TreasureType;
 import com.island.model.Room;
-import com.island.model.Tile;
-import com.island.view.ActionLogView;
+import com.island.util.ui.Dialog;
 
-import java.net.SocketException;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 
-public class RoomController implements AutoCloseable {
-    private GameController gameController;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+public class RoomController {
+    /** Current game room instance */
     private Room room;
+    
+    /** Broadcast sender for network messages */
+    private final BroadcastSender sender;
+    
+    /** Broadcast receiver for network messages */
+    private final BroadcastReceiver receiver;
+    
+    /** Map to track last heartbeat time for each player */
+    private final Map<String, Long> playerLastHeartbeat;
+    
+    /** Scheduler for periodic tasks */
+    private final ScheduledExecutorService scheduler;
+    
+    /** Handler for processing game messages */
     private MessageHandler messageHandler;
-    private BroadcastSender sender;
-    private BroadcastReceiver receiver;
-    private Map<String, Long> playerHeartbeat = new HashMap<>();
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
-    private final ActionLogView logView;
+    
+    /** Game controller reference */
+    private GameController gameController;
+    
+    /** Island instance reference */
+    private Island island;
 
-    public RoomController(GameController gameController, Room room, ActionLogView logView) throws SocketException {
-        this.gameController = Objects.requireNonNull(gameController, "GameController not empty");
-        this.room = Objects.requireNonNull(room, "Room not empty");
-        this.messageHandler = new MessageHandler(gameController, this, room, new ActionLogView());
-        this.logView = Objects.requireNonNull(logView, "ActionLogView cannot be null");
-        try {
-            this.sender = new BroadcastSender("255.255.255.255", 8888);
-        } catch (SocketException e) {
-            throw new RuntimeException(e);
-        }
-        try {
-            this.receiver = new BroadcastReceiver(this, Launcher.networkConfig.getListenPort());
-        } catch (SocketException e) {
-            throw new RuntimeException(e);
-        }
-        start();
-    }
-
+    /** Interval for sending heartbeat messages (5 seconds) */
+    private static final long HEARTBEAT_INTERVAL = 5000;
+    
+    /** Timeout threshold for player disconnection (15 seconds) */
+    private static final long PLAYER_TIMEOUT = 15000;
 
     /**
-     * 设置游戏控制器
-     * @param gameController 游戏控制器实例
+     * Constructs a new RoomController
+     * @param room The game room to be controlled
      */
-    public void setGameController(GameController gameController) {
-        this.gameController = Objects.requireNonNull(gameController, "GameController cannot be null");
-        if (this.messageHandler != null) {
-            // 重新初始化消息处理器以更新GameController引用
-            this.messageHandler = new MessageHandler(gameController, this, room, logView);
-        }
+    public RoomController(Room room) {
+        this.room = room;
+        this.sender = new BroadcastSender();
+        this.receiver = new BroadcastReceiver(this);
+        this.playerLastHeartbeat = new ConcurrentHashMap<>();
+        this.scheduler = Executors.newScheduledThreadPool(2);
+
+        // Start receiver thread
+        new Thread(receiver).start();
+
+        // Start heartbeat sending task
+        startHeartbeat();
+
+        // Start heartbeat checking task
+        startHeartbeatCheck();
     }
 
     /**
-     * 设置房间
-     * @param room 房间实例
+     * Starts the heartbeat sending task
+     * Sends periodic heartbeat messages to notify other players of this player's presence
      */
-    public void setRoom(Room room) {
-        this.room = Objects.requireNonNull(room, "Room cannot be null");
-        if (this.messageHandler != null) {
-            // 重新初始化消息处理器以更新Room引用
-            this.messageHandler = new MessageHandler(gameController, this, room, logView);
-        }
-    }
-
-    public void start() {
-        scheduler.scheduleAtFixedRate(this::broadcastHeartbeat, 0, 10, TimeUnit.SECONDS);
-        scheduler.scheduleAtFixedRate(this::checkHeartbeats, 0, 15, TimeUnit.SECONDS);
-        // 开启监听线程
-        Executors.newSingleThreadExecutor().submit(receiver);
-    }
-
-    public void shutdown() {
-        scheduler.shutdownNow();
-        receiver.stop();
-        sender.close();
-    }
-
-
-    @Override
-    public void close() {
-        shutdown();
-    }
-
-
-    private void broadcastHeartbeat() {
-        Message msg = new Message(MessageType.MESSAGE_ACK, room.getRoomId(), "system");
-        broadcast(msg);
-    }
-
-    private void checkHeartbeats() {
-        long now = System.currentTimeMillis();
-        List<String> disconnected = new ArrayList<>();
-
-        playerHeartbeat.entrySet().removeIf(entry -> {
-            if (now - entry.getValue() > 30000) {
-                disconnected.add(entry.getKey());
-                return true;
+    private void startHeartbeat() {
+        // Send heartbeat periodically
+        scheduler.scheduleAtFixedRate(() -> {
+            try {
+                String heartbeatMsg = String.format("HEARTBEAT|%d|%s", room.getId(), room.getCurrentProgramPlayer().getName());
+                // Heartbeat message will be encrypted by BroadcastSender.broadcast method
+                sender.broadcast(heartbeatMsg);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            return false;
-        });
-        disconnected.forEach(this::handlePlayerDisconnect);
+        }, 0, HEARTBEAT_INTERVAL, TimeUnit.MILLISECONDS);
     }
 
-    public void broadcast(Message message) {
-        try {
-            Set<String> addresses = BroadcastAddressCalculator.getBroadcastAddresses();
-            for (String addr : addresses) {
-                sendToAddress(addr, message);
-            }
-        } catch (Exception e) {
-            System.err.println("Broadcast failed: " + e.getMessage());
-        }
+    /**
+     * Starts the heartbeat checking task
+     * Monitors other players' heartbeats and handles disconnections
+     */
+    private void startHeartbeatCheck() {
+        // Check for player timeouts
+        scheduler.scheduleAtFixedRate(() -> {
+            long now = System.currentTimeMillis();
+            playerLastHeartbeat.entrySet().removeIf(entry -> {
+                if (now - entry.getValue() > PLAYER_TIMEOUT) {
+                    try {
+                        handlePlayerDisconnect(entry.getKey());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                    return true;
+                }
+                return false;
+            });
+        }, 0, 1000, TimeUnit.MILLISECONDS);
     }
 
-    private void sendToAddress(String address, Message message) {
-        sender.broadcast(message);
-    }
-
-    public void handlePlayerDisconnect(String username) {
-        Player player = room.getPlayerByName(username);
-        if (player != null) {
-            room.removePlayer(player);
-            broadcastAction(MessageType.PLAYER_LEAVE, player, Map.of("status", "disconnected"));
-        }
-    }
-
-
+    /**
+     * Removes a player's heartbeat tracking
+     * @param username The username of the player to remove
+     */
     public void removeHeartbeat(String username) {
-        playerHeartbeat.remove(username);
+        playerLastHeartbeat.remove(username);
     }
 
+    /**
+     * Handles player disconnection
+     * Notifies the message handler about the disconnected player
+     * @param username The username of the disconnected player
+     * @throws Exception If there's an error handling the disconnection
+     */
+    private void handlePlayerDisconnect(String username) throws Exception {
+        // Notify game message handler about player disconnection
+        if (messageHandler != null) {
+            Message leaveMsg = new Message(
+                    MessageType.PLAYER_LEAVE,
+                    room.getId(),
+                    username
+            );
+            messageHandler.handleMessage(leaveMsg);
+        }
+    }
+
+    /**
+     * Updates the last heartbeat time for a player
+     * @param username The username of the player
+     */
     public void updatePlayerHeartbeat(String username) {
-        playerHeartbeat.put(username, System.currentTimeMillis());
+        playerLastHeartbeat.put(username, System.currentTimeMillis());
     }
 
-
-    public void handleJoinRequest(Message message) {
-        
-        try {
-            // 检查消息有效性
-            if (message == null || message.getData() == null) {
-                logView.error("无效的加入请求：消息为空");
-                throw new IllegalArgumentException("无效的加入请求：消息为空");
+    /**
+     * Shuts down the room controller
+     * Stops all scheduled tasks and closes network connections
+     */
+    public void shutdown() {
+        // Stop the scheduler
+        if (scheduler != null) {
+            scheduler.shutdownNow();  // Immediately stop all tasks
+            try {
+                scheduler.awaitTermination(2, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
+        }
 
-            // 获取玩家信息
-            Object playerObj = Message.getMapper()
-                    .convertValue(message.getData().get("username"), Player.class);
-            if (playerObj == null) {
-                logView.error("无效的加入请求：玩家信息格式错误");
-                throw new IllegalArgumentException("无效的加入请求：玩家信息格式错误");
+        // Stop the receiver
+        if (receiver != null) {
+            receiver.stop();
+        }
+
+        // Turn off the transmitter
+        if (sender != null) {
+            sender.close();
+        }
+
+        // Clean up resources
+        playerLastHeartbeat.clear();
+    }
+
+    /**
+     * Broadcasts a message to all players in the room
+     * If the message requires acknowledgment, it will be tracked for retries
+     * @param message The message to broadcast
+     */
+    public void broadcast(Message message) {
+        if (sender != null) {
+            try {
+                sender.broadcast(message.toString());
+                if (message.isAck()) {
+                    if (messageHandler.getUnconfirmedMessages().containsKey(message.getMessageId())) return;
+                    // Get all players who need to receive this message
+                    Set<String> receivers = room.getPlayers().stream()
+                            .map(Player::getName)
+                            .collect(Collectors.toSet());
+                    // If it is a message that requires confirmation, add it to the list of unconfirmed messages
+                    messageHandler.putUnconfirmedMessage(message.getMessageId(), new UnconfirmedMessage(message, receivers));
+                    messageHandler.scheduleMessageRetry(message.getMessageId());
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
             }
-
-            Player player = (Player) playerObj;
-            if (!room.isHost(player.getName())) {
-                logView.log("玩家 " + player.getName() + " 不是房主，不处理加入请求");
-            }
-            logView.log("处理玩家加入请求: " + player.getName());
-
-            // 检查房间状态
-            if (room == null) {
-                logView.error("房间对象为空，无法处理加入请求");
-                throw new IllegalStateException("房间对象为空，无法处理加入请求");
-            }
-
-            // 检查房间是否已满
-            if (room.isFull()) {
-                logView.warning("房间已满，无法加入更多玩家");
-                throw new IllegalStateException("房间已满，无法加入更多玩家");
-            }
-
-            // 检查玩家是否已在房间中
-//            if (room.getPlayerByName(player.getName()) != null) {
-//                logView.warning("玩家 " + player.getName() + " 已在房间中");
-//                throw new IllegalStateException("玩家已在房间中");
-//            }
-
-            // 尝试添加玩家
-            boolean joined = room.addPlayer(player);
-            logView.log("玩家加入结果: " + (joined ? "成功" : "失败"));
-
-
-            // 更新房间状态
-            broadcastAction(MessageType.UPDATE_ROOM, "system", Map.of(
-                    "players", room.getPlayers(),
-                    "roomId", room.getRoomId()
-            ));
-        } catch (Exception e) {
-            logView.error("处理加入请求时发生错误: " + e.getMessage());
-            // 将错误信息发送回客户端
-            if (message != null && message.getFrom() != null) {
-                Message errorResponse = new Message(MessageType.LEAVE_ROOM, 
-                    room != null ? room.getRoomId() : "", 
-                    "system")
-                    .addExtraData("error", e.getMessage());
-                broadcast(errorResponse);
-            }
-            throw new RuntimeException("加入房间失败: " + e.getMessage(), e);
         }
     }
 
-    public void handleGameMessage(Message message) {
-        
-        try {
-        messageHandler.handleMessage(message);
-        } catch (Exception e) {
-            logView.error("Error handling game message: " + e.getMessage());
+    /**
+     * Gets the room ID
+     * @return The current room ID
+     */
+    public int getRoomId() {
+        return room.getId();
+    }
+
+    /**
+     * Sets the message handler for this room
+     * @param handler The message handler to set
+     */
+    public void setMessageHandler(MessageHandler handler) {
+        this.messageHandler = handler;
+    }
+
+    /**
+     * Handles game-related messages
+     * Forwards messages to the game message handler
+     * @param message The game message to handle
+     * @throws Exception If there's an error handling the message
+     */
+    public void handleGameMessage(Message message) throws Exception {
+        // Forward to game message processor
+        if (messageHandler != null) {
+            messageHandler.handleMessage(message);
         }
     }
 
-    public void sendJoinResponse(Player player, boolean success) {
+    /**
+     * Handles room join requests from other players
+     * Processes both join requests and join responses
+     * @param message The join request/response message
+     * @throws Exception If there's an error handling the request
+     */
+    public void handleJoinRequest(Message message) throws Exception {
+        // Don't process own messages
+        if (message.getFrom().equals(room.getCurrentProgramPlayer().getName())) {
+            return;
+        }
+
+        // Don't process if player is already in room
+        if (room.getPlayers().stream().anyMatch(p -> p.getName().equals(message.getFrom()))) {
+            return;
+        }
+
+        // Don't process if game has already started
+        if (gameController.isGameStart()) {
+            return;
+        }
+
+        // Check if this is a join request
+        if (message.getData().containsKey("isRequest")) {
+            // Process join request if current player is host
+            if (room.isHost(room.getCurrentProgramPlayer().getName())) {
+                if (room.getPlayers().size() >= 4) {
+                    // Room is full, reject join request
+                    sendJoinResponse(message.getFrom(), false);
+                    return;
+                }
+                // Show confirmation dialog in JavaFX thread
+                Platform.runLater(() -> {
+                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("Player Join Request");
+                    alert.setHeaderText("Player " + message.getFrom() + " requests to join the room");
+                    alert.setContentText("Do you agree to let this player join?");
+
+                    // Custom button text
+                    ((Button) alert.getDialogPane().lookupButton(ButtonType.OK)).setText("Accept");
+                    ((Button) alert.getDialogPane().lookupButton(ButtonType.CANCEL)).setText("Reject");
+
+                    // Wait for user response
+                    alert.showAndWait().ifPresent(response -> {
+                        boolean isAccepted = response == ButtonType.OK;
+                        sendJoinResponse(message.getFrom(), isAccepted);
+                        if (isAccepted) {
+                            room.addPlayer(new Player(message.getFrom()));
+                            sendUpdateRoomMessage();
+
+                            // Notify observers after player joins
+                            if (gameController != null) {
+                                gameController.updatePlayersInfo();
+                            }
+                        }
+                    });
+                });
+            }
+        } else {
+            // Don't process messages not intended for this player
+            if (message.getTo() == null || !message.getTo().equals(room.getCurrentProgramPlayer().getName())) {
+                return;
+            }
+            // Process join response message
+            if (message.getData().containsKey("isAccepted")) {
+                boolean isAccepted = Boolean.parseBoolean(message.getData().get("isAccepted").toString());
+                if (isAccepted) {
+                    // Join successful, update room state
+                    Player player = new Player(message.getFrom());
+                    room.addPlayer(player);
+                    room.setHostPlayer(player);
+                    Dialog.showMessage("Join Success", "You have successfully joined the room!");
+
+                    // Notify observers after player joins
+                    if (gameController != null) {
+                        gameController.updatePlayersInfo();
+                    }
+                } else {
+                    // Join failed
+                    Dialog.showMessage("Join Failed", "The host rejected your join request.");
+                }
+            }
+        }
+    }
+
+    /**
+     * Sends a response to a join request
+     * @param username The username of the player requesting to join
+     * @param b Whether the join request was accepted
+     */
+    private void sendJoinResponse(String username, boolean b) {
         Message response = new Message(
-            success ? MessageType.PLAYER_JOIN : MessageType.LEAVE_ROOM,
-            room.getRoomId(),
-            "system"
-        )
-        .addExtraData("username", player)
-                .addExtraData("status", success);
-        
-        handleGameMessage(response);
-    }
-
-    public void broadcastAction(MessageType type, Player player, Map<String, Object> data) {
-        
-        Message msg = new Message(type, room.getRoomId(), player.getName());
-        data.forEach(msg::addExtraData);
-        broadcast(msg);
-    }
-
-    public void broadcastAction(MessageType type, String sender, Map<String, Object> data) {
-        
-        Message msg = new Message(type, room.getRoomId(), sender);
-        data.forEach(msg::addExtraData);
-        broadcast(msg);
-    }
-
-    public void broadcastAction(MessageType type, Player player) {
-        broadcastAction(type, player, new HashMap<>());
-    }
-
-    // 游戏相关的消息发送方法
-    public void sendMoveMessage(Player player, Position position) {
-        broadcastAction(MessageType.MOVE_PLAYER, player, Map.of("position", position));
-    }
-
-    public void sendGameStartMessage(Message message) {
+                MessageType.PLAYER_JOIN,
+                room.getId(),
+                room.getHostPlayer().getName(),
+                username
+        );
+        response.addExtraData("isAccepted", b);
         try {
-            // 1. 获取玩家信息
-        String username = (String) message.getData().get("username");
-            Player player = room.getPlayerByName(username);
-            if (player == null) {
-                throw new IllegalStateException("Player not found: " + username);
-            }
-
-            // 2. 验证房间状态
-            if (room.getPlayers().isEmpty()) {
-                throw new IllegalStateException("No players in room");
-            }
-
-            // 3. 启动游戏
-            System.out.println("Starting game for player: " + username);
-            gameController.startGame(System.currentTimeMillis());
-
-            // 4. 广播游戏开始消息
-            Message startMsg = new Message(MessageType.GAME_START, room.getRoomId(), "system")
-                .addExtraData("players", player)
-                .addExtraData("initialMap", gameController.updateBoard());
-            broadcast(startMsg);
-
-            // 5. 更新玩家状态
-            for (Player p : room.getPlayers()) {
-                p.setInGame(true);
-            }
-
-            System.out.println("Game start message sent successfully");
+            broadcast(response);
         } catch (Exception e) {
-            logView.error("Failed to send game start message: " + e.getMessage());
-            throw new RuntimeException("Failed to start game", e);
+            throw new RuntimeException(e);
         }
     }
 
-    public void sendGameOverMessage(String description) {
-        broadcastAction(MessageType.GAME_OVER, "system", Map.of("description", description));
-    }
-
-    public void sendDiscardMessage(Player player, int cardIndex) {
-        broadcastAction(MessageType.DISCARD_CARD, player, Map.of("cardIndex", cardIndex));
-    }
-
-    public void sendStartTurnMessage(Player player) {
-        broadcastAction(MessageType.TURN_START, player);
-    }
-
-    public void sendDrawFloodMessage(int count, String name) {
-        broadcastAction(MessageType.DRAW_FLOOD_CARD, name, Map.of("count", count));
-    }
-
-    public void sendMoveByNavigatorMessage(Player navigator, Player target, Tile tile) {
-        broadcastAction(MessageType.MOVE_PLAYER_BY_NAVIGATOR, navigator, Map.of(
-                "target", target,
-                "tile", tile
-        ));
-    }
-
-    public void sendDrawTreasureCardsMessage(int count, Player player) {
-        broadcastAction(MessageType.DRAW_TREASURE_CARD, player, Map.of("count", count));
-    }
-
-    public void sendShoreUpMessage(Player player, Position position) {
-        broadcastAction(MessageType.SHORE_UP, player, Map.of("position", position));
-    }
-
-    public void sendGiveCardMessage(Player from, Player to, int cardIndex) {
-        broadcastAction(MessageType.GIVE_CARD, from, Map.of(
-                "to", to,
-                "cardIndex", cardIndex
-        ));
-    }
-
-    public void sendCaptureTreasureMessage(Player player, List<Integer> cardIndices) {
-        broadcastAction(MessageType.CAPTURE_TREASURE, player, Map.of("cardIndices", cardIndices));
-    }
-
-    public void sendEndTurnMessage(Player player) {
-        broadcastAction(MessageType.END_TURN, player);
-    }
-
-    // Getters
-    public MessageHandler getMessageHandler() {
-        return messageHandler;
-    }
-
-    public GameController getGameController() {
-        return gameController;
-    }
-
+    /**
+     * Gets the current room instance
+     * @return The current room
+     */
     public Room getRoom() {
         return room;
     }
 
+    /**
+     * Gets the message handler
+     * @return The current message handler
+     */
+    public MessageHandler getMessageHandler() {
+        return messageHandler;
+    }
 
+    /**
+     * Sets the game controller
+     * @param gameController The game controller to set
+     */
+    public void setGameController(GameController gameController) {
+        this.gameController = gameController;
+    }
+
+    /**
+     * Sets the island instance
+     * Used for constructing game-related messages
+     * @param island The island instance to set
+     */
+    public void setIsland(Island island) {
+        this.island = island;
+    }
+
+    /**
+     * Sends a room update message to all players
+     * Updates include player count and player names
+     */
+    public void sendUpdateRoomMessage() {
+        // Update room information
+        Message updateRoomMessage = new Message(
+                MessageType.UPDATE_ROOM,
+                room.getId(),
+                room.getHostPlayer().getName(),
+                true
+        );
+        updateRoomMessage.addExtraData("playerCount", room.getPlayers().size());
+        int i = 1;
+        for (Player p : room.getPlayers()) {
+            updateRoomMessage.addExtraData("player" + i, p.getName());
+            i++;
+        }
+        broadcast(updateRoomMessage);
+    }
+
+    /**
+     * Sends a message for drawing treasure cards
+     * @param count Number of cards to draw
+     * @param player Player drawing the cards
+     */
+    public void sendDrawTreasureCardsMessage(int count, Player player) {
+        Message message = new Message(MessageType.DRAW_TREASURE_CARD,
+                room.getId(),
+                player.getName(),
+                true
+        );
+        message.addExtraData("count", count);
+        broadcast(message);
+    }
+
+    /**
+     * Sends a player movement message
+     * @param player Player who is moving
+     * @param position New position of the player
+     */
+    public void sendMoveMessage(Player player, Position position) {
+        Message message = new Message(MessageType.MOVE_PLAYER,
+                room.getId(),
+                player.getName(),
+                true
+        );
+        message.addExtraData("positionX", position.getX());
+        message.addExtraData("positionY", position.getY());
+        message.addExtraData("tileName", island.getTile(position).getName());
+        broadcast(message);
+    }
+
+    /**
+     * Sends a shore up action message
+     * @param currentPlayer Player performing the shore up
+     * @param position Position of the tile being shored up
+     */
+    public void sendShoreUpMessage(Player currentPlayer, Position position) {
+        Message message = new Message(MessageType.SHORE_UP,
+                room.getId(),
+                currentPlayer.getName(),
+                true
+        );
+        message.addExtraData("positionX", position.getX());
+        message.addExtraData("positionY", position.getY());
+        message.addExtraData("tileName", island.getTile(position).getName());
+        broadcast(message);
+    }
+
+    /**
+     * Sends a message for giving a card to another player
+     * @param currentPlayer Player giving the card
+     * @param selectedPlayer Player receiving the card
+     * @param selectedCard Card being given
+     */
+    public void sendGiveCardMessage(Player currentPlayer, Player selectedPlayer, Card selectedCard) {
+        Message message = new Message(MessageType.GIVE_CARD,
+                room.getId(),
+                currentPlayer.getName(),
+                true
+        );
+        message.addExtraData("Card", selectedCard.getName());
+        message.addExtraData("playerName", selectedPlayer.getName());
+        broadcast(message);
+    }
+
+    /**
+     * Sends a message for navigator's special move ability
+     * @param currentPlayer Navigator player
+     * @param player Player being moved
+     * @param tile Destination tile
+     */
+    public void sendMoveByNavigatorMessage(Player currentPlayer, Player player, Tile tile) {
+        Message message = new Message(MessageType.MOVE_PLAYER_BY_NAVIGATOR,
+                room.getId(),
+                currentPlayer.getName(),
+                true
+        );
+        message.addExtraData("positionX", tile.getPosition().getX());
+        message.addExtraData("positionY", tile.getPosition().getY());
+        message.addExtraData("playerName", player.getName());
+        message.addExtraData("tileName", tile.getName());
+        broadcast(message);
+    }
+
+    /**
+     * Sends a message for capturing a treasure
+     * @param player Player capturing the treasure
+     * @param treasureType Type of treasure being captured
+     */
+    public void sendCaptureTreasureMessage(Player player, TreasureType treasureType) {
+        Message message = new Message(MessageType.CAPTURE_TREASURE,
+                room.getId(),
+                player.getName(),
+                true
+        );
+        message.addExtraData("treasureType", treasureType.toString());
+        broadcast(message);
+    }
+
+    /**
+     * Sends a message to end the current player's turn
+     * @param currentPlayer Player ending their turn
+     */
+    public void sendEndTurnMessage(Player currentPlayer) {
+        Message message = new Message(MessageType.END_TURN,
+                room.getId(),
+                currentPlayer.getName(),
+                true
+        );
+        broadcast(message);
+    }
+
+    /**
+     * Sends a message for using sandbags
+     * @param user Player using the sandbags
+     * @param position Position where sandbags are being used
+     * @param cardIndex Index of the sandbags card being used
+     */
+    public void sendSandbagsMessage(Player user, Position position, int cardIndex) {
+        Message message = new Message(
+                MessageType.SANDBAGS_USE,
+                room.getId(),
+                user.getName(),
+                true
+        );
+        message.addExtraData("positionX", position.getX());
+        message.addExtraData("positionY", position.getY());
+        message.addExtraData("tileName", island.getTile(position).getName());
+        message.addExtraData("cardIndex", cardIndex);
+        broadcast(message);
+    }
+
+    /**
+     * Sends a message for helicopter movement
+     * @param helicopterPlayers List of players being moved
+     * @param user Player using the helicopter card
+     * @param newPosition Destination position
+     * @param cardIndex Index of the helicopter card being used
+     */
+    public void sendHelicopterMoveMessage(List<Player> helicopterPlayers, Player user, Position newPosition, int cardIndex) {
+        Message message = new Message(
+                MessageType.HELICOPTER_MOVE,
+                room.getId(),
+                user.getName(),
+                true
+        );
+        message.addExtraData("newPositionX", newPosition.getX());
+        message.addExtraData("newPositionY", newPosition.getY());
+        message.addExtraData("tileName", island.getTile(newPosition).getName());
+        message.addExtraData("cardIndex", cardIndex);
+        message.addExtraData("playerCount", helicopterPlayers.size());
+        for (int i = 0; i < helicopterPlayers.size(); i++) {
+            message.addExtraData("player" + i, helicopterPlayers.get(i).getName());
+        }
+        broadcast(message);
+    }
+
+    /**
+     * Sends a message for drawing flood cards
+     * @param count Number of flood cards to draw
+     * @param playerName Name of the player drawing cards
+     */
+    public void sendDrawFloodMessage(int count, String playerName) {
+        Message message = new Message(MessageType.DRAW_FLOOD_CARD,
+                room.getId(),
+                playerName,
+                true
+        );
+        message.addExtraData("count", count);
+        broadcast(message);
+    }
+
+    /**
+     * Sends a game over message
+     * @param description Description of how the game ended
+     */
+    public void sendGameOverMessage(String description) {
+        Message message = new Message(MessageType.GAME_OVER,
+                room.getId(),
+                "system",
+                true
+        );
+        message.addExtraData("description", description);
+        broadcast(message);
+    }
+
+    /**
+     * Sends a message for discarding a card
+     * @param player Player discarding the card
+     * @param cardIndex Index of the card being discarded
+     */
+    public void sendDiscardMessage(Player player, int cardIndex) {
+        Message message = new Message(MessageType.DISCARD_CARD,
+                room.getId(),
+                player.getName(),
+                true
+        );
+        message.addExtraData("cardIndex", cardIndex);
+        broadcast(message);
+    }
+
+    /**
+     * Sends a message to start a player's turn
+     * @param nextPlayer Player whose turn is starting
+     */
+    public void sendStartTurnMessage(Player nextPlayer) {
+        Message message = new Message(MessageType.TURN_START,
+                room.getId(),
+                nextPlayer.getName(),
+                true
+        );
+        broadcast(message);
+    }
+
+    /**
+     * Sends a message to start the game
+     * @param player Player starting the game
+     * @param waterLevel Initial water level
+     */
+    public void sendStartGameMessage(Player player, AtomicInteger waterLevel) {
+        long seed = System.currentTimeMillis();
+        // Start game message
+        Message startGameMessage = new Message(
+                MessageType.GAME_START,
+                room.getId(),
+                player.getName(),
+                true
+        );
+        startGameMessage.addExtraData("seed", seed);
+        startGameMessage.addExtraData("waterLevel", waterLevel.get());
+        broadcast(startGameMessage);
+    }
+
+    /**
+     * Sends an acknowledgment message
+     * @param message Original message being acknowledged
+     */
+    public void sendAckMessage(Message message) {
+        Message ackMessage = new Message(
+                message.getMessageId(),
+                MessageType.MESSAGE_ACK,
+                room.getId(),
+                room.getCurrentProgramPlayer().getName(),
+                message.getFrom()
+        );
+        System.out.println("send ack message" + message.toString());
+        broadcast(ackMessage);
+    }
 }
