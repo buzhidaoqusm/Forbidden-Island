@@ -257,30 +257,4 @@ public class IslandController {
         removeTreasure(treasureType.getDisplayName());
         gameController.decreaseRemainingActions();
     }
-
-    /**
-     * Floods a tile at the specified position.
-     * @param position Position of the tile to flood
-     */
-    public void floodTile(Position position) {
-        // ... existing code ...
-
-        // Notify observers of state change
-        if (gameController != null) {
-            gameController.updateBoard();
-        }
-    }
-
-    /**
-     * Shores up a tile at the specified position.
-     * @param position Position of the tile to shore up
-     */
-    public void shoreUp(Position position) {
-        // ... existing code ...
-
-        // Notify observers of state change
-        if (gameController != null) {
-            gameController.updateBoard();
-        }
-    }
 }
