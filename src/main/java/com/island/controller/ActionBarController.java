@@ -12,40 +12,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The ActionBarController class manages the player action controls and interactions.
- *
- * This controller:
- * - Handles all player actions during their turn (move, shore up, give cards, etc.)
- * - Manages action-specific dialog boxes and user interface elements
- * - Tracks the remaining actions for the current player
- * - Coordinates with other controllers to execute player choices
- * - Validates action eligibility based on game rules and current state
- * - Implements role-specific action capabilities (like Navigator's special move)
- * - Manages the end-of-turn sequence when players are finished
+ * Controller class responsible for managing the action bar UI and game actions.
+ * Handles player actions, validates moves, and updates the game state accordingly.
+ * This class serves as the interface between the UI and the game logic for all player actions,
+ * including movement, card usage, treasure capture, and turn management.
  */
 public class ActionBarController {
-    /**
-     * Reference to the main game controller
-     */
+    /** Reference to the main game controller */
     private GameController gameController;
-
-    /**
-     * The player whose turn it currently is
-     */
+    /** The current player whose actions are being managed */
     private Player currentPlayer;
 
     /**
-     * Constructs a new ActionBarController with default values
+     * Constructs a new ActionBarController.
      */
     public ActionBarController() {
-
     }
 
     /**
-     * Establishes a bidirectional link with the game controller and
-     * initializes the current player reference
-     *
-     * @param gameController The main controller for the game
+     * Sets the game controller reference and initializes current player.
+     * @param gameController The main game controller
      */
     public void setGameController(GameController gameController) {
         this.gameController = gameController;
@@ -53,559 +39,412 @@ public class ActionBarController {
     }
 
     /**
-     * Gets the current active player
-     *
-     * @return The player whose turn it currently is
+     * Gets the current active player.
+     * @return The current player
      */
     public Player getCurrentPlayer() {
         return currentPlayer;
     }
 
     /**
-     * Updates the current active player
-     *
-     * @param currentPlayer The player to set as current
+     * Sets the current active player and updates the UI.
+     * @param currentPlayer The new current player
      */
     public void setCurrentPlayer(Player currentPlayer) {
         this.currentPlayer = currentPlayer;
+
+        // Notify observers when current player changes
+        if (gameController != null) {
+            gameController.updateActionBar();
+        }
     }
 
-    /**
-     * Gets the number of actions remaining for the current player
-     *
-     * @return The count of remaining actions
-     */
-    public int getRemainingActions() {
-        return gameController.getRemainingActions();
-    }
+    // Getters and utility methods
+    public int getRemainingActions() { return gameController.getRemainingActions(); }
+    public Room getRoom() { return gameController.getRoom(); }
+    public GameController getGameController() { return gameController; }
+    public Island getIsland() { return gameController.getIsland(); }
 
     /**
-     * Gets the current game room
-     *
-     * @return The Room object containing game state
-     */
-    public Room getRoom() {
-        return gameController.getRoom();
-    }
-
-    /**
-     * Gets the main game controller
-     *
-     * @return The GameController instance
-     */
-    public GameController getGameController() {
-        return gameController;
-    }
-
-    /**
-     * Gets the island model
-     *
-     * @return The Island model containing the game board
-     */
-    public Island getIsland() {
-        return gameController.getIsland();
-    }
-
-    /**
-     * Checks if the player has a special card they can play
-     *
-     * @param player The player to check
-     * @return true if the player can play a special card, false otherwise
+     * Checks if a player can play a special action card.
+     * @param player Player to check
+     * @return true if the player has any playable special cards
      */
     public boolean canPlaySpecialCard(Player player) {
         return gameController.getPlayerController().canPlaySpecialCard(player);
     }
 
     /**
-     * Checks if the player can shore up any nearby flooded tiles
-     *
-     * @param player The player to check
-     * @return true if the player can shore up a tile, false otherwise
+     * Checks if a player can shore up any adjacent tiles.
+     * @param player Player to check
+     * @return true if there are any valid tiles to shore up
      */
     public boolean canShoreUpTile(Player player) {
         return gameController.getPlayerController().canShoreUpTile(player);
     }
 
     /**
-     * Checks if the player can give a card to another player
-     *
-     * @param player The player to check
-     * @return true if the player can give a card, false otherwise
+     * Checks if a player can give a card to another player.
+     * @param player Player attempting to give a card
+     * @return true if the player can give a card
      */
     public boolean canGiveCard(Player player) {
         return gameController.getPlayerController().canGiveCard(player);
     }
 
     /**
-     * Checks if the player can capture a treasure
-     *
-     * @param player The player to check
-     * @return true if the player can capture a treasure, false otherwise
+     * Checks if a player can capture a treasure.
+     * @param player Player attempting to capture treasure
+     * @return true if the player can capture a treasure
      */
     public boolean canCaptureTreasure(Player player) {
         return gameController.getPlayerController().canCaptureTreasure(player);
     }
 
     /**
-     * Checks if the player has already drawn treasure cards this turn
-     *
-     * @return true if the player has drawn treasure cards, false otherwise
+     * Checks if the current player has drawn treasure cards this turn.
+     * @return true if treasure cards have been drawn
      */
     public boolean hasDrawnTreasureCards() {
         return gameController.getPlayerController().hasDrawnTreasureCards();
     }
 
     /**
-     * Sends a message that the player is drawing treasure cards
-     *
-     * @param i The number of cards to draw
-     * @param player The player drawing the cards
+     * Sends a message to draw treasure cards for a player.
+     * @param count Number of cards to draw
+     * @param player Player drawing the cards
      */
-    public void sendDrawTreasureCardsMessage(int i, Player player) {
-        gameController.getRoomController().sendDrawTreasureCardsMessage(i, player);
+    public void sendDrawTreasureCardsMessage(int count, Player player) {
+        gameController.getRoomController().sendDrawTreasureCardsMessage(count, player);
     }
 
     /**
-     * Gets the number of flood cards drawn in the current turn
-     *
-     * @return The count of flood cards drawn
+     * Gets the number of flood cards drawn in the current turn.
+     * @return Number of flood cards drawn
      */
     public int getDrawnFloodCards() {
         return gameController.getPlayerController().getDrawnFloodCards();
     }
 
     /**
-     * Handles the player movement action.
-     * Validates the chosen tile for movement based on the player's position and state.
-     * If the player is on a sunk tile, special movement rules apply.
-     * Only allows movement to valid adjacent tiles that aren't sunk, following role-specific rules.
+     * Handles player movement action.
+     * Validates the move and sends appropriate network messages.
+     * Handles both normal movement and movement from sunk tiles.
      */
     public void handleMoveAction() {
-        // 检查当前玩家是否为空
-        if (currentPlayer == null) {
-            gameController.showErrorToast("No active player!");
-            return;
+        Tile chosenTile = gameController.getChosenTile();
+        Tile playerTile = getIsland().getTile(currentPlayer.getPosition());
+        if (playerTile.isSunk()) {
+            List<Tile> validTilesOnSunk = gameController.getValidTilesOnSunk(currentPlayer);
+            if (chosenTile != null && validTilesOnSunk.contains(chosenTile)) {
+                gameController.getRoomController().sendMoveMessage(currentPlayer, chosenTile.getPosition());
+            } else {
+                gameController.showErrorToast("Invalid Tile!");
+            }
         }
-
-//        Tile chosenTile = gameController.getChosenTile();
-//        if (chosenTile == null) {
-//            gameController.showErrorToast("Please select a tile first!");
-//            return;
-//        }
-
-//        Tile playerTile = getIsland().getTile(currentPlayer.getPosition());
-//        if (playerTile == null) {
-//            gameController.showErrorToast("Player position is invalid!");
-//            return;
-//        }11
-
-//        if (playerTile.isSunk()) {
-//            List<Tile> validTilesOnSunk = gameController.getValidTilesOnSunk(currentPlayer);
-//            if (validTilesOnSunk.contains(chosenTile)) {
-//                gameController.getRoomController().sendMoveMessage(currentPlayer, chosenTile.getPosition());
-//            } else {
-//                gameController.showErrorToast("Invalid Tile!");
-//            }
-//            return; // 添加return语句，防止执行下面的代码
-//        }
-//
-//        if (getRemainingActions() > 0) {
-//            List<Position> validPositions = currentPlayer.getMovePositions(getIsland().getGameMap());
-//            if (validPositions.contains(chosenTile.getPosition())) {
-//                gameController.getRoomController().sendMoveMessage(currentPlayer, chosenTile.getPosition());
-//            } else {
-//                gameController.showErrorToast("Invalid Move!");
-//            }
-//        } else {
-//            gameController.showErrorToast("No actions remaining!");
-//        }
-        List<Position> validPositions = currentPlayer.getMovePositions(getIsland().getGameMap());
-        gameController.getGameView().getIslandView().highlightTiles(validPositions, "hightlight-move");
+        if (getRemainingActions() > 0) {
+            List<Position> validPositions = currentPlayer.getMovePositions(getIsland().getTiles());
+            if (chosenTile != null && validPositions.contains(chosenTile.getPosition())) {
+                gameController.getRoomController().sendMoveMessage(currentPlayer, chosenTile.getPosition());
+            } else {
+                gameController.showErrorToast("Invalid Move!");
+            }
+        }
+        notifyActionPerformed();
     }
 
     /**
-     * Handles the shore up action to stabilize a flooded tile.
-     * Validates if the chosen tile is flooded and in range for the current player.
-     * Only allows shoring up flooded tiles that are adjacent or the player's current tile.
+     * Handles shore up action.
+     * Validates the tile and sends appropriate network messages.
      */
     public void handleShoreUpAction() {
-        // 检查当前玩家是否为空
-        if (currentPlayer == null) {
-            gameController.showErrorToast("No active player!");
-            return;
+        if (getRemainingActions() > 0) {
+            Tile chosenTile = gameController.getChosenTile();
+            List<Position> validPositions = currentPlayer.getShorePositions(getIsland().getTiles());
+            if (chosenTile != null && chosenTile.getState() == Tile.TileState.FLOODED && validPositions.contains(chosenTile.getPosition())) {
+                gameController.getRoomController().sendShoreUpMessage(currentPlayer, chosenTile.getPosition());
+            } else {
+                gameController.showErrorToast("Invalid Tile!");
+            }
         }
-
-        if (getRemainingActions() <= 0) {
-            gameController.showErrorToast("No actions remaining!");
-            return;
-        }
-
-        Tile chosenTile = gameController.getChosenTile();
-        if (chosenTile == null) {
-            gameController.showErrorToast("Please select a tile first!");
-            return;
-        }
-
-        List<Position> validPositions = currentPlayer.getShorePositions(getIsland().getGameMap());
-        if (chosenTile.getState() == TileState.FLOODED && validPositions.contains(chosenTile.getPosition())) {
-            gameController.getRoomController().sendShoreUpMessage(currentPlayer, chosenTile.getPosition());
-        } else {
-            gameController.showErrorToast("Invalid Tile!");
-        }
+        notifyActionPerformed();
     }
 
     /**
-     * Handles the action of giving a card to another player.
-     * Shows a dialog allowing the player to select both a recipient and a card to give.
-     * Validates that the current player has cards to give and that there are eligible recipients.
-     * Only treasure cards can be given to other players.
+     * Handles giving a card to another player.
+     * Shows dialog for selecting player and card, validates the action,
+     * and sends appropriate network messages.
      */
     public void handleGiveCardAction() {
-        // 检查当前玩家是否为空
-        if (currentPlayer == null) {
-            gameController.showErrorToast("No active player!");
-            return;
-        }
+        if (getRemainingActions() > 0) {
+            Player currentPlayer = gameController.getCurrentPlayer();
 
-        if (getRemainingActions() <= 0) {
-            gameController.showErrorToast("No actions remaining!");
-            return;
-        }
+            // Get current player's cards
+            List<Card> playerCards = currentPlayer.getCards();
+            if (playerCards.isEmpty()) {
+                gameController.showWarningToast("You have no cards to give");
+                return;
+            }
 
-        // getting the current player's cards
-        List<Card> playerCards = currentPlayer.getCards();
-        if (playerCards.isEmpty()) {
-            gameController.showWarningToast("You have no cards to give");
-            return;
-        }
+            Room room = gameController.getRoom();
 
-        Room room = gameController.getRoom();
+            // Get eligible players who can receive cards
+            List<Player> eligiblePlayers = currentPlayer.getGiveCardPlayers(room.getPlayers());
 
-        // getting the eligible players to give cards
-        List<Player> eligiblePlayers = new ArrayList<>();
-        // Messenger can give cards to any player
-        if (currentPlayer.getRole() == PlayerRole.MESSENGER) {
-            for (Player player : room.getPlayers()) {
-                if (!player.equals(currentPlayer)) {
-                    eligiblePlayers.add(player);
+            if (eligiblePlayers.isEmpty()) {
+                gameController.showWarningToast("No eligible players to give cards");
+                return;
+            }
+
+            // Create player selection dialog
+            VBox dialogContent = new VBox(10);
+            dialogContent.setPadding(new Insets(20));
+
+            Label selectPlayerLabel = new Label("Select a player to give a card to:");
+            ComboBox<String> playerComboBox = new ComboBox<>();
+            for (Player player : eligiblePlayers) {
+                playerComboBox.getItems().add(player.getName());
+            }
+            playerComboBox.getSelectionModel().selectFirst();
+
+            Label selectCardLabel = new Label("Select a card to give:");
+            ComboBox<String> cardComboBox = new ComboBox<>();
+            for (Card card : playerCards) {
+                // Only treasure cards can be given, not special cards
+                if (card.getType() == CardType.TREASURE) {
+                    cardComboBox.getItems().add(card.getName());
                 }
             }
-        } else {
-            // Other roles can only give cards to players on the same tile
-            Position currentPos = currentPlayer.getPosition();
-            for (Player player : room.getPlayers()) {
-                if (!player.equals(currentPlayer) && player.getPosition().equals(currentPos)) {
-                    eligiblePlayers.add(player);
-                }
+
+            if (cardComboBox.getItems().isEmpty()) {
+                gameController.showWarningToast("You have no card to give");
+                return;
             }
-        }
 
-        if (eligiblePlayers.isEmpty()) {
-            gameController.showWarningToast("No eligible players to give cards");
-            return;
-        }
+            cardComboBox.getSelectionModel().selectFirst();
 
-        // creating the dialog
-        VBox dialogContent = new VBox(10);
-        dialogContent.setPadding(new Insets(20));
+            dialogContent.getChildren().addAll(
+                    selectPlayerLabel, playerComboBox,
+                    selectCardLabel, cardComboBox
+            );
 
-        Label selectPlayerLabel = new Label("Select a player to give a card to:");
-        ComboBox<String> playerComboBox = new ComboBox<>();
-        for (Player player : eligiblePlayers) {
-            playerComboBox.getItems().add(player.getName());
-        }
-        playerComboBox.getSelectionModel().selectFirst();
+            // Create dialog
+            Alert dialog = new Alert(Alert.AlertType.CONFIRMATION);
+            dialog.setTitle("Give Card");
+            dialog.setHeaderText("Give a card to another player");
+            dialog.getDialogPane().setContent(dialogContent);
 
-        Label selectCardLabel = new Label("Select a card to give:");
-        ComboBox<String> cardComboBox = new ComboBox<>();
-        for (Card card : playerCards) {
-            // only the treasure cards can be given
-            if (card.getType() == CardType.TREASURE) {
-                cardComboBox.getItems().add(card.getName());
-            }
-        }
+            // Show dialog and handle result
+            dialog.showAndWait().ifPresent(result -> {
+                if (result == ButtonType.OK) {
+                    String selectedPlayerName = playerComboBox.getValue();
+                    String selectedCardName = cardComboBox.getValue();
 
-        if (cardComboBox.getItems().isEmpty()) {
-            gameController.showWarningToast("You have no card to give");
-            return;
-        }
+                    if (selectedPlayerName != null && selectedCardName != null) {
+                        // Find selected player and card
+                        Player selectedPlayer = room.getPlayerByUsername(selectedPlayerName);
 
-        cardComboBox.getSelectionModel().selectFirst();
+                        Card selectedCard = null;
+                        for (Card card : playerCards) {
+                            if (card.getName().equals(selectedCardName)) {
+                                selectedCard = card;
+                                break;
+                            }
+                        }
 
-        dialogContent.getChildren().addAll(
-                selectPlayerLabel, playerComboBox,
-                selectCardLabel, cardComboBox
-        );
-
-        // creating the dialog
-        Alert dialog = new Alert(Alert.AlertType.CONFIRMATION);
-        dialog.setTitle("Give Card");
-        dialog.setHeaderText("Give a card to another player");
-        dialog.getDialogPane().setContent(dialogContent);
-
-        // showing the dialog
-        dialog.showAndWait().ifPresent(result -> {
-            if (result == ButtonType.OK) {
-                String selectedPlayerName = playerComboBox.getValue();
-                String selectedCardName = cardComboBox.getValue();
-
-                if (selectedPlayerName != null && selectedCardName != null) {
-                    // find the selected player and card
-                    Player selectedPlayer = null;
-                    for (Player player : room.getPlayers()) {
-                        if (player.getName().equals(selectedPlayerName)) {
-                            selectedPlayer = player;
-                            break;
+                        if (selectedPlayer != null && selectedCard != null) {
+                            // Send network message
+                            gameController.getRoomController().sendGiveCardMessage(currentPlayer, selectedPlayer, selectedCard);
                         }
                     }
-
-                    Card selectedCard = null;
-                    for (Card card : playerCards) {
-                        if (card.getName().equals(selectedCardName)) {
-                            selectedCard = card;
-                            break;
-                        }
-                    }
-
-                    if (selectedPlayer != null && selectedCard != null) {
-                        // Find the index of the card in the player's hand
-                        int cardIndex = playerCards.indexOf(selectedCard);
-                        gameController.getRoomController().sendGiveCardMessage(currentPlayer, selectedPlayer, cardIndex);
-                    }
                 }
-            }
-        });
+            });
+        }
+        notifyActionPerformed();
     }
 
     /**
-     * Handles the Navigator special ability to move another player.
-     * Shows a dialog to select a player and number of moves (1 or 2).
-     * Validates that the current player is a Navigator and there are other players to move.
-     * Sets up the Navigator's target for subsequent tile selection.
+     * Handles Navigator's special ability to move other players.
+     * Shows dialog for selecting player and number of moves,
+     * then waits for tile selection.
      */
     public void handleMoveOtherPlayerAction() {
-        // 检查当前玩家是否为空
-        if (currentPlayer == null) {
-            gameController.showErrorToast("No active player!");
-            return;
-        }
+        if (getRemainingActions() > 0) {
+            Player currentPlayer = gameController.getCurrentPlayer();
+            Room room = gameController.getRoom();
 
-        if (getRemainingActions() <= 0) {
-            gameController.showErrorToast("No actions remaining!");
-            return;
-        }
-        Room room = gameController.getRoom();
-
-        // check if the current player is a Navigator
-        if (currentPlayer.getRole() != PlayerRole.NAVIGATOR) {
-            gameController.showErrorToast("Only Navigator can move other players");
-            return;
-        }
-        Navigator navigator = (Navigator) currentPlayer;
-
-        // getting the eligible players to move
-        List<Player> movablePlayers = new ArrayList<>();
-        for (Player player : room.getPlayers()) {
-            if (!player.getName().equals(navigator.getName())) {
-                movablePlayers.add(player);
+            // Ensure current player is Navigator
+            if (currentPlayer.getRole() != PlayerRole.NAVIGATOR) {
+                gameController.showErrorToast("Only Navigator can move other players");
+                return;
             }
-        }
+            Navigator navigator = (Navigator) currentPlayer;
 
-        if (movablePlayers.isEmpty()) {
-            gameController.showWarningToast("No other players to move");
-            return;
-        }
+            // Get movable players
+            List<Player> movablePlayers = new ArrayList<>();
+            for (Player player : room.getPlayers()) {
+                if (!player.getName().equals(navigator.getName())) {
+                    movablePlayers.add(player);
+                }
+            }
 
-        // creating the components for the dialog
-        VBox dialogContent = new VBox(10);
-        dialogContent.setPadding(new Insets(20));
+            if (movablePlayers.isEmpty()) {
+                gameController.showWarningToast("No other players to move");
+                return;
+            }
 
-        Label selectPlayerLabel = new Label("Select a player to move:");
-        ComboBox<String> playerComboBox = new ComboBox<>();
-        for (Player player : movablePlayers) {
-            playerComboBox.getItems().add(player.getName());
-        }
-        playerComboBox.getSelectionModel().selectFirst();
+            // Create player selection dialog
+            VBox dialogContent = new VBox(10);
+            dialogContent.setPadding(new Insets(20));
 
-        Label movesLabel = new Label("Number of moves (1 or 2):");
-        ComboBox<Integer> movesComboBox = new ComboBox<>();
-        movesComboBox.getItems().addAll(1, 2);
-        movesComboBox.getSelectionModel().select(0);
+            Label selectPlayerLabel = new Label("Select a player to move:");
+            ComboBox<String> playerComboBox = new ComboBox<>();
+            for (Player player : movablePlayers) {
+                playerComboBox.getItems().add(player.getName());
+            }
+            playerComboBox.getSelectionModel().selectFirst();
 
-        dialogContent.getChildren().addAll(
-                selectPlayerLabel, playerComboBox,
-                movesLabel, movesComboBox
-        );
+            Label movesLabel = new Label("Number of moves (1 or 2):");
+            ComboBox<Integer> movesComboBox = new ComboBox<>();
+            movesComboBox.getItems().addAll(1, 2);
+            movesComboBox.getSelectionModel().select(0);
 
-        // creating the dialog
-        Alert dialog = new Alert(Alert.AlertType.CONFIRMATION);
-        dialog.setTitle("Move Other Player");
-        dialog.setHeaderText("Move another player up to 2 adjacent tiles");
-        dialog.getDialogPane().setContent(dialogContent);
+            dialogContent.getChildren().addAll(
+                    selectPlayerLabel, playerComboBox,
+                    movesLabel, movesComboBox
+            );
 
-        // showing the dialog
-        dialog.showAndWait().ifPresent(result -> {
-            if (result == ButtonType.OK) {
-                String selectedPlayerName = playerComboBox.getValue();
-                Integer selectedMoves = movesComboBox.getValue();
+            // Create dialog
+            Alert dialog = new Alert(Alert.AlertType.CONFIRMATION);
+            dialog.setTitle("Move Other Player");
+            dialog.setHeaderText("Move another player up to 2 adjacent tiles");
+            dialog.getDialogPane().setContent(dialogContent);
 
-                if (selectedPlayerName != null && selectedMoves != null) {
-                    // find the selected player
-                    Player selectedPlayer = null;
-                    for (Player player : room.getPlayers()) {
-                        if (player.getName().equals(selectedPlayerName)) {
-                            selectedPlayer = player;
-                            break;
+            // Show dialog and handle result
+            dialog.showAndWait().ifPresent(result -> {
+                if (result == ButtonType.OK) {
+                    String selectedPlayerName = playerComboBox.getValue();
+                    Integer selectedMoves = movesComboBox.getValue();
+
+                    if (selectedPlayerName != null && selectedMoves != null) {
+                        // Find selected player
+                        Player selectedPlayer = room.getPlayerByUsername(selectedPlayerName);
+
+                        if (selectedPlayer != null) {
+                            // Set selected player and move count
+                            navigator.setNavigatorTarget(selectedPlayer, selectedMoves);
+
+                            // Prompt user to select destination
+                            showMessage("Select Destination",
+                                    "Now click on a tile to move " + selectedPlayer.getName() +
+                                            " there. You can move them up to " + selectedMoves + " adjacent tiles.");
                         }
                     }
-
-                    if (selectedPlayer != null) {
-                        // set the navigator target
-                        navigator.setNavigatorTarget(selectedPlayer, selectedMoves);
-
-                        // show the message to select the destination
-                        gameController.showToast("Select Destination: Now click on a tile to move " +
-                                selectedPlayer.getName() + " there. You can move them up to " +
-                                selectedMoves + " adjacent tiles.");
-                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     /**
-     * Handles the action of capturing a treasure.
-     * Validates that the player is on a treasure tile and has 4 matching treasure cards.
-     * Shows a confirmation dialog before processing the capture.
-     * Discards the required cards and registers the captured treasure.
+     * Handles capturing a treasure.
+     * Validates treasure location and card requirements,
+     * then sends appropriate network messages.
      */
     public void handleCaptureTreasureAction() {
-        // 检查当前玩家是否为空
-        if (currentPlayer == null) {
-            gameController.showErrorToast("No active player!");
-            return;
-        }
+        if (getRemainingActions() > 0) {
+            Player currentPlayer = gameController.getCurrentPlayer();
 
-        if (getRemainingActions() <= 0) {
-            gameController.showErrorToast("No actions remaining!");
-            return;
-        }
+            // Get treasure type of current tile
+            Position playerPosition = currentPlayer.getPosition();
+            Tile currentTile = getIsland().getTile(playerPosition);
 
-        // getting the current player's position and tile
-        Position playerPosition = currentPlayer.getPosition();
-        Tile currentTile = getIsland().getTile(playerPosition);
-
-        if (currentTile == null || currentTile.getTreasureType() == null) {
-            gameController.showWarningToast("You are not on a treasure tile.");
-            return;
-        }
-
-        TreasureType treasureType = currentTile.getTreasureType();
-
-        // checking if the player has enough matching treasure cards
-        int treasureCardCount = 0;
-        for (Card card : currentPlayer.getCards()) {
-            if (card.getType() == CardType.TREASURE && card.getTreasureType() == treasureType) {
-                treasureCardCount++;
+            if (currentTile == null || currentTile.getTreasureType() == null) {
+                showMessage("No Treasure", "You are not on a treasure tile.");
+                return;
             }
-        }
 
-        if (treasureCardCount < 4) {
-            gameController.showWarningToast("You need 4 matching treasure cards to capture this treasure. You have " +
-                    treasureCardCount + " " + treasureType.getDisplayName() + " cards.");
-            return;
-        }
+            TreasureType treasureType = currentTile.getTreasureType();
 
-        // confirmation dialog
-        Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmDialog.setTitle("Capture Treasure");
-        confirmDialog.setHeaderText("Capture " + treasureType.getDisplayName());
-        confirmDialog.setContentText("Do you want to discard 4 " + treasureType.getDisplayName() + " cards to capture this treasure?");
-
-        confirmDialog.showAndWait().ifPresent(result -> {
-            if (result == ButtonType.OK) {
-                // Find the treasure card indices to discard
-                List<Integer> cardIndices = new ArrayList<>();
-                List<Card> playerCards = currentPlayer.getCards();
-                int count = 0;
-                for (int i = 0; i < playerCards.size() && count < 4; i++) {
-                    Card card = playerCards.get(i);
-                    if (card.getType() == CardType.TREASURE && card.getTreasureType() == treasureType) {
-                        cardIndices.add(i);
-                        count++;
-                    }
+            // Check if player has enough treasure cards
+            int treasureCardCount = 0;
+            for (Card card : currentPlayer.getCards()) {
+                if (card.getType() == CardType.TREASURE && card.getTreasureType() == treasureType) {
+                    treasureCardCount++;
                 }
-
-                gameController.getRoomController().sendCaptureTreasureMessage(currentPlayer, cardIndices);
             }
-        });
+
+            if (treasureCardCount < 4) {
+                showMessage("Not Enough Cards", "You need 4 matching treasure cards to capture this treasure. You have " + treasureCardCount + " " + treasureType.getDisplayName() + " cards.");
+                return;
+            }
+
+            // Confirm treasure capture
+            Alert confirmDialog = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmDialog.setTitle("Capture Treasure");
+            confirmDialog.setHeaderText("Capture " + treasureType.getDisplayName());
+            confirmDialog.setContentText("Do you want to discard 4 " + treasureType.getDisplayName() + " cards to capture this treasure?");
+
+            confirmDialog.showAndWait().ifPresent(result -> {
+                if (result == ButtonType.OK) {
+                    // Execute treasure capture
+                    gameController.getRoomController().sendCaptureTreasureMessage(currentPlayer, treasureType);
+                }
+            });
+        }
+        notifyActionPerformed();
     }
 
     /**
-     * Sends a message to end the current player's turn
+     * Handles end turn action.
+     * Sends appropriate network message to end the current player's turn.
      */
     public void handleEndTurnAction() {
-        // 检查当前玩家是否为空
-        if (currentPlayer == null) {
-            gameController.showErrorToast("No active player!");
-            return;
-        }
         gameController.getRoomController().sendEndTurnMessage(currentPlayer);
     }
 
     /**
-     * Initiates the process of playing a special card
+     * Handles playing special cards.
+     * Delegates to game controller for special card logic.
      */
     public void handlePlaySpecialAction() {
-        // 检查当前玩家是否为空
-        if (currentPlayer == null) {
-            gameController.showErrorToast("No active player!");
-            return;
-        }
         gameController.handlePlaySpecialAction();
     }
 
     /**
-     * Handles drawing of flood cards
-     * Increments the count of flood cards drawn and sends a message to the room
+     * Handles drawing flood cards.
+     * Updates flood card count and sends network message.
      */
     public void handleDrawFloodAction() {
-        // 检查当前玩家是否为空
-        if (currentPlayer == null) {
-            gameController.showErrorToast("No active player!");
-            return;
-        }
         gameController.getPlayerController().addDrawnFloodCards(1);
         gameController.getRoomController().sendDrawFloodMessage(1, currentPlayer.getName());
     }
 
     /**
-     * Sets the flag indicating whether the player has drawn treasure cards this turn
-     *
-     * @param hasDrawn Whether the player has drawn treasure cards
+     * Sets whether the current player has drawn treasure cards this turn.
+     * @param hasDrawn true if treasure cards have been drawn
      */
     public void setHasDrawnTreasureCards(boolean hasDrawn) {
         gameController.getPlayerController().setHasDrawnTreasureCards(hasDrawn);
     }
 
     /**
-     * Initiates the card discard action when the player has too many cards
+     * Handles discarding a card.
+     * Delegates to game controller for discard logic.
      */
     public void handleDiscardAction() {
         gameController.handleDiscardAction();
     }
 
     /**
-     * Progresses the game to the next player's turn
+     * Advances to the next player's turn.
      */
     public void nextTurn() {
         gameController.nextTurn();
     }
 
     /**
-     * Checks if any player is currently on a sunk tile
-     *
-     * @return true if any player is on a sunk tile, false otherwise
+     * Checks if any player is on a sunk tile.
+     * @return true if any player is on a sunk tile
      */
     public boolean isAnyPlayerSunk() {
         Room room = gameController.getRoom();
@@ -621,9 +460,7 @@ public class ActionBarController {
     }
 
     /**
-     * Handles the situation where a player is on a sunk tile
-     * Coordinates with the game controller to manage player movement or game over conditions
-     *
+     * Handles the case when a player is on a sunk tile.
      * @param currentProgramPlayer The player on a sunk tile
      */
     public void handlePlayerSunk(Player currentProgramPlayer) {
@@ -631,10 +468,21 @@ public class ActionBarController {
     }
 
     /**
-     * Cleans up resources when the game is shutting down
+     * Cleans up controller state.
+     * Called when shutting down the game.
      */
     public void shutdown() {
         currentPlayer = null;
         gameController = null;
+    }
+
+    /**
+     * Notifies observers that an action has been performed.
+     * Updates the action bar UI.
+     */
+    private void notifyActionPerformed() {
+        if (gameController != null) {
+            gameController.updateActionBar();
+        }
     }
 }
