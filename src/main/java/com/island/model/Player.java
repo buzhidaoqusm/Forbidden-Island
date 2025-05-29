@@ -23,6 +23,19 @@ public abstract class Player {
     private boolean inGame;       // Player in game status
     private boolean isHost;       // Player host status
 
+    public Player(String name) {
+        this.id = UUID.randomUUID().toString();
+        this.name = name;
+        this.cards = new ArrayList<>();
+        this.capturedTreasures = new ArrayList<>();
+        this.hasDrawnTreasureCards = false;
+        this.drawFloodCards = 0;
+        this.actions = MAX_ACTIONS;
+        this.isReady = false;
+        this.inGame = false;
+        this.isHost = false;
+    }
+
     protected Player(String name, PlayerRole role) {
         this.id = UUID.randomUUID().toString();
         this.name = name;

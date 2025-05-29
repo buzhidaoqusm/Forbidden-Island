@@ -1,5 +1,7 @@
 package com.island.view;
 
+import com.island.model.Player;
+import com.island.network.RoomController;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -38,6 +40,8 @@ public class JoinRoomView {
     // Image resources
     private Image roomBackgroundImage;
     private Image roomTitleImage;
+    private Player player;
+    private RoomController roomController;
 
     // Constructor without GameController
     public JoinRoomView(Stage primaryStage) {
@@ -65,9 +69,7 @@ public class JoinRoomView {
     private void loadImages() {
         try {
             // Load room background image
-            roomBackgroundImage = new Image(getClass().getResourceAsStream("/image/UI/room_background.jpg"));
-            // Load room title image
-            roomTitleImage = new Image(getClass().getResourceAsStream("/image/UI/join_room_title.png"));
+            roomBackgroundImage = new Image(getClass().getResourceAsStream("/image/UI/start_background.jpg"));
         } catch (Exception e) {
             System.err.println("Room image resources loading failed: " + e.getMessage());
             e.printStackTrace();
@@ -208,9 +210,10 @@ public class JoinRoomView {
                         Platform.runLater(() -> setFeedback("正在尝试加入房间... 尝试 " + (retryCount.get() + 1) + "/" + maxRetries));
                         
                         // 尝试加入房间
-                        Message joinMessage = new Message(MessageType.PLAYER_JOIN, roomId, "system");
-                        gameController.handlePlayerJoin(joinMessage);
-                        
+                        Message joinMessage = new Message(MessageType.PLAYER_JOIN, roomId, "system")
+                                .addExtraData("username", gameController.getCurrentPlayer());
+                        gameController.getRoomController().broadcast(joinMessage);
+
                         // 等待响应
                         Thread.sleep(retryDelay);
                         

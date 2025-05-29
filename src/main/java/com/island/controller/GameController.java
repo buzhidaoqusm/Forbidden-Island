@@ -162,7 +162,7 @@ public class GameController {
             }
 
             // 5. 设置当前玩家
-            currentPlayer = players.getFirst();
+            currentPlayer = players.get(0);
             System.out.println("Current player: " + (currentPlayer != null ? currentPlayer.getName() : "null"));
             if (actionBarController != null && currentPlayer != null) {
                 actionBarController.setCurrentPlayer(currentPlayer);
@@ -686,6 +686,14 @@ public class GameController {
         }
     }
 
+    public Card getActiveSpecialCard() {
+        return activeSpecialCard;
+    }
+
+    public void setActiveSpecialCard(Card activeSpecialCard) {
+        this.activeSpecialCard = activeSpecialCard;
+    }
+
     public void returnToMainMenu() {
         gameView.returnToMainMenu();
     }
@@ -728,5 +736,13 @@ public class GameController {
      */
     public int getWaterLevel() {
         return waterLevel;
+    }
+
+    /**
+     * 获取当前激活的特殊卡牌
+     * @return 当前激活的特殊卡牌，如果没有则返回null
+     */
+    public Card getActiveSpecialCard() {
+        return activeSpecialCard;
     }
 }

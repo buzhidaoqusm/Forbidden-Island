@@ -72,7 +72,7 @@ public class CardView {
                 // 宝藏卡背面
                 {
                     "/Back/Treasure Deck.png", 
-                    "/TreasureCards/Treasure Deck.png",
+                    "/treasure cards/TreasureCardSymbol.png",
                     "/image/Back/Treasure Deck.png", 
                     "/Design/Back/Treasure.png", 
                     "/Design/Cards/TreasureBack.png"
@@ -80,7 +80,7 @@ public class CardView {
                 // 洪水卡背面
                 {
                     "/Back/Flood Deck.png", 
-                    "/Flood/Flood Deck.png",
+                    "/flood cards/FloodCardSymbol.png",
                     "/image/Back/Flood Deck.png", 
                     "/Design/Back/Flood.png", 
                     "/Design/Cards/FloodBack.png"
@@ -88,14 +88,14 @@ public class CardView {
                 // 宝藏弃牌堆
                 {
                     "/Back/Treasure Discard.png", 
-                    "/image/Back/Treasure Discard.png", 
+                    "/treasure cards/Treasure Discard.png",
                     "/Design/Back/TreasureDiscard.png", 
                     "/Design/Cards/TreasureDiscard.png"
                 },
                 // 洪水弃牌堆
                 {
                     "/Back/Flood Discard.png", 
-                    "/image/Back/Flood Discard.png", 
+                    "/flood cards/Flood Discard.png",
                     "/Design/Back/FloodDiscard.png", 
                     "/Design/Cards/FloodDiscard.png"
                 }
@@ -171,7 +171,7 @@ public class CardView {
             
             // 尝试加载宝藏卡正面图片
             String[] treasureFolderPaths = {
-                "/TreasureCards/",
+                "/treasure cards/",
                 "/image/TreasureCards/",
                 "/Design/Cards/Treasure/",
                 "/Design/TreasureCards/"
@@ -285,7 +285,7 @@ public class CardView {
             
             // 尝试加载洪水卡正面图片
             String[] floodFolderPaths = {
-                "/Flood/",
+                "/flood cards/",
                 "/image/Flood/",
                 "/Design/Cards/Flood/",
                 "/Design/FloodCards/"

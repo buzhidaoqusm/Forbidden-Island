@@ -65,12 +65,22 @@ public class MessageHandler {
                 case GAME_START -> handleGameStart(message);
                 case UPDATE_ROOM -> handleUpdateRoom(message);
                 case MESSAGE_ACK -> handleMessageAck(message);
+                case PLAYER_JOIN -> handlePlayerJoin(message);
                 default -> actionLogView.warning("Unknown message type: " + message.getType());
             }
         } catch (Exception e) {
             actionLogView.error("Message processing error: " + e.getMessage());
             scheduleMessageRetry(Message.getMessageId());
         }
+    }
+    private void handlePlayerJoin(Message message) {
+        try {
+            gameController.handlePlayerJoin(message);
+        } catch (Exception e) {
+            actionLogView.error("Failed to handle player join: " + e.getMessage());
+            scheduleMessageRetry(Message.getMessageId());
+        }
+
     }
 
     private void handleLeaveRoom(Message message) {

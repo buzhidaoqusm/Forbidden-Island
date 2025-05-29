@@ -1,5 +1,6 @@
 package com.island.view;
 
+import com.island.model.PendingPlayer;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -18,6 +19,8 @@ import javafx.scene.text.FontWeight;
 import com.island.model.Player;
 import com.island.model.PlayerRole;
 import com.island.controller.GameController;
+
+import java.util.Objects;
 
 /**
  * GameStart: Responsible for implementing the game startup interface, including user name
@@ -61,9 +64,9 @@ public class GameStart {
     private void loadImages() {
         try {
             // Load start screen background
-            startBackgroundImage = new Image(getClass().getResourceAsStream("/image/UI/start_background.jpg"));
+            startBackgroundImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/image/UI/start_background.jpg")));
             // Load game logo
-            gameLogo = new Image(getClass().getResourceAsStream("/image/UI/game_logo.png"));
+            gameLogo = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/image/UI/game_logo.png")));
         } catch (Exception e) {
             System.err.println("Start screen image resources loading failed: " + e.getMessage());
             e.printStackTrace();
@@ -126,6 +129,8 @@ public class GameStart {
                     // gameController.showMainMenu();
                     
                     // For now, use direct transition with gameController
+                    Player player = new PendingPlayer(username);
+                    gameController.setCurrentPlayer(player);
                     MenuView menuView = new MenuView(primaryStage, gameController);
                     primaryStage.setScene(menuView.createScene());
                     primaryStage.setTitle("Forbidden Island - Main Menu");

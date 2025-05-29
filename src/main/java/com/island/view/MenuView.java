@@ -18,6 +18,8 @@ import javafx.scene.control.Label;
 import com.island.model.Player;
 import com.island.controller.GameController;
 
+import java.util.Objects;
+
 public class MenuView {
 
     private Stage primaryStage;
@@ -60,9 +62,7 @@ public class MenuView {
     private void loadImages() {
         try {
             // Load menu background
-            menuBackgroundImage = new Image(getClass().getResourceAsStream("/image/UI/menu_background.jpg"));
-            // Load game logo
-            gameLogo = new Image(getClass().getResourceAsStream("/image/UI/game_logo.png"));
+            menuBackgroundImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/image/UI/menu_background.jpg")));
         } catch (Exception e) {
             System.err.println("Menu image resources loading failed: " + e.getMessage());
             e.printStackTrace();
@@ -132,6 +132,7 @@ public class MenuView {
                 CreateRoomView createRoomView = new CreateRoomView(primaryStage, gameController);
                 primaryStage.setScene(createRoomView.createScene());
                 primaryStage.setTitle("Forbidden Island - Create Room");
+                System.out.println("当前房间ID： " + gameController.getRoom().getRoomId());
             } else {
                 System.out.println("Transitioning to Create Room view...");
                 CreateRoomView createRoomView = new CreateRoomView(primaryStage);
@@ -153,7 +154,7 @@ public class MenuView {
                 // Future implementation: gameController.showJoinRoomView();
                 
                 // For now, use direct transition
-                JoinRoomView joinRoomView = new JoinRoomView(primaryStage);
+                JoinRoomView joinRoomView = new JoinRoomView(primaryStage, gameController);
                 primaryStage.setScene(joinRoomView.createScene());
                 primaryStage.setTitle("Forbidden Island - Join Room");
             } else {

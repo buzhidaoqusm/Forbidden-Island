@@ -19,6 +19,7 @@ import javafx.scene.image.ImageView;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import com.island.model.Player;
 import com.island.model.PlayerRole;
@@ -47,12 +48,12 @@ public class PlayerView {
     private void loadImages() {
         try {
             // 加载冒险家图片
-            adventurerImages.put(PlayerRole.ENGINEER, new Image(getClass().getResourceAsStream("/image/Adventurers/Engineer.png")));
-            adventurerImages.put(PlayerRole.PILOT, new Image(getClass().getResourceAsStream("/image/Adventurers/Pilot.png")));
-            adventurerImages.put(PlayerRole.NAVIGATOR, new Image(getClass().getResourceAsStream("/image/Adventurers/Navigator.png")));
-            adventurerImages.put(PlayerRole.EXPLORER, new Image(getClass().getResourceAsStream("/image/Adventurers/Explorer.png")));
-            adventurerImages.put(PlayerRole.MESSENGER, new Image(getClass().getResourceAsStream("/image/Adventurers/Messenger.png")));
-            adventurerImages.put(PlayerRole.DIVER, new Image(getClass().getResourceAsStream("/image/Adventurers/Diver.png")));
+            adventurerImages.put(PlayerRole.ENGINEER, new Image(Objects.requireNonNull(getClass().getResourceAsStream("/players/Red.png"))));
+            adventurerImages.put(PlayerRole.PILOT, new Image(Objects.requireNonNull(getClass().getResourceAsStream("/players/Blue.png"))));
+            adventurerImages.put(PlayerRole.NAVIGATOR, new Image(Objects.requireNonNull(getClass().getResourceAsStream("/players/Yellow.png"))));
+            adventurerImages.put(PlayerRole.EXPLORER, new Image(Objects.requireNonNull(getClass().getResourceAsStream("/players/Green.png"))));
+            adventurerImages.put(PlayerRole.MESSENGER, new Image(Objects.requireNonNull(getClass().getResourceAsStream("/players/White.png"))));
+            adventurerImages.put(PlayerRole.DIVER, new Image(Objects.requireNonNull(getClass().getResourceAsStream("/players/Black.png"))));
         } catch (Exception e) {
             System.err.println("Error loading adventurer images: " + e.getMessage());
             e.printStackTrace();

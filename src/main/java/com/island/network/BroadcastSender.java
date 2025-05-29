@@ -121,7 +121,7 @@ public class BroadcastSender {
                     logView.log("正在发送到地址: " + address);
                     InetAddress inetAddress = InetAddress.getByName(address);
                     DatagramPacket packet = new DatagramPacket(dataToSend, dataToSend.length, inetAddress, port);
-                    socket.send(packet);
+            socket.send(packet);
                     logView.success("成功发送到地址: " + address);
                     return true;
                 } catch (Exception e) {

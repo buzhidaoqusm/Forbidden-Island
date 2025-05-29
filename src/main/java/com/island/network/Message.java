@@ -84,7 +84,7 @@ public class Message {
 
     public Message addExtraData(String key, Object value) {
         if (key != null && value != null) {
-            data.put(key, value);
+        data.put(key, value);
         }
         return this;
     }
@@ -123,7 +123,7 @@ public class Message {
         } catch (Exception e) {
             System.err.println("JSON deserialization error: " + e.getMessage());
             throw new MessageSerializationException("Failed to deserialize message from JSON: " + e.getMessage(), e);
-        }
+    }
     }
 
     // Getters
