@@ -12,86 +12,65 @@ import javafx.stage.Stage;
 import java.util.*;
 
 /**
- * The GameController class serves as the central coordinator for the Forbidden Island game.
- * It manages the overall game state, gameplay flow, and coordinates interactions between different components.
- *
- * This controller:
- * - Maintains references to all other controllers (IslandController, PlayerController, CardController, ActionBarController)
- * - Handles game initialization, turn management, and game over conditions
- * - Coordinates player actions and their effects on the game state
- * - Manages the network communication through the RoomController
- * - Tracks game parameters like remaining actions, water level, and active cards
- * - Provides methods for other controllers to access game state and trigger game events
+ * The main controller class for the Forbidden Island game.
+ * This class coordinates all other controllers and manages the overall game state.
+ * It acts as a central hub for game logic and communication between different components.
+ * Handles game initialization, turn management, player actions, and win/lose conditions.
  */
 public class GameController {
-    // Main controller of game views
+    /** The main view of the game */
     private GameView gameView;
-
-    // Controller of room
+    /** Controller for managing room/network related operations */
     private RoomController roomController;
-
-    // Current game room
+    /** The game room model containing player information */
     private Room room;
-
-    // Island object
-    private Island island = new Island();
-
-    // Controller of island
+    /** The island model representing the game board */
+    private Island island;
+    /** Controller for managing island-related operations */
     private IslandController islandController;
 
-    // Controller of players
+    /** Controller for managing player-related operations */
     private PlayerController playerController;
-
-    // Controller of cards
+    /** Controller for managing card operations */
     private CardController cardController;
-
-    // Controller of action bar
+    /** Controller for managing action bar UI and game actions */
     private ActionBarController actionBarController;
-
-    // Current player in turn
+    /** The current player whose turn it is */
     private Player currentPlayer;
 
-    // Players that will be moved by helicopter
+    /** List of players to be moved by helicopter card */
     private List<Player> helicopterPlayers;
-
-    // Special cards currently in use
+    /** Currently active special card being played */
     private Card activeSpecialCard;
 
-    // Reaming actions of current player
+    /** Number of actions remaining for current player */
     private int remainingActions = 3;
-
-    // Game start flag
+    /** Flag indicating if game has started */
     private boolean gameStart = false;
-
-    // Game over flag
+    /** Flag indicating if game is over */
     private boolean gameOver = false;
 
-    // Water level
-    private int waterLevel = 1;
-
-    // Players selected for helicopter lift
-    private List<Player> selectedPlayers;
-    // Target position for helicopter lift
-    private Position targetPosition;
-
-    // Observer pattern implementation
-    private GameSubjectImpl gameSubject = new GameSubjectImpl();
+    /** Implementation of the Observer pattern for game state changes */
+    private GameSubjectImpl gameSubject;
 
     /**
-     * Constructs a GameController with the given RoomController.
-     * Initializes all other controllers and establishes bidirectional references.
-     *
-     * @param roomController The controller managing network communication and room state
+     * Constructs a new GameController with the given RoomController.
+     * Initializes all sub-controllers and establishes necessary connections between components.
+     * @param roomController The controller managing room/network operations
      */
     public GameController(RoomController roomController) {
         this.roomController = roomController;
-        if (roomController != null) {
-            roomController.setGameController(this);
-            room = roomController.getRoom();
-        }
+        roomController.setGameController(this);
+        room = roomController.getRoom();
 
-        islandController = new IslandController(island);
+        gameSubject = new GameSubjectImpl();
+        
+        islandController = new IslandController();
         islandController.setGameController(this);
+        island = islandController.getIsland();
+        
+        // Set island reference in RoomController
+        roomController.setIsland(island);
 
         playerController = new PlayerController();
         playerController.setGameController(this);
@@ -102,122 +81,66 @@ public class GameController {
     }
 
     /**
-     * Sets the RoomController for this GameController.
-     * Used to resolve circular dependency during initialization.
-     *
-     * @param roomController The room controller to set
+     * Gets the game subject for observer pattern implementation.
+     * @return The game subject instance
      */
-    public void setRoomController(RoomController roomController) {
-        this.roomController = roomController;
-        if (roomController != null) {
-            this.room = roomController.getRoom();
-        }
+    public GameSubjectImpl getGameSubject() {
+        return gameSubject;
     }
 
     /**
-     * Initializes the game with the given random seed.
-     * Sets up the island, players, and cards, and deals initial cards to players.
-     *
-     * @param seed Random seed for game initialization to ensure deterministic behavior
+     * Handles a player joining the game.
+     * @param message The join request message
+     * @throws Exception If join request fails
+     */
+    public void handlePlayerJoin(Message message) throws Exception {
+        roomController.handleJoinRequest(message);
+    }
+
+    /**
+     * Gets the room controller instance.
+     * @return The room controller
+     */
+    public RoomController getRoomController() {
+        return roomController;
+    }
+
+    /**
+     * Cleans up resources and shuts down the game.
+     */
+    public void shutdown() {
+        roomController.shutdown();
+    }
+
+    /**
+     * Starts a new game with the given random seed.
+     * Initializes the island, players, cards and game state.
+     * @param seed Random seed for game initialization
      */
     public void startGame(long seed) {
-        System.out.println("Starting game with seed: " + seed);
-        
-        try {
-            // 1. 初始化基本组件
-            if (room == null && roomController != null) {
-                room = roomController.getRoom();
-            }
-            if (room == null) {
-                System.out.println("Creating new Room object...");
-                room = new Room();
-                if (roomController != null) {
-                    roomController.setRoom(room);
-                }
-            }
+        gameStart = true;
+        currentPlayer = room.getPlayers().getFirst();
 
-            // 2. 确保所有控制器都有正确的引用
-            if (playerController != null) {
-                playerController.setGameController(this);
-            }
-            if (actionBarController != null) {
-                actionBarController.setGameController(this);
-            }
-            if (islandController != null) {
-                islandController.setGameController(this);
-            }
+        // Initialize island
+        islandController.initIsland(seed);
 
-            // 3. 验证玩家列表
-            List<Player> players = room.getPlayers();
-            if (players == null || players.isEmpty()) {
-                throw new IllegalStateException("No players in room!");
-            }
-            System.out.println("Players in room: " + players.size());
+        // Initialize players
+        playerController.initPlayers(seed);
 
-            // 4. 初始化玩家状态
-            for (Player player : players) {
-                player.setInGame(true);
-                player.resetState();
-                player.setGameController(this);
-            }
+        // Initialize cards
+        cardController.initCards(seed);
 
-            // 5. 设置当前玩家
-            currentPlayer = players.get(0);
-            System.out.println("Current player: " + (currentPlayer != null ? currentPlayer.getName() : "null"));
-            if (actionBarController != null && currentPlayer != null) {
-                actionBarController.setCurrentPlayer(currentPlayer);
-            }
+        // Deal initial cards to players
+        playerController.dealCards(cardController.getTreasureDeck());
 
-            // 6. 初始化游戏组件
-            System.out.println("Initializing island...");
-            islandController.initIsland(seed);
-
-            System.out.println("Initializing players...");
-            playerController.initPlayers(seed);
-
-            System.out.println("Initializing cards...");
-            cardController.initCards(seed);
-
-            // 7. 发牌给玩家
-            System.out.println("Dealing cards to players...");
-            playerController.dealCards(cardController.getTreasureDeck());
-
-            // 8. 设置游戏状态
-            gameStart = true;
-            System.out.println("Setting game state...");
-            if (gameSubject != null) {
-                gameSubject.setGameState(GameState.RUNNING);
-                gameSubject.notifyObservers();
-                gameSubject.notifyBoardChanged();
-                gameSubject.notifyPlayerInfoChanged();
-                gameSubject.notifyActionBarChanged();
-            } else {
-                System.err.println("Warning: gameSubject is null, cannot set game state");
-            }
-
-            // 9. 初始化游戏视图
-            if (gameView != null) {
-                System.out.println("Initializing game view...");
-                gameView.initGame();
-                gameView.setPrimaryStage();
-            }
-
-            System.out.println("Game started successfully!");
-        } catch (Exception e) {
-            gameStart = false;
-            if (gameSubject != null) {
-                gameSubject.setGameState(GameState.INITIALIZING);
-            }
-            System.err.println("Error starting game: " + e.getMessage());
-            e.printStackTrace();
-            throw e;
-        }
+        gameSubject.setGameState(GameState.RUNNING);
+        gameView.initGame();
+        gameView.setPrimaryStage();
     }
 
     /**
-     * Prepares a player to start their turn.
-     * Resets player state, updates the action bar, and sets the remaining actions to 3.
-     *
+     * Starts a new turn for the given player.
+     * Resets player state and action points.
      * @param player The player whose turn is starting
      */
     public void startTurn(Player player) {
@@ -230,35 +153,24 @@ public class GameController {
         gameSubject.notifyActionBarChanged();
     }
 
-    /**
-     * Handles player join requests by delegating to the RoomController.
-     *
-     * @param message The join request message
-     * @throws Exception If the join process fails
-     */
-    public void handlePlayerJoin(Message message) throws Exception {
-        roomController.handleJoinRequest(message);
-    }
+    // Getters and setters with appropriate documentation
+    public IslandController getIslandController() { return islandController; }
+    public void setGameView(GameView gameView) { this.gameView = gameView; }
+    public PlayerController getPlayerController() { return playerController; }
+    public CardController getCardController() { return cardController; }
+    public void setCurrentPlayer(Player currentPlayer) { this.currentPlayer = currentPlayer; }
+    public Player getCurrentPlayer() { return currentPlayer; }
+    public ActionBarController getActionBarController() { return actionBarController; }
+    public int getRemainingActions() { return remainingActions; }
+    public void decreaseRemainingActions() { remainingActions--; }
+    public void setRemainingActions(int remainingActions) { this.remainingActions = remainingActions; }
+    public Room getRoom() { return room; }
+    public Island getIsland() { return islandController.getIsland(); }
+    public Player getCurrentProgramPlayer() { return room.getCurrentProgramPlayer(); }
 
     /**
-     * Returns the RoomController associated with this GameController.
-     *
-     * @return The RoomController instance
-     */
-    public RoomController getRoomController() {
-        return roomController;
-    }
-
-    /**
-     * Cleans up resources when the game is shutting down.
-     */
-    public void shutdown() {
-
-    }
-
-    /**
-     * Handles the water rise event when a water rise card is drawn.
-     * Increases the water level and checks for game over conditions.
+     * Handles water level rising event.
+     * Increases water level and checks for game over condition.
      */
     public void handleWaterRise() {
         islandController.increaseWaterLevel();
@@ -267,27 +179,53 @@ public class GameController {
             roomController.sendGameOverMessage("Water level has reached the maximum!");
         }
         cardController.handleWaterRise();
+        updateWaterLevel();
+    }
+
+    /**
+     * Gets the message handler for network communication.
+     * @return The message handler instance
+     */
+    public MessageHandler getMessageHandler() {
+        return roomController.getMessageHandler();
     }
 
     /**
      * Handles drawing treasure cards for a player.
-     * Delegates to the CardController to manage the card drawing process.
-     *
-     * @param count The number of cards to draw
-     * @param player The player who is drawing the cards
+     * @param count Number of cards to draw
+     * @param player Player drawing the cards
      */
-    public List handleDrawTreasureCard(int count, Player player) {
+    public void handleDrawTreasureCard(int count, Player player) {
         cardController.drawTreasureCard(count, player);
-        return List.of();
+    }
+
+    /**
+     * Gets the currently selected tile.
+     * @return The chosen tile
+     */
+    public Tile getChosenTile() {
+        return islandController.getChosenTile();
+    }
+
+    /**
+     * Updates the game board view.
+     */
+    public void updateBoard() {
+        gameSubject.notifyBoardChanged();
+    }
+
+    /**
+     * Updates the action bar view.
+     */
+    public void updateActionBar() {
+        gameSubject.notifyActionBarChanged();
     }
 
     /**
      * Transfers a card from one player to another.
-     * Removes the card from the giving player and adds it to the receiving player.
-     *
-     * @param fromPlayer The player giving the card
-     * @param toPlayer The player receiving the card
-     * @param card The name of the card to be given
+     * @param fromPlayer Player giving the card
+     * @param toPlayer Player receiving the card
+     * @param card Name of the card being transferred
      */
     public void giveCard(Player fromPlayer, Player toPlayer, String card) {
         Card removedCard = fromPlayer.removeCard(card);
@@ -296,22 +234,84 @@ public class GameController {
     }
 
     /**
+     * Updates the players info view.
+     */
+    public void updatePlayersInfo() {
+        gameSubject.notifyPlayerInfoChanged();
+    }
+
+    /**
+     * Updates the card view.
+     */
+    public void updateCardView() {
+        gameSubject.notifyCardChanged();
+    }
+
+    /**
+     * Handles playing a special action card.
+     * Shows appropriate dialog based on card type.
+     */
+    public void handlePlaySpecialAction() {
+
+    }
+
+    /**
+     * Handles using a sandbags card.
+     * @param chosenCard The sandbags card being used
+     */
+    private void handleSandbagsCard(Card chosenCard) {
+
+    }
+
+    /**
+     * Handles using a helicopter card.
+     * Shows dialog for selecting players and handles win condition check.
+     * @param chosenCard The helicopter card being used
+     */
+    private void handleHelicopterCard(Card chosenCard) {
+
+    }
+
+    /**
+     * Handles using a special card at a specific position.
+     * @param position The target position for the special card effect
+     */
+    public void handleUseSpecialCard(Position position) {
+
+    }
+
+    /**
+     * Executes the sandbags card effect on a tile.
+     * @param position Position of the tile to shore up
+     */
+    private void executeSandbagsUse(Position position) {
+
+    }
+
+    /**
+     * Executes the helicopter move action.
+     * @param position Destination position for the helicopter move
+     */
+    private void executeHelicopterMove(Position position) {
+
+    }
+
+    /**
      * Adds a card to the treasure discard pile.
-     *
-     * @param card The card to add to the discard pile
+     * @param card Card to add to discard pile
      */
     public void addTreasureDiscardPile(Card card) {
         cardController.addTreasureDiscardPile(card);
     }
 
     /**
-     * Draws a specified number of flood cards and checks for game over conditions.
-     *
-     * @param count The number of flood cards to draw
-     * @return A list of positions that were flooded
+     * Draws flood cards and checks for game-ending conditions.
+     * @param count Number of flood cards to draw
+     * @return List of positions where tiles were flooded
      */
     public List<Position> drawFloodCards(int count) {
         List<Position> floodedPositions = cardController.drawFloodCards(count);
+        // Check if treasure tiles are sunk before treasure collection
         if (!islandController.checkTreasureTiles()) {
             gameOver = true;
             roomController.sendGameOverMessage("A treasure tile has sunk before the treasure is captured!");
@@ -323,8 +323,7 @@ public class GameController {
     }
 
     /**
-     * Handles the discard action when a player needs to discard a card.
-     * Identifies the chosen card and sends a discard message to the room.
+     * Handles discarding a card action.
      */
     public void handleDiscardAction() {
         Card chosenCard = playerController.getChosenCard();
@@ -336,8 +335,8 @@ public class GameController {
     }
 
     /**
-     * Advances the game to the next player's turn.
-     * If the next player is the first player, also triggers flood card drawing.
+     * Advances to the next player's turn.
+     * Handles flood card drawing at the end of a round.
      */
     public void nextTurn() {
         List<Player> players = room.getPlayers();
@@ -345,12 +344,12 @@ public class GameController {
         Player nextPlayer = players.get(nextIndex);
         roomController.sendStartTurnMessage(nextPlayer);
 
-        // If the next player is the first player, draw flood cards
+        // If completing a round (back to first player), draw flood cards based on water level
         if (nextIndex == 0) {
             int waterLevel = islandController.getWaterLevel();
             int cardsToDraw;
 
-            // determine the number of flood cards to draw based on the water level
+            // Determine number of flood cards based on water level
             if (waterLevel <= 2) cardsToDraw = 2;
             else if (waterLevel <= 5) cardsToDraw = 3;
             else if (waterLevel <= 7) cardsToDraw = 4;
@@ -362,29 +361,30 @@ public class GameController {
 
     /**
      * Handles the case when a player is on a sunk tile.
-     * Checks if the player has valid moves, and if not, ends the game.
-     *
-     * @param currentProgramPlayer The player who is on a sunk tile
+     * Shows valid move options and checks for game over condition.
+     * @param currentProgramPlayer The player on a sunk tile
      */
     public void handlePlayerSunk(Player currentProgramPlayer) {
-        List<Position> validPositions = currentProgramPlayer.getMovePositions(island.getGameMap());
+        List<Position> validPositions = currentProgramPlayer.getMovePositions(island.getTiles());
         if (validPositions.isEmpty()) {
             gameOver = true;
             roomController.sendGameOverMessage("One player has no valid moves to a non-sunk tile!");
         }
         List<Tile> validTiles = getValidTilesOnSunk(currentProgramPlayer);
-
+        
+        // Update board and show valid moves
+        updateBoard();
+        gameView.getIslandView().addBoarders(validTiles);
+        showToast("Your tile has sunk. Please select a valid tile to move to");
     }
 
     /**
-     * Determines valid tiles a player can move to when they are on a sunk tile.
-     * For the Diver role, considers the minimum distance to valid tiles.
-     *
-     * @param player The player who is on a sunk tile
-     * @return A list of valid tiles the player can move to
+     * Gets valid tiles that a player can move to when their current tile is sunk.
+     * @param player The player needing to move
+     * @return List of valid tiles the player can move to
      */
     public List<Tile> getValidTilesOnSunk(Player player) {
-        List<Position> validPositions = player.getMovePositions(island.getGameMap());
+        List<Position> validPositions = player.getMovePositions(island.getTiles());
         List<Tile> validTiles = new ArrayList<>();
 
         double minDistance = Double.MAX_VALUE;
@@ -404,221 +404,10 @@ public class GameController {
         return validTiles;
     }
 
+    // Toast notification methods
     /**
-     * Returns the IslandController associated with this GameController.
-     *
-     * @return The IslandController instance
-     */
-    public IslandController getIslandController() {
-        return islandController;
-    }
-
-    /**
-     * Sets the GameView for this GameController.
-     *
-     * @param gameView The GameView to be set
-     */
-    public void setGameView(GameView gameView) {
-        this.gameView = gameView;
-    }
-
-    /**
-     * Gets the GameView for this GameController.
-     *
-     * @return The GameView instance
-     */
-    public GameView getGameView() {
-        return gameView;
-    }
-
-    public PlayerController getPlayerController() {
-        return playerController;
-    }
-
-    public CardController getCardController() {
-        return cardController;
-    }
-
-    public void setCurrentPlayer(Player currentPlayer) {
-        this.currentPlayer = currentPlayer;
-    }
-
-    public Player getCurrentPlayer() {
-        return currentPlayer;
-    }
-
-    public ActionBarController getActionBarController() {
-        return actionBarController;
-    }
-
-    public int getRemainingActions() {
-        return remainingActions;
-    }
-
-    public void decreaseRemainingActions() {
-        remainingActions--;
-    }
-
-    public void setRemainingActions(int remainingActions) {
-        this.remainingActions = remainingActions;
-    }
-
-    public Room getRoom() {
-        return room;
-    }
-
-    public Island getIsland() {
-        return islandController.getIsland();
-    }
-
-    public Player getCurrentProgramPlayer() {
-        return room.getCurrentProgramPlayer();
-    }
-
-    public MessageHandler getMessageHandler() {
-        return roomController.getMessageHandler();
-    }
-
-
-    public Tile getChosenTile() {
-        return islandController.getChosenTile();
-    }
-
-
-
-    public void handlePlaySpecialAction() {
-        if (currentPlayer == null || !playerController.canPlaySpecialCard(currentPlayer)) {
-            showWarningToast("Cannot use special card");
-            return;
-        }
-
-        Card chosenCard = playerController.getChosenCard();
-        if (chosenCard == null) {
-            showWarningToast("Please select a special card");
-            return;
-        }
-
-        if (chosenCard.getType() == CardType.HELICOPTER) {
-            handleHelicopterCard(chosenCard);
-        } else if (chosenCard.getType() == CardType.SANDBAGS) {
-            handleSandbagsCard(chosenCard);
-        }
-    }
-
-    private void handleSandbagsCard(Card chosenCard) {
-        if (chosenCard.getType() != CardType.SANDBAGS) {
-            showErrorToast("Invalid sandbag card");
-            return;
-        }
-
-        // Get valid positions from IslandController
-        List<Position> validPositions = islandController.getValidShoreUpPositions(currentPlayer);
-        if (validPositions.isEmpty()) {
-            showWarningToast("No flooded tiles available");
-            return;
-        }
-
-        // Check action points through PlayerController
-        if (!playerController.canPerformAction(currentPlayer)) {
-            showWarningToast("Not enough action points");
-            return;
-        }
-
-        activeSpecialCard = chosenCard;
-        islandController.setValidPositions(validPositions);
-        showToast("Please select a flooded tile to shore up");
-    }
-
-    private void handleHelicopterCard(Card chosenCard) {
-        if (chosenCard.getType() != CardType.HELICOPTER) {
-            showErrorToast("Invalid helicopter card");
-            return;
-        }
-
-        // Check Fool's Landing through IslandController
-        if (!islandController.isAtFoolsLanding(currentPlayer.getPosition())) {
-            showWarningToast("Helicopter card can only be used at Fool's Landing");
-            return;
-        }
-
-        activeSpecialCard = chosenCard;
-        selectedPlayers = new ArrayList<>();
-        selectedPlayers.add(currentPlayer);
-
-        // Get valid positions from IslandController
-        List<Position> validPositions = islandController.getValidHelicopterDestinations();
-        islandController.setValidPositions(validPositions);
-        showToast("Please select a destination");
-    }
-
-    public void handleUseSpecialCard(Position position) {
-        if (activeSpecialCard == null) {
-            showErrorToast("No active special card");
-            return;
-        }
-
-        if (activeSpecialCard.getType() == CardType.HELICOPTER) {
-            executeHelicopterMove(position);
-        } else if (activeSpecialCard.getType() == CardType.SANDBAGS) {
-            executeSandbagsUse(position);
-        }
-
-        activeSpecialCard = null;
-        islandController.clearValidPositions();
-    }
-
-    public void executeSandbagsUse(Position position) {
-        try {
-            // Set the target position for the sandbag card
-            activeSpecialCard.setTargetPosition(position);
-
-            // Use the sandbag card
-            activeSpecialCard.useCard(currentPlayer);
-
-            showSuccessToast("Successfully shored up tile");
-
-            // Check game state through IslandController
-            if (!islandController.checkTreasureTiles()) {
-                gameOver = true;
-                roomController.sendGameOverMessage("A treasure tile has sunk before its treasure was collected!");
-            } else if (!islandController.checkFoolsLanding()) {
-                gameOver = true;
-                roomController.sendGameOverMessage("Fool's Landing has sunk!");
-            }
-        } catch (IllegalStateException e) {
-            showErrorToast(e.getMessage());
-        }
-    }
-
-    public void executeHelicopterMove(Position position) {
-        try {
-            // Set the target position for the helicopter card
-            activeSpecialCard.setTargetPosition(position);
-
-            // Add selected players to the helicopter card
-            for (Player player : selectedPlayers) {
-                activeSpecialCard.addSelectedPlayer(player);
-            }
-
-            // Use the helicopter card
-            activeSpecialCard.useCard(currentPlayer);
-
-            showSuccessToast("Successfully used helicopter lift");
-
-            // Check win condition through IslandController
-            if (islandController.checkHelicopterWinCondition()) {
-                gameOver = true;
-                roomController.sendGameOverMessage("All players have successfully escaped!");
-            }
-        } catch (IllegalStateException e) {
-            showErrorToast(e.getMessage());
-        }
-    }
-
-    /**
-     * Displays a toast message to the user.
-     *
-     * @param message The message to be displayed
+     * Shows a toast notification to the user.
+     * @param message Message to display
      */
     public void showToast(String message) {
         if (gameView != null) {
@@ -630,9 +419,8 @@ public class GameController {
     }
 
     /**
-     * Displays a success toast message to the user.
-     *
-     * @param message The success message to be displayed
+     * Shows a success toast notification.
+     * @param message Message to display
      */
     public void showSuccessToast(String message) {
         if (gameView != null) {
@@ -644,9 +432,8 @@ public class GameController {
     }
 
     /**
-     * Displays a warning toast message to the user.
-     *
-     * @param message The warning message to be displayed
+     * Shows a warning toast notification.
+     * @param message Message to display
      */
     public void showWarningToast(String message) {
         if (gameView != null) {
@@ -658,9 +445,8 @@ public class GameController {
     }
 
     /**
-     * Displays an error toast message to the user.
-     *
-     * @param message The error message to be displayed
+     * Shows an error toast notification.
+     * @param message Message to display
      */
     public void showErrorToast(String message) {
         if (gameView != null) {
@@ -671,78 +457,37 @@ public class GameController {
         }
     }
 
-    public boolean isGameOver() {
-        return gameOver;
-    }
+    // Additional getters and setters
+    public boolean isGameOver() { return gameOver; }
+    public void setGameOver(boolean gameOver) { this.gameOver = gameOver; }
+    public void setWaterLevel(int waterLevel) { islandController.setWaterLevel(waterLevel); }
 
-    public void setGameOver(boolean gameOver) {
-        this.gameOver = gameOver;
-    }
-
-    public void setWaterLevel(int level) {
-        this.waterLevel = level;
-        if (gameView != null) {
-            gameView.updateWaterLevel(level);
-        }
-    }
-
-    public Card getActiveSpecialCard() {
-        return activeSpecialCard;
-    }
-
-    public void setActiveSpecialCard(Card activeSpecialCard) {
-        this.activeSpecialCard = activeSpecialCard;
-    }
-
-    public void returnToMainMenu() {
-        gameView.returnToMainMenu();
-    }
-
-    public void resetTileBorders() {
-    }
-
-    public boolean isGameStart() {
-        return gameStart;
-    }
-
-    public GameSubjectImpl getGameSubject() {
-        return gameSubject;
-    }
-
-    public Object updateBoard() {
-        gameSubject.notifyBoardChanged();
-        return null;
-    }
-
-    public void updateActionBar() {
-        gameSubject.notifyActionBarChanged();
-    }
-
-    public void updatePlayersInfo() {
-        gameSubject.notifyPlayerInfoChanged();
-    }
-
-    public void updateCardView() {
-        gameSubject.notifyCardChanged();
-    }
-
+    /**
+     * Updates the water level display.
+     */
     public void updateWaterLevel() {
         gameSubject.notifyWaterLevelChanged(islandController.getWaterLevel());
     }
 
     /**
-     * 获取当前水位
-     * @return 当前水位值
+     * Returns to the main menu.
      */
-    public int getWaterLevel() {
-        return waterLevel;
+    public void returnToMainMenu() {
+        gameView.returnToMainMenu();
     }
 
     /**
-     * 获取当前激活的特殊卡牌
-     * @return 当前激活的特殊卡牌，如果没有则返回null
+     * Resets all tile borders on the game board.
      */
-    public Card getActiveSpecialCard() {
-        return activeSpecialCard;
+    public void resetTileBorders() {
+        gameView.getIslandView().clearAllBoarders();
+    }
+
+    /**
+     * Checks if the game has started.
+     * @return true if the game has started
+     */
+    public boolean isGameStart() {
+        return gameStart;
     }
 }
