@@ -1,5 +1,6 @@
 package com.island.network;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.island.controller.GameController;
 import com.island.model.*;
 import com.island.view.ActionLogView;
@@ -295,6 +296,13 @@ public class MessageHandler {
     private void handleUpdateRoom(Message message) {
         actionLogView.log("Room info updated.");
         // 可选：room.updateFrom(message.getData());
+        // 获取message.getDate()中的players并反序列化成List<Player>
+        Object raw = message.getData().get("players");
+        List<Player> deserializedPlayers = Message.getMapper()
+                .convertValue(raw, new TypeReference<List<Player>>() {});
+        // 更新room
+        room.setPlayers(deserializedPlayers);
+
     }
 
     public void shutdown() {

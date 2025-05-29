@@ -1,5 +1,6 @@
 package com.island.view;
 
+import com.island.model.Room;
 import com.island.network.RoomController;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -21,6 +22,8 @@ import com.island.controller.GameController;
 import com.island.model.Player;
 import com.island.model.Explorer;
 import com.island.view.GameView;
+
+import java.util.List;
 import java.util.UUID;
 
 public class CreateRoomView {
@@ -57,6 +60,7 @@ public class CreateRoomView {
         // this.hostPlayer = hostPlayer;
         this.playerListView = new ListView<>();
         this.difficultyComboBox = new ComboBox<>();
+
         loadImages();
     }
     
@@ -234,7 +238,16 @@ public class CreateRoomView {
             playerListView.getItems().add(playerName);
         });
     }
-
+    public void updatePlayerList(List<Player> players) {
+        Platform.runLater(() -> {
+            playerListView.getItems().clear();
+            playerListView.getItems().addAll(
+                players.stream()
+                       .map(player -> player.getName() + (player.isHost() ? " (Host)" : ""))
+                       .toList()
+            );
+        });
+    }
     /**
      * Updates the list of players displayed in the view.
      * Called by the controller when a player leaves.
@@ -293,7 +306,6 @@ public class CreateRoomView {
                 // 设置房间ID
                 if (gameController.getRoom() != null) {
                     gameController.getRoom().setRoomId(roomId);
-                    
                     // 更新玩家列表显示
                     Platform.runLater(() -> {
                         playerListView.getItems().clear();

@@ -1,14 +1,14 @@
 package com.island.network;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.island.model.PendingPlayer;
 import com.island.model.Player;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
@@ -166,6 +166,39 @@ public class Message {
     @Override
     public int hashCode() {
         return Long.hashCode(messageId);
+    }
+    public static ObjectMapper getMapper() {
+        return objectMapper;
+    }
+
+    public static void main(String[] args) {
+        // 测试 Message 类的序列化和反序列化
+        List<Player> players= new ArrayList<>();
+        players.add(new PendingPlayer("1"));
+        Message message = new Message(MessageType.UPDATE_ROOM, "room123","123")
+                .addExtraData("players",players)
+                .addExtraData("roomId", "room123");
+        // 开始序列化
+        byte[] bytes = message.toBytes();
+        System.out.println("Serialized bytes: " + Arrays.toString(bytes));
+
+        // 测试反序列化
+        String jsonString = new String(bytes, StandardCharsets.UTF_8);
+        System.out.println("Deserializing from JSON: " + jsonString);
+        Message deserializedMessage = Message.fromString(jsonString);
+        Object raw = deserializedMessage.getData().get("players");
+        List<Player> deserializedPlayers = Message.getMapper()
+                .convertValue(raw, new TypeReference<List<Player>>() {});
+        deserializedPlayers.forEach(player -> {
+            if (player instanceof PendingPlayer) {
+                System.out.println("Deserialized player ID: " + ((PendingPlayer) player).getId());
+            } else {
+                System.out.println("Deserialized player: " + player);
+            }
+        });
+        System.out.println("Deserialized message: " + deserializedMessage);
+
+
     }
 }
 
