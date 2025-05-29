@@ -1,164 +1,127 @@
-package com.island.model;
+package com.forbiddenisland.models;
 
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.forbiddenisland.models.adventurers.Player;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents a game room that contains players and manages the game session.
+ * Each room has a unique ID, a list of players, and a host player who controls the game.
+ */
 public class Room {
+    private int id;
     private List<Player> players;
     private Player hostPlayer;
-    private Player currentProgramPlayer;
-    private String roomId;
+    private int currentProgramPlayerIndex;
 
-    public Room() {
+    /**
+     * Creates a new room with the specified ID and initial player.
+     * @param id The unique identifier for the room
+     * @param player The first player to join the room
+     */
+    public Room(int id, Player player) {
+        this.id = id;
+        this.hostPlayer = null;
         this.players = new ArrayList<>();
-        // 生成roomId的UUID
-        this.roomId = java.util.UUID.randomUUID().toString();
+        this.players.add(player);
+        this.currentProgramPlayerIndex = 0;
     }
 
-    public List<Player> getPlayers() {
-        return players;
-    }
-
-    public void setPlayers(List<Player> players) {
-        this.players = players;
-    }
-
-    public Player getHostPlayer() {
-        return hostPlayer;
-    }
-
+    /**
+     * Sets the host player for this room.
+     * @param hostPlayer The player to be set as host
+     */
     public void setHostPlayer(Player hostPlayer) {
         this.hostPlayer = hostPlayer;
     }
 
+    /**
+     * Gets the list of players in this room.
+     * @return List of players in the room
+     */
+    public List<Player> getPlayers() {
+        return players;
+    }
+
+    /**
+     * Gets the room's unique identifier.
+     * @return The room ID
+     */
+    public int getId() {
+        return id;
+    }
+
+    /**
+     * Gets the current program player.
+     * @return The current program player
+     */
     public Player getCurrentProgramPlayer() {
-        return currentProgramPlayer;
+        return players.get(currentProgramPlayerIndex);
     }
 
-    public void setCurrentProgramPlayer(Player currentProgramPlayer) {
-        this.currentProgramPlayer = currentProgramPlayer;
+    /**
+     * Checks if a player with the given username is the host.
+     * @param username The username to check
+     * @return true if the player is the host, false otherwise
+     */
+    public boolean isHost(String username) {
+        return hostPlayer != null && hostPlayer.getName().equals(username);
     }
 
-    public String getRoomId() {
-        return roomId;
+    /**
+     * Adds a new player to the room.
+     * @param player The player to add
+     */
+    public void addPlayer(Player player) {
+        players.add(player);
     }
 
-    public void setRoomId(String roomId) {
-        this.roomId = roomId;
-    }
-
-    public boolean isHost(String playerName) {
-        return hostPlayer != null && hostPlayer.getName().equals(playerName);
-    }
-
-    public boolean addPlayer(Player player) {
-        if (isFull()) {
-            throw new IllegalStateException("Room is full, cannot add player: " + player.getName());
-        }
-        if (player != null && !players.contains(player)) {
-            players.add(player);
-            // 如果是第一个玩家，设置为房主
-            if (players.size() == 1) {
-                setHostPlayer(player);
-                player.setHost(true);
-            }
-            return true;
-        }
-        return false;
-    }
-
+    /**
+     * Removes a player from the room.
+     * @param player The player to remove
+     */
     public void removePlayer(Player player) {
-        if (player != null) {
-            players.remove(player);
-        }
+        players.remove(player);
     }
 
-    public void startGame() {
-        // Check if the room meets the conditions to start the game
-        if (players.size() < 2 || players.size() > 4) {
-            throw new IllegalStateException("Game requires 2-4 players to start");
-        }
+    /**
+     * Gets the host player of the room.
+     * @return The host player
+     */
+    public Player getHostPlayer() {
+        return hostPlayer;
+    }
 
-        // Check if all players are ready
-        for (Player player : players) {
-            if (!player.isReady()) {
-                throw new IllegalStateException("Some players are not ready");
+    /**
+     * Sets the list of players and updates the current program player index and host.
+     * @param players The new list of players
+     */
+    public void setPlayers(ArrayList<Player> players) {
+        Player player = this.players.get(currentProgramPlayerIndex);
+        this.players = players;
+        // Find the index of the current program player
+        for (int i = 0; i < players.size(); i++) {
+            if (players.get(i).getName().equals(player.getName())) {
+                currentProgramPlayerIndex = i;
+                break;
             }
         }
-
-        // Initialize player states
-        for (Player player : players) {
-            player.resetState();
-            player.setInGame(true);
-        }
+        // Update the host player
+        hostPlayer = players.get(0);
     }
 
     /**
-     * Sets a player as ready
-     * @param playerName The name of the player to set as ready
-     * @param isReady The ready status to set
+     * Gets a player by their username.
+     * @param username The username to search for
+     * @return The player with the matching username, or null if not found
      */
-    public void setPlayerReady(String playerName, boolean isReady) {
+    public Player getPlayerByUsername(String username) {
         for (Player player : players) {
-            if (player.getName().equals(playerName)) {
-                player.setReady(isReady);
-                break;
-    }
-        }
-    }
-
-    /**
-     * Gets a player by their name
-     * @param playerName The name of the player to find
-     * @return The player if found, null otherwise
-     */
-    public Player getPlayerByName(String playerName) {
-        for (Player player : players) {
-            if (player.getName().equals(playerName)) {
+            if (player.getName().equals(username)) {
                 return player;
-    }
+            }
         }
         return null;
-    }
-
-    /**
-     * Checks if all players are ready
-     * @return true if all players are ready, false otherwise
-     */
-    public boolean areAllPlayersReady() {
-        for (Player player : players) {
-            if (!player.isReady()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Gets the number of players in the room
-     * @return The number of players
-     */
-    public int getPlayerCount() {
-        return players.size();
-    }
-
-    /**
-     * Checks if the room is full
-     * @return true if the room has 4 players, false otherwise
-     */
-    public boolean isFull() {
-        return players.size() >= 4;
-    }
-
-    /**
-     * 清理房间状态
-     */
-    public void clear() {
-        players.clear();
-        hostPlayer = null;
-        currentProgramPlayer = null;
-        roomId = null;
     }
 }
