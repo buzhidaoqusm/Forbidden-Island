@@ -12,14 +12,20 @@ import java.util.*;
 public class CardController {
     /** Reference to the main game controller */
     private GameController gameController;
-    /** Collection of fields related to card management */
-    private final Deque<Card> treasureDeck;         // Deck of treasure cards
-    private final Deque<Card> floodDeck;            // Deck of flood cards
-    private final List<Card> treasureDiscardPile;    // Discard pile for treasure cards
-    private final List<Card> floodDiscardPile;       // Discard pile for flood cards
-    private long seed;                               // Random seed for shuffling
-    private Island island;                           // Reference to the game board
-    private CardFactory cardFactory;                 // Factory for creating cards
+    /** Deck of treasure cards */
+    private final Deque<Card> treasureDeck;
+    /** Deck of flood cards */
+    private final Deque<Card> floodDeck;
+    /** Discard pile for treasure cards */
+    private final List<Card> treasureDiscardPile;
+    /** Discard pile for flood cards */
+    private final List<Card> floodDiscardPile;
+    /** Random seed for shuffling cards */
+    private long seed;
+    /** Reference to the game board (island) */
+    private Island island;
+    /** Factory for creating and initializing cards */
+    private CardFactory cardFactory;
 
     /**
      * Constructs a new CardController with the specified card factory.
