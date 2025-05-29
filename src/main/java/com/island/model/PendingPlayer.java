@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class PendingPlayer extends Player{
     public PendingPlayer(String name) {
-        super(name);
+        super(name, PlayerRole.EXPLORER);
     }
 
     @Override

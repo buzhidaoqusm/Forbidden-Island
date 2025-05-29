@@ -23,6 +23,7 @@ public abstract class Player {
     private boolean inGame;       // Player in game status
     private boolean isHost;       // Player host status
 
+    public Player() {}
     public Player(String name) {
         this.id = UUID.randomUUID().toString();
         this.name = name;

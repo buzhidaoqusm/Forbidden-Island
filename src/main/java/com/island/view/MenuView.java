@@ -130,8 +130,10 @@ public class MenuView {
                 
                 // For now, use direct transition with gameController
                 CreateRoomView createRoomView = new CreateRoomView(primaryStage, gameController);
+                gameController.getRoom().addPlayer(gameController.getCurrentPlayer());
                 primaryStage.setScene(createRoomView.createScene());
                 primaryStage.setTitle("Forbidden Island - Create Room");
+                createRoomView.updatePlayerList(gameController.getRoom().getPlayers());
                 System.out.println("当前房间ID： " + gameController.getRoom().getRoomId());
             } else {
                 System.out.println("Transitioning to Create Room view...");
