@@ -1,8 +1,8 @@
-package com.island.views.ui;
+package com.forbiddenisland.views.ui;
 
-import com.island.models.adventurers.Player;
-import com.island.views.room.CreateRoomView;
-import com.island.views.room.JoinRoomView;
+import com.forbiddenisland.models.adventurers.Player;
+import com.forbiddenisland.views.room.CreateRoomView;
+import com.forbiddenisland.views.room.JoinRoomView;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -13,36 +13,36 @@ import javafx.stage.Stage;
 
 public class MenuView {
     public Scene getMenuScene(Stage primaryStage, Player player) {
-        // 创建欢迎信息标签
+        // Create welcome message label
         Label welcomeLabel = new Label("Welcome, " + player.getName() + "!");
 
-        // 设置字体大小
-        welcomeLabel.setFont(new Font("Arial", 46));  // 设置字体为 Arial，大小为 24
-        // 设置字体颜色
-        welcomeLabel.setStyle("-fx-text-fill: #000000;");  // 设置字体颜色为黑色
+        // Set font size
+        welcomeLabel.setFont(new Font("Arial", 46));  // Set font to Arial, size 46
+        // Set font color
+        welcomeLabel.setStyle("-fx-text-fill: #000000;");  // Set font color to black
 
         Button createRoomButton = new Button("Create Room");
         Button joinRoomButton = new Button("Join Room");
 
-        // 按钮点击事件（跳转到相应场景）
+        // Button click events (navigate to corresponding scenes)
         createRoomButton.setOnAction(e -> {
-            // 创建房间界面
+            // Create room interface
             primaryStage.setScene(new CreateRoomView(primaryStage, player).getScene());
         });
 
         joinRoomButton.setOnAction(e -> {
-            // 加入房间界面
+            // Join room interface
             primaryStage.setScene(new JoinRoomView(primaryStage, player).getScene());
         });
 
-        // 创建 VBox 布局，设置按钮间距为 20 像素
+        // Create VBox layout, set button spacing to 20 pixels
         VBox layout = new VBox(20);
-        layout.setStyle("-fx-alignment: center;");  // 设置水平方向居中
+        layout.setStyle("-fx-alignment: center;");  // Set horizontal alignment to center
 
-        // 将按钮添加到 VBox 中
+        // Add buttons to VBox
         layout.getChildren().addAll(welcomeLabel, createRoomButton, joinRoomButton);
 
-        // 创建并返回场景
+        // Create and return the scene
         return new Scene(layout, 800, 500);
     }
 }

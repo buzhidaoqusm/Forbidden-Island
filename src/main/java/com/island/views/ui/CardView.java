@@ -1,8 +1,8 @@
-package com.island.views.ui;
+package com.forbiddenisland.views.ui;
 
-import com.island.controller.CardController;
-import com.island.models.card.Card;
-import com.island.models.card.CardType;
+import com.forbiddenisland.controllers.card.CardController;
+import com.forbiddenisland.models.card.Card;
+import com.forbiddenisland.models.card.CardType;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -15,7 +15,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
-import static com.island.views.ui.IslandView.SCALE;
+import static com.forbiddenisland.views.ui.IslandView.SCALE;
 
 import java.util.Deque;
 import java.util.List;
@@ -35,39 +35,39 @@ public class CardView {
 
     }
 
-    // 初始化卡牌信息区域
+    // Initialize the card information area
     public void initializeFloodCardsInfo() {
         cardsInfoBox.getChildren().clear();
 
-        // 创建洪水卡牌区域
+        // Create flood card area
         HBox floodCardsBox = new HBox(5);
         floodCardsBox.setAlignment(Pos.TOP_CENTER);
         floodCardsBox.setStyle("-fx-padding: 10; -fx-border-color: #cccccc; -fx-border-width: 1;");
 
-        // 洪水卡牌图标，显示洪水卡牌中没有被抽取的数量
+        // Flood card icon, showing the number of undrawn flood cards
         StackPane floodSymbol = createCardSymbol("FloodCardSymbol", floodDeck.size(), CardType.FLOOD);
 
-        // 洪水卡牌展示
-        HBox floodCards = new HBox(-30); // 负值使卡牌重叠
+        // Flood card display
+        HBox floodCards = new HBox(-30); // Negative value to make cards overlap
         floodCards.setAlignment(Pos.CENTER);
 
         for (int i = 0; i < floodDiscardPile.size(); i++) {
             Card card = floodDiscardPile.get(i);
             try {
-                // 加载板块图片
+                // Load tile image
                 String imagePath = "/flood cards/" + card.getName() + ".png";
                 Image tileImage = new Image(getClass().getResourceAsStream(imagePath));
                 ImageView tileView = new ImageView(tileImage);
                 tileView.setFitHeight(204 * SCALE);
                 tileView.setFitWidth(147 * SCALE);
 
-                // 最后一张卡片要完全显示
+                // Last card should be fully visible
                 if (i == floodDiscardPile.size() - 1) {
                     floodCards.getChildren().add(new StackPane(tileView));
                 } else {
-                    // 创建一个裁剪区域
+                    // Create a clipping area
                     Rectangle clip = new Rectangle(
-                            60, // 只显示左边一小部分
+                            60, // Only show a small part on the left
                             204 * SCALE
                     );
                     StackPane cardPane = new StackPane(tileView);
@@ -75,47 +75,47 @@ public class CardView {
                     floodCards.getChildren().add(cardPane);
                 }
             } catch (Exception e) {
-                System.err.println("无法加载图片 " + card.getName() + ": " + e.getMessage());
+                System.err.println("Cannot load image " + card.getName() + ": " + e.getMessage());
             }
         }
 
         floodCardsBox.getChildren().addAll(floodSymbol, floodCards);
         VBox.setMargin(floodCardsBox, new Insets(0, 0, 10, 0));
-        // 添加到卡牌信息区域
+        // Add to card information area
         cardsInfoBox.getChildren().add(floodCardsBox);
     }
 
     public void initializeTreasureCardsInfo() {
-        // 创建宝藏卡牌区域
+        // Create treasure card area
         HBox treasureCardsBox = new HBox(5);
         treasureCardsBox.setAlignment(Pos.TOP_CENTER);
         treasureCardsBox.setStyle("-fx-padding: 10; -fx-border-color: #cccccc; -fx-border-width: 1;");
 
-        // 宝藏卡牌符号
+        // Treasure card symbol
         StackPane treasureSymbol = createCardSymbol("TreasureCardSymbol", treasureDeck.size(), CardType.TREASURE);
 
-        // 弃牌堆卡牌展示
-        HBox treasureCards = new HBox(-30); // 负值使卡牌重叠
+        // Discard pile card display
+        HBox treasureCards = new HBox(-30); // Negative value to make cards overlap
         treasureCards.setAlignment(Pos.CENTER);
 
-        // 显示位于宝藏弃牌堆的卡牌
+        // Show cards in the treasure discard pile
         for (int i = 0; i < treasureDiscardPile.size(); i++) {
             Card card = treasureDiscardPile.get(i);
             try {
-                // 加载板块图片
+                // Load card image
                 String imagePath = "/treasure cards/" + card.getName() + ".png";
                 Image cardImage = new Image(getClass().getResourceAsStream(imagePath));
                 ImageView cardView = new ImageView(cardImage);
                 cardView.setFitHeight(204 * SCALE);
                 cardView.setFitWidth(147 * SCALE);
 
-                // 最后一张卡片要完全显示
+                // Last card should be fully visible
                 if (i == treasureDiscardPile.size() - 1) {
                     treasureCards.getChildren().add(new StackPane(cardView));
                 } else {
-                    // 创建一个裁剪区域
+                    // Create a clipping area
                     Rectangle clip = new Rectangle(
-                            60, // 只显示左边一小部分
+                            60, // Only show a small part on the left
                             204 * SCALE
                     );
                     StackPane cardPane = new StackPane(cardView);
@@ -123,22 +123,22 @@ public class CardView {
                     treasureCards.getChildren().add(cardPane);
                 }
             } catch (Exception e) {
-                System.err.println("无法加载图片 " + card.getName() + ": " + e.getMessage());
+                System.err.println("Cannot load image " + card.getName() + ": " + e.getMessage());
             }
         }
 
         treasureCardsBox.getChildren().addAll(treasureSymbol, treasureCards);
-        // 添加到卡牌信息区域
+        // Add to card information area
         cardsInfoBox.getChildren().add(treasureCardsBox);
     }
 
 
-    // 创建卡牌符号（带数字）
+    // Create card symbol (with number)
     private StackPane createCardSymbol(String type, int count, CardType cardType) {
         StackPane cardPane = new StackPane();
 
         try {
-            // 根据卡牌类型选择不同的文件夹路径
+            // Choose different folder path based on card type
             String folderPath = (cardType == CardType.TREASURE) ? "/treasure cards/" : "/flood cards/";
             String imagePath = folderPath + type + ".png";
             Image cardImage = new Image(getClass().getResourceAsStream(imagePath));
@@ -148,7 +148,7 @@ public class CardView {
 
             cardPane.getChildren().add(cardView);
 
-            // 如果有数量，添加数字标签
+            // If there is a count, add a number label
             if (count > 0) {
                 Label countLabel = new Label(String.valueOf(count));
                 countLabel.setStyle("-fx-background-color: white; -fx-border-color: black; -fx-padding: 2px; -fx-text-fill: black;");
@@ -158,7 +158,7 @@ public class CardView {
                 cardPane.getChildren().add(countLabel);
             }
         } catch (Exception e) {
-            // 如果图片加载失败，显示文本
+            // If image loading fails, show text
             Rectangle cardRect = new Rectangle(60, 80);
             cardRect.setFill(Color.LIGHTGRAY);
             cardRect.setStroke(Color.BLACK);
@@ -167,7 +167,7 @@ public class CardView {
 
             cardPane.getChildren().addAll(cardRect, typeLabel);
 
-            // 如果有数量，添加数字标签
+            // If there is a count, add a number label
             if (count > 0) {
                 Label countLabel = new Label(String.valueOf(count));
                 countLabel.setStyle("-fx-background-color: white; -fx-border-color: black; -fx-padding: 2px;");
@@ -191,14 +191,14 @@ public class CardView {
     }
 
     /**
-     * 关闭卡牌视图，清理资源
+     * Close card view, clean up resources
      */
     public void shutdown() {
-        // 清理卡牌信息区域资源
+        // Clean up card information area resources
         if (cardsInfoBox != null) {
             cardsInfoBox.getChildren().clear();
         }
-        // 清理控制器引用
+        // Clean up controller references
         cardController = null;
     }
 }

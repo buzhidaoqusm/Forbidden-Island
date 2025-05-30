@@ -1,10 +1,10 @@
-package com.island.views.ui;
+package com.forbiddenisland.views.ui;
 
-import com.island.controller.ActionBarController;
-import com.island.models.Room;
-import com.island.models.adventurers.Player;
-import com.island.models.adventurers.PlayerRole;
-import com.island.models.island.Tile;
+import com.forbiddenisland.controllers.ui.ActionBarController;
+import com.forbiddenisland.models.Room;
+import com.forbiddenisland.models.adventurers.Player;
+import com.forbiddenisland.models.adventurers.PlayerRole;
+import com.forbiddenisland.models.island.Tile;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -20,18 +20,18 @@ import javafx.scene.text.FontWeight;
 public class ActionBarView {
     private ActionBarController actionBarController;
 
-    private HBox actionBar; // 操作栏
-    private Label actionLabel; // 操作提示文本
-    private HBox actionButtons; // 操作按钮容器
+    private HBox actionBar; // Action bar
+    private Label actionLabel; // Action prompt text
+    private HBox actionButtons; // Action buttons container
     private Button moveButton;
     private Button shoreUpButton;
     private Button endTurnButton;
     private Button playSpecialButton;
     private Button drawFloodButton;
-    private Button giveCardButton; // 新增给卡牌按钮
-    private Button moveOtherPlayerButton; // 新增移动其他玩家按钮
-    private Button captureTreasureButton; // 新增收集宝藏按钮
-    private Button discardButton; // 新增弃牌按钮
+    private Button giveCardButton; // Give card button
+    private Button moveOtherPlayerButton; // Move other player button
+    private Button captureTreasureButton; // Capture treasure button
+    private Button discardButton; // Discard button
 
     public ActionBarView(HBox actionBar) {
         this.actionBar = actionBar;
@@ -47,7 +47,7 @@ public class ActionBarView {
         actionButtons = new HBox(5);
         actionButtons.setAlignment(Pos.CENTER_RIGHT);
 
-        // 初始化按钮
+        // Initialize buttons
         moveButton = createActionButton("Move");
         shoreUpButton = createActionButton("Shore Up");
         giveCardButton = createActionButton("Give Card");
@@ -59,7 +59,7 @@ public class ActionBarView {
         discardButton = createActionButton("Discard");
         discardButton.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold;");
 
-        // 设置按钮事件
+        // Set button events
         moveButton.setOnAction(e -> actionBarController.handleMoveAction());
         shoreUpButton.setOnAction(e ->actionBarController. handleShoreUpAction());
         giveCardButton.setOnAction(e -> actionBarController.handleGiveCardAction());
@@ -70,7 +70,7 @@ public class ActionBarView {
         drawFloodButton.setOnAction(e -> actionBarController.handleDrawFloodAction());
         discardButton.setOnAction(e -> actionBarController.handleDiscardAction());
 
-        // 将标签和按钮容器添加到操作栏
+        // Add label and button container to action bar
         actionBar.getChildren().addAll(actionLabel, new Region(), actionButtons);
         HBox.setHgrow(actionBar.getChildren().get(1), Priority.ALWAYS);
 
@@ -78,7 +78,7 @@ public class ActionBarView {
     }
 
     /**
-     * 更新操作栏状态
+     * Update action bar status
      */
     public void updateActionBar() {
         if (actionButtons == null) {
@@ -121,7 +121,7 @@ public class ActionBarView {
         } else {
             if (currentPlayer.getName().equals(room.getCurrentProgramPlayer().getName())) {
                 if (currentPlayer.getCards().size() > 5) {
-                    // 设置提示dialog
+                    // Show alert dialog
                     Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                     alert.setTitle("Discard Card");
                     alert.setHeaderText("You have more than 5 cards, please discard one or play a special card.");
@@ -132,13 +132,13 @@ public class ActionBarView {
                         actionButtons.getChildren().add(playSpecialButton);
                     }
                 } else {
-                    // 当前玩家的回合
+                    // Current player's turn
                     if (remainingActions > 0) {
-                        // 还有剩余行动次数
+                        // Still have remaining actions
                         actionLabel.setText("You may take " + remainingActions + " action(s)");
                         actionButtons.getChildren().add(moveButton);
 
-                        // 检查能否加固地板
+                        // Check if can shore up tile
                         if (actionBarController.canShoreUpTile(currentPlayer)) {
                             actionButtons.getChildren().add(shoreUpButton);
                         }
@@ -147,7 +147,7 @@ public class ActionBarView {
                             actionButtons.getChildren().add(giveCardButton);
                         }
 
-                        // 如果是领航员，添加移动其他玩家按钮
+                        // If player is Navigator, add move other player button
                         if (currentPlayer.getRole() == PlayerRole.NAVIGATOR) {
                             actionButtons.getChildren().add(moveOtherPlayerButton);
                         }
@@ -166,19 +166,19 @@ public class ActionBarView {
                         actionBarController.setHasDrawnTreasureCards(true);
                         actionBarController.sendDrawTreasureCardsMessage(2, currentPlayer);
                     } else if (actionBarController.getDrawnFloodCards() != 2) {
-                        // 需要抽取洪水卡
+                        // Need to draw flood cards
                         actionLabel.setText("Draw A Flood Card or Play Special");
                         actionButtons.getChildren().addAll(drawFloodButton);
                         if (actionBarController.canPlaySpecialCard(currentPlayer)) {
                             actionButtons.getChildren().add(playSpecialButton);
                         }
                     } else {
-                        // 回合结束
+                        // Turn end
                         actionBarController.nextTurn();
                     }
                 }
             } else {
-                // 其他玩家的回合
+                // Other player's turn
                 String status = "";
                 if (remainingActions > 0) {
                     status = currentPlayer.getName() + " is taking actions (" + remainingActions + " remaining)";
@@ -197,7 +197,7 @@ public class ActionBarView {
     }
 
     /**
-     * 创建统一样式的操作按钮
+     * Create action button with unified style
      */
     private Button createActionButton(String text) {
         Button button = new Button(text);
@@ -211,14 +211,14 @@ public class ActionBarView {
     }
 
     /**
-     * 关闭操作栏视图，清理资源
+     * Close action bar view, clean up resources
      */
     public void shutdown() {
-        // 清理操作栏资源
+        // Clean up action bar resources
         if (actionBar != null) {
             actionBar.getChildren().clear();
         }
-        // 清理控制器引用
+        // Clean up controller references
         actionBarController = null;
     }
 }

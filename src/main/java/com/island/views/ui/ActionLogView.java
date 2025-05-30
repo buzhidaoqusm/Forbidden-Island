@@ -1,4 +1,5 @@
-package com.island.views.ui;
+package com.forbiddenisland.views.ui;
+
 
 import javafx.geometry.Insets;
 import javafx.scene.control.ListView;
@@ -31,16 +32,16 @@ public class ActionLogView extends VBox {
                     setGraphic(null);
                     setStyle("-fx-background-color: transparent;");
                 } else {
-                    // 创建一个Text对象来支持自动换行
+                    // Create a Text object to support automatic text wrapping
                     Text text = new Text(item);
-                    text.setWrappingWidth(logList.getWidth() - 20); // 设置换行宽度，留出一些边距
+                    text.setWrappingWidth(logList.getWidth() - 20); // Set wrapping width, leaving some margin
                     setGraphic(text);
                     setText(null);
                     setStyle("-fx-background-color: rgba(255, 255, 255, 0.2); " +
                             "-fx-background-radius: 5; " +
                             "-fx-padding: 8; " +
                             "-fx-text-fill: black;");
-                    // 增加上下间距
+                    // Add top and bottom spacing
                     setPadding(new Insets(5, 0, 5, 0));
                 }
             }
@@ -49,7 +50,7 @@ public class ActionLogView extends VBox {
     }
 
     public void addLog(String message) {
-        // 最多显示13条日志，而且新日志显示在最上面
+        // Show maximum of 13 logs, with new logs displayed at top
         if (logList.getItems().size() >= 7) {
             logList.getItems().remove(6);
         }
@@ -61,7 +62,7 @@ public class ActionLogView extends VBox {
     }
 
     public void shutdown() {
-        // 清理日志列表
+        // Clean up log list
         if (logList != null) {
             logList.getItems().clear();
         }

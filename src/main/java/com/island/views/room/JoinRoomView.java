@@ -1,14 +1,14 @@
-package com.island.views.room;
+package com.forbiddenisland.views.room;
 
-import com.island.controller.GameController;
-import com.island.network.RoomController;
-import com.island.models.adventurers.Player;
-import com.island.network.Message;
-import com.island.network.MessageType;
-import com.island.models.Room;
-import com.island.network.MessageHandler;
-import com.island.views.game.GameView;
-import com.island.views.ui.MenuView;
+import com.forbiddenisland.controllers.game.GameController;
+import com.forbiddenisland.controllers.room.RoomController;
+import com.forbiddenisland.models.adventurers.Player;
+import com.forbiddenisland.models.network.Message;
+import com.forbiddenisland.models.network.MessageType;
+import com.forbiddenisland.models.Room;
+import com.forbiddenisland.network.MessageHandler;
+import com.forbiddenisland.views.game.GameView;
+import com.forbiddenisland.views.ui.MenuView;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -28,40 +28,40 @@ public class JoinRoomView {
     private Label statusLabel;
     private RoomController roomController;
     private GameController gameController;
-    private Label playerListLabel; // 用于显示玩家列表
+    private Label playerListLabel; // For displaying player list
     private boolean isWaitingConfirmation = false;
     private Room room;
 
     public JoinRoomView(Stage primaryStage, Player player) {
-        // 设置定时更新玩家列表
+        // Set up timer to update player list
         Thread updateThread = new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(1000); // 每秒更新一次
+                    Thread.sleep(1000); // Update once per second
                     Platform.runLater(this::updatePlayerList);
                 } catch (InterruptedException e) {
                     break;
                 }
             }
         });
-        updateThread.setDaemon(true); // 设置为守护线程
+        updateThread.setDaemon(true); // Set as daemon thread
         updateThread.start();
 
-        // 创建主布局
+        // Create main layout
         VBox root = new VBox(20);
         root.setAlignment(Pos.TOP_CENTER);
         root.setPadding(new Insets(50, 20, 20, 20));
 
-        // 创建顶部工具栏
+        // Create top toolbar
         HBox topBar = new HBox(10);
         topBar.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
 
-        // 创建标题
+        // Create title
         Label titleLabel = new Label("Join Room");
         titleLabel.setFont(Font.font("System", 24));
 
-        // 创建输入区域
+        // Create input area
         HBox inputBox = new HBox(10);
         inputBox.setAlignment(Pos.CENTER);
         Label roomLabel = new Label("Room ID：");
@@ -70,15 +70,15 @@ public class JoinRoomView {
         roomInput.setPrefWidth(200);
         inputBox.getChildren().addAll(roomLabel, roomInput);
 
-        // 创建状态标签
+        // Create status label
         statusLabel = new Label("");
         statusLabel.setTextFill(Color.RED);
 
-        // 创建按钮区域
+        // Create button area
         HBox buttonBox = new HBox(20);
         buttonBox.setAlignment(Pos.CENTER);
 
-        // 创建返回按钮
+        // Create back button
         Button backButton = new Button("Back");
         backButton.setOnAction(e -> {
             updateThread.interrupt();
@@ -91,24 +91,24 @@ public class JoinRoomView {
                 roomController.broadcast(leaveMessage);
             }
 
-            // 关闭资源
+            // Close resources
             if (roomController != null) {
                 roomController.shutdown();
             }
             if (gameController != null) {
                 gameController.shutdown();
             }
-            // 返回到主界面
+            // Return to main menu
             primaryStage.setScene(new MenuView().getMenuScene(primaryStage, player));
         });
 
         topBar.getChildren().addAll(backButton);
 
-        // 创建玩家列表标签
+        // Create player list label
         playerListLabel = new Label();
         playerListLabel.setStyle("-fx-font-size: 14px;");
 
-        // 创建加入按钮
+        // Create join button
         Button joinButton = new Button("Join Room");
         joinButton.setOnAction(e -> {
             if (isWaitingConfirmation) {
@@ -118,7 +118,7 @@ public class JoinRoomView {
 
             String roomNumberStr = roomInput.getText().trim();
 
-            // 验证房间号格式
+            // Validate room number format
             if (!roomNumberStr.matches("\\d{3}")) {
                 statusLabel.setText("Please enter a 3-digit room number.");
                 return;
@@ -127,7 +127,7 @@ public class JoinRoomView {
             int roomNumber = Integer.parseInt(roomNumberStr);
 
             try {
-                // 创建房间控制器
+                // Create room controller
                 room = new Room(roomNumber, player);
                 GameView gameView = new GameView(primaryStage);
                 roomController = new RoomController(room);
@@ -137,7 +137,7 @@ public class JoinRoomView {
                 MessageHandler messageHandler = new MessageHandler(gameController);
                 roomController.setMessageHandler(messageHandler);
 
-                // 发送加入请求消息
+                // Send join request message
                 Message joinRequestMessage = new Message(
                         MessageType.PLAYER_JOIN,
                         roomNumber,
@@ -147,7 +147,7 @@ public class JoinRoomView {
                 roomController.broadcast(joinRequestMessage);
 
             } catch (Exception ex) {
-                // 关闭资源
+                // Close resources
                 if (roomController != null) {
                     roomController.shutdown();
                     roomController = null;
@@ -164,7 +164,7 @@ public class JoinRoomView {
 
         buttonBox.getChildren().addAll(backButton, joinButton);
 
-        // 将所有组件添加到主布局
+        // Add all components to main layout
         root.getChildren().addAll(
                 titleLabel,
                 inputBox,
@@ -173,7 +173,7 @@ public class JoinRoomView {
                 playerListLabel
         );
 
-        // 创建场景
+        // Create scene
         scene = new Scene(root, 800, 500);
 
     }

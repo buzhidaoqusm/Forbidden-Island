@@ -1,16 +1,16 @@
-package com.island.views.game;
+package com.forbiddenisland.views.game;
 
-import com.island.controller.GameController;
-import com.island.models.adventurers.Player;
-import com.island.models.game.GameState;
-import com.island.models.island.Position;
-import com.island.util.observer.GameObserver;
-import com.island.views.ui.ActionBarView;
-import com.island.views.ui.ActionLogView;
-import com.island.views.ui.CardView;
-import com.island.views.ui.IslandView;
-import com.island.views.ui.MenuView;
-import com.island.views.ui.PlayerView;
+import com.forbiddenisland.controllers.game.GameController;
+import com.forbiddenisland.models.adventurers.Player;
+import com.forbiddenisland.models.game.GameState;
+import com.forbiddenisland.models.island.Position;
+import com.forbiddenisland.utils.observer.GameObserver;
+import com.forbiddenisland.views.ui.ActionBarView;
+import com.forbiddenisland.views.ui.ActionLogView;
+import com.forbiddenisland.views.ui.CardView;
+import com.forbiddenisland.views.ui.IslandView;
+import com.forbiddenisland.views.ui.MenuView;
+import com.forbiddenisland.views.ui.PlayerView;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -30,15 +30,15 @@ public class GameView implements GameObserver {
     private VBox waterLevelBox;
 
     private PlayerView playerView;
-    private VBox playersInfoBox; // 玩家信息区域
+    private VBox playersInfoBox; // Player information area
 
     private CardView cardView;
-    private VBox cardsInfoBox; // 卡牌信息区域
+    private VBox cardsInfoBox; // Card information area
 
-    private ActionLogView actionLogView; // 添加日志视图
+    private ActionLogView actionLogView; // Action log view
 
     private ActionBarView actionBarView;
-    private HBox actionBar; // 操作栏
+    private HBox actionBar; // Action bar
 
     public GameView(Stage primaryStage) {
         this.primaryStage = primaryStage;
@@ -51,12 +51,12 @@ public class GameView implements GameObserver {
         islandView = new IslandView(boardGrid, waterLevelBox);
         playerView = new PlayerView(playersInfoBox);
         cardView = new CardView(cardsInfoBox);
-        actionLogView = new ActionLogView(); // 创建日志视图
-        actionBarView = new ActionBarView(actionBar); // 创建操作栏视图
+        actionLogView = new ActionLogView(); // Create action log view
+        actionBarView = new ActionBarView(actionBar); // Create action bar view
     }
 
     public void initGame() {
-        gameController.getMessageHandler().setActionLogView(actionLogView); // 设置日志视图
+        gameController.getMessageHandler().setActionLogView(actionLogView); // Set action log view
 
         islandView.initializeBoard();
         islandView.initWaterLevel();
@@ -65,24 +65,24 @@ public class GameView implements GameObserver {
         cardView.initializeTreasureCardsInfo();
         actionBarView.initActionButtons();
 
-        // 创建主布局（使用BorderPane）
+        // Create main layout (using BorderPane)
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(10));
 
         // Set background to root
         root.setBackground(islandView.getBackground());
 
-        // 创建水平布局容器（用于放置棋盘和水位条）
+        // Create horizontal layout container (for board and water level bar)
         HBox topLayout = new HBox(20);
         topLayout.setAlignment(Pos.CENTER);
         actionLogView.setAlignment(Pos.CENTER_RIGHT);
         waterLevelBox.setAlignment(Pos.CENTER);
         boardGrid.setStyle("-fx-background-color: transparent;");
-        topLayout.getChildren().addAll(boardGrid, waterLevelBox, actionLogView); // 添加日志视图
+        topLayout.getChildren().addAll(boardGrid, waterLevelBox, actionLogView); // Add action log view
 
         VBox contentLayout = new VBox(20);
         contentLayout.setAlignment(Pos.TOP_CENTER);
-        // 将玩家信息区域和卡牌信息区域改成半透明
+        // Make player info area and card info area semi-transparent
         playersInfoBox.setStyle("-fx-background-color: rgba(240, 240, 240, 0.8); -fx-border-color: #cccccc; -fx-border-width: 1px;");
         cardsInfoBox.setStyle("-fx-background-color: rgba(240, 240, 240, 0.8); -fx-border-color: #cccccc; -fx-border-width: 1px;");
         contentLayout.getChildren().addAll(topLayout, playersInfoBox, cardsInfoBox);
@@ -102,7 +102,7 @@ public class GameView implements GameObserver {
 
         root.setCenter(scrollPane);
 
-        // 将操作栏添加到顶部
+        // Add action bar to top
         root.setTop(actionBar);
         scene = new Scene(root, 1000, 800);
     }
@@ -114,7 +114,7 @@ public class GameView implements GameObserver {
         cardView.setCardController(gameController.getCardController());
         actionBarView.setActionBarController(gameController.getActionBarController());
         
-        // 注册为观察者
+        // Register as observer
         gameController.getGameSubject().addObserver(this);
     }
 
@@ -132,8 +132,8 @@ public class GameView implements GameObserver {
     }
 
     /**
-     * 获取主窗口Stage
-     * @return 主窗口Stage
+     * Get the primary Stage window
+     * @return The primary Stage
      */
     public Stage getPrimaryStage() {
         return primaryStage;
@@ -143,16 +143,16 @@ public class GameView implements GameObserver {
         actionLogView.addLog(message);
     }
 
-    // 以下是GameObserver接口的实现方法
+    // The following are GameObserver interface implementation methods
     @Override
     public void onGameStateChanged(GameState state) {
         Platform.runLater(() -> {
-            // 处理游戏状态变化
+            // Handle game state changes
             if (state == GameState.GAME_OVER) {
-                // 游戏结束处理逻辑
+                // Game over handling logic
                 returnToMainMenu();
             } else if (state == GameState.TURN_START) {
-                // 回合开始处理逻辑
+                // Turn start handling logic
                 updateActionBar();
             }
         });
@@ -168,7 +168,7 @@ public class GameView implements GameObserver {
     @Override
     public void onPlayerMoved(Player player, Position newPosition) {
         Platform.runLater(() -> {
-            // 玩家移动更新
+            // Player movement update
             islandView.initializeBoard();
         });
     }

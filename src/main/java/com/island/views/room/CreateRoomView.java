@@ -1,12 +1,14 @@
-package com.island.views.room;
+package com.forbiddenisland.views.room;
 
-import com.island.controller.GameController;
-import com.island.network.RoomController;
-import com.island.models.adventurers.Player;
-import com.island.models.Room;
-import com.island.network.MessageHandler;
-import com.island.views.game.GameView;
-import com.island.views.ui.MenuView;
+import com.forbiddenisland.controllers.game.GameController;
+import com.forbiddenisland.controllers.room.RoomController;
+import com.forbiddenisland.models.adventurers.Player;
+import com.forbiddenisland.models.network.Message;
+import com.forbiddenisland.models.network.MessageType;
+import com.forbiddenisland.models.Room;
+import com.forbiddenisland.network.MessageHandler;
+import com.forbiddenisland.views.game.GameView;
+import com.forbiddenisland.views.ui.MenuView;
 
 import javafx.application.Platform;
 import javafx.geometry.Pos;

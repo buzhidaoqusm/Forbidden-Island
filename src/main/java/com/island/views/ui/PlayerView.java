@@ -1,11 +1,11 @@
-package com.island.views.ui;
+package com.forbiddenisland.views.ui;
 
-import com.island.controller.PlayerController;
-import com.island.models.Room;
-import com.island.models.adventurers.Player;
-import com.island.models.adventurers.PlayerRole;
-import com.island.models.card.Card;
-import com.island.models.treasure.TreasureType;
+import com.forbiddenisland.controllers.player.PlayerController;
+import com.forbiddenisland.models.Room;
+import com.forbiddenisland.models.adventurers.Player;
+import com.forbiddenisland.models.adventurers.PlayerRole;
+import com.forbiddenisland.models.card.Card;
+import com.forbiddenisland.models.treasure.TreasureType;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -19,14 +19,14 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
-import static com.island.views.ui.IslandView.SCALE;
+import static com.forbiddenisland.views.ui.IslandView.SCALE;
 
 import java.util.List;
 
 public class PlayerView {
     private PlayerController playerController;
     private VBox playersInfoBox;
-    private ImageView selectedCardView; // 当前选中的卡牌
+    private ImageView selectedCardView; // Currently selected card
     private Room room;
     private static final String SELECTED_STYLE = "-fx-border-color: red; -fx-border-width: 2; -fx-border-style: solid;";
 
@@ -40,28 +40,28 @@ public class PlayerView {
     public void initPlayersInfo() {
         playersInfoBox.getChildren().clear();
 
-        // 获取房间中的玩家
+        // Get players in the room
         List<Player> players = room.getPlayers();
 
-        // 为每个玩家创建一行信息
+        // Create a row of information for each player
         for (Player player : players) {
             HBox playerRow = new HBox(15);
             playerRow.setAlignment(Pos.CENTER_LEFT);
 
-            // 玩家名称
+            // Player name
             Label nameLabel = new Label(player.getName());
             nameLabel.setMinWidth(100);
             nameLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
 
-            // 玩家角色
+            // Player role
             HBox roleBox = new HBox(25);
             roleBox.setAlignment(Pos.CENTER_LEFT);
 
             PlayerRole role = player.getRole();
-//            String roleName = role != null ? role.getDisplayName() : "未选择";
+//            String roleName = role != null ? role.getDisplayName() : "Not selected";
 
             try {
-                // 加载角色图片
+                // Load role image
                 String imagePath = "/adventurers/" + (role != null ? role.name() : "unknown") + ".png";
                 Image roleImage = new Image(getClass().getResourceAsStream(imagePath));
                 ImageView roleView = new ImageView(roleImage);
@@ -73,11 +73,11 @@ public class PlayerView {
 //
 //                roleBox.getChildren().addAll(roleView, roleLabel);
             } catch (Exception e) {
-                // 如果图片加载失败，只显示文本
+                // If image loading fails, show text only
 //                roleBox.getChildren().add(new Label(roleName));
             }
 
-            // 玩家卡牌
+            // Player cards
             FlowPane cardsPane = new FlowPane(5, 5);
             cardsPane.setPrefWrapLength(400);
 
@@ -85,26 +85,26 @@ public class PlayerView {
             if (cards != null && !cards.isEmpty()) {
                 for (Card card : cards) {
                     try {
-                        // 加载卡牌图片
+                        // Load card image
                         String imagePath = "/treasure cards/" + card.getName() + ".png";
                         Image cardImage = new Image(getClass().getResourceAsStream(imagePath));
                         ImageView cardView = new ImageView(cardImage);
                         cardView.setFitHeight(204 * SCALE);
                         cardView.setFitWidth(147 * SCALE);
 
-                        // 创建一个StackPane来包装卡牌图片，以便添加边框
+                        // Create a StackPane to wrap the card image to add border
                         StackPane cardPane = new StackPane(cardView);
 
-                        // 为卡牌添加点击事件
+                        // Add click event for cards
                         cardView.setOnMouseClicked(event -> {
-                            // 只有card的owner才能点击
+                            // Only the card owner can click
                             if (card.getBelongingPlayer().equals(room.getCurrentProgramPlayer().getName())) {
-                                // 移除之前选中卡牌的边框
+                                // Remove border from previously selected card
                                 if (selectedCardView != null) {
                                     selectedCardView.setStyle("");
                                     selectedCardView.getParent().setStyle("");
                                 }
-                                // 设置新选中的卡牌
+                                // Set new selected card
                                 cardPane.setStyle(SELECTED_STYLE);
                                 selectedCardView = cardView;
 
@@ -121,7 +121,7 @@ public class PlayerView {
 
                         cardsPane.getChildren().add(cardPane);
                     } catch (Exception e) {
-                        // 如果图片加载失败，显示卡牌名称
+                        // If image loading fails, show card name
                         Label cardLabel = new Label(card.getName());
                         cardLabel.setPadding(new Insets(5));
                         cardLabel.setStyle("-fx-border-color: #cccccc; -fx-background-color: #ffffff;");
@@ -129,29 +129,29 @@ public class PlayerView {
                     }
                 }
             } else {
-//                cardsPane.getChildren().add(new Label("无卡牌"));
+//                cardsPane.getChildren().add(new Label("No cards"));
             }
 
-            // 将所有元素添加到玩家行
+            // Add all elements to the player row
             playerRow.getChildren().addAll(nameLabel, roleBox, cardsPane);
 
             if (!player.getCapturedTreasures().isEmpty()) {
                 for (TreasureType treasureType : player.getCapturedTreasures()) {
-                    // 加载卡牌图片
+                    // Load treasure image
                     String imagePath = "/treasures/" + treasureType.getDisplayName() + ".png";
                     Image treasureImage = new Image(getClass().getResourceAsStream(imagePath));
                     ImageView treasureView = new ImageView(treasureImage);
                     treasureView.setFitHeight(120 * 0.7);
                     treasureView.setFitWidth(88 * 0.7);
 
-                    // 将宝藏图片添加到整个playerrow的右上角
+                    // Add treasure image to the top right of the player row
                     StackPane treasurePane = new StackPane(treasureView);
                     treasurePane.setAlignment(Pos.TOP_RIGHT);
                     playerRow.getChildren().add(treasurePane);
                 }
 
             }
-            // 添加到玩家信息区域
+            // Add to player info area
             playersInfoBox.getChildren().add(playerRow);
         }
     }
