@@ -10,6 +10,7 @@ import com.island.models.island.Tile;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -31,7 +32,8 @@ public class IslandView {
     private List<Tile> highlightedTiles; // List of currently highlighted tiles
     static final double SCALE = 0.55;  // Scale factor
     private static final double TILE_SIZE = 147 * SCALE;
-    private static final String SELECTED_STYLE = "-fx-border-color: red; -fx-border-width: 2; -fx-border-style: solid;";
+    private static final Color HIGHLIGHT_COLOR = Color.RED;
+    private static final double BORDER_WIDTH = 2.0;
 
     public IslandView(GridPane boardGrid, VBox waterLevelBox) {
         this.boardGrid = boardGrid;
@@ -177,7 +179,7 @@ public class IslandView {
     }
 
     private void addBoarder(Tile tile) {
-        // Find corresponding StackPane in grid and add border
+        // Find the corresponding StackPane and add border
         for (javafx.scene.Node node : boardGrid.getChildren()) {
             if (node instanceof StackPane tilePane) {
                 Integer columnIndex = GridPane.getColumnIndex(tilePane);
@@ -186,7 +188,24 @@ public class IslandView {
                 if (columnIndex != null && rowIndex != null &&
                         columnIndex == tile.getPosition().getX() &&
                         rowIndex == tile.getPosition().getY()) {
-                    tilePane.setStyle(SELECTED_STYLE);
+
+                    // Remove any existing border
+                    tilePane.getChildren().removeIf(child -> child instanceof Rectangle &&
+                            "tile-border".equals(child.getId()));
+
+                    // Create new border rectangle
+                    Rectangle border = new Rectangle(
+                            TILE_SIZE - BORDER_WIDTH,
+                            TILE_SIZE - BORDER_WIDTH
+                    );
+                    border.setId("tile-border");
+                    border.setFill(Color.TRANSPARENT);
+                    border.setStroke(HIGHLIGHT_COLOR);
+                    border.setStrokeWidth(BORDER_WIDTH);
+
+                    // Ensure border is always on top
+                    border.setMouseTransparent(true);
+                    tilePane.getChildren().add(border);
                     break;
                 }
             }
@@ -198,11 +217,13 @@ public class IslandView {
         if (highlightedTiles != null) {
             highlightedTiles.clear();
         }
-        
-        // Clear border style from all tiles
-        for (javafx.scene.Node node : boardGrid.getChildren()) {
+
+        // Remove all border rectangles
+        for (Node node : boardGrid.getChildren()) {
             if (node instanceof StackPane tilePane) {
-                tilePane.setStyle("");
+                tilePane.getChildren().removeIf(child ->
+                        child instanceof Rectangle && "tile-border".equals(child.getId())
+                );
             }
         }
     }
