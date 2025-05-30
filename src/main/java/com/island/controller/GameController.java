@@ -265,6 +265,10 @@ public class GameController {
      */
     public void handlePlaySpecialAction() {
         Card chosenCard = playerController.getChosenCard();
+        if (chosenCard == null) {
+            showErrorToast("Not choose a card!");
+            return;
+        }
         if (chosenCard.getType() != CardType.TREASURE) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Use Special Card");

@@ -98,11 +98,6 @@ public class BroadcastAddressCalculator {
         if (selectedInterface != null && selectedInetAddress != null && selectedSubnetMask != null) {
             // Calculate the broadcast address
             InetAddress broadcastAddress = calculateBroadcastAddress(selectedInetAddress, selectedSubnetMask);
-
-            // Output selected interface details and calculated broadcast address
-            System.out.println("Selected Local IP: " + selectedInetAddress.getHostAddress());
-            System.out.println("Selected Subnet Mask: " + selectedSubnetMask.getHostAddress());
-            System.out.println("Calculated Broadcast Address: " + broadcastAddress.getHostAddress());
             return broadcastAddress.getHostAddress();
         } else {
             System.out.println("No suitable network interface found.");

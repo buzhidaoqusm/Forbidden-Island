@@ -177,7 +177,6 @@ public class MessageHandler {
     private void processMessageRetry(long messageId) {
         UnconfirmedMessage unconfirmed = unconfirmedMessages.get(messageId);
         if (unconfirmed != null && unconfirmed.hasPendingReceivers()) {
-            System.out.println(unconfirmed.getMessage().toString() + " Retry count: " + unconfirmed.getRetryCount());
 
             if (unconfirmed.getRetryCount() < MAX_RETRY_COUNT) {
                 // Create a copy of pendingReceivers to avoid concurrent modification
@@ -192,7 +191,6 @@ public class MessageHandler {
 
                 // Increment retry count
                 unconfirmed.incrementRetryCount();
-                System.out.println("Current retry count: " + unconfirmed.getRetryCount());
 
                 // Schedule next retry
                 synchronized (queueLock) {

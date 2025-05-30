@@ -103,13 +103,6 @@ public class ActionBarView {
         actionLabel.setText("Current Player: " + currentPlayer.getName() +
                 " | Actions: " + remainingActions);
 
-//        Button testButton = createActionButton("Test");
-//        actionButtons.getChildren().add(testButton);
-//        testButton.setOnAction(e -> {
-//            actionBarController.getGameController().receiveMessage = !actionBarController.getGameController().receiveMessage;
-//            System.out.println(currentProgramPlayer.getName() + " can not receive message");
-//        });
-
         if (actionBarController.isAnyPlayerSunk()) {
             if (actionBarController.getIsland().getTile(currentProgramPlayer.getPosition()).getState() == Tile.TileState.SUNK) {
                 actionLabel.setText("You are sunk! Please choose a tile to swim to.");

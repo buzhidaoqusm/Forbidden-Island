@@ -638,7 +638,6 @@ public class RoomController {
                 room.getCurrentProgramPlayer().getName(),
                 message.getFrom()
         );
-        System.out.println("send ack message" + message.toString());
         broadcast(ackMessage);
     }
 }

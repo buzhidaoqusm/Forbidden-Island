@@ -28,7 +28,6 @@ public class IslandView {
     private VBox waterLevelBox;
     private ImageView waterLevelView;  // Water level image view
     private Rectangle waterLevelIndicator; // Water level indicator
-    private StackPane selectedTilePane; // Currently selected tile
     private List<Tile> highlightedTiles; // List of currently highlighted tiles
     static final double SCALE = 0.55;  // Scale factor
     private static final double TILE_SIZE = 147 * SCALE;
@@ -63,7 +62,6 @@ public class IslandView {
 
         // Clear existing tiles first
         boardGrid.getChildren().clear();
-        selectedTilePane = null;
 
         Room room = islandController.getRoom();
         // Iterate through all positions and tiles
