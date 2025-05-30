@@ -83,9 +83,8 @@ public class MessageHandler {
 
         if (message.isAck()) {
             gameController.getRoomController().sendAckMessage(message);
-        } else {
-            receivedMessages.put(message.getMessageId(), message);
         }
+        receivedMessages.put(message.getMessageId(), message);
 
         switch (message.getType()) {
             case PLAYER_JOIN -> gameController.handlePlayerJoin(message);
