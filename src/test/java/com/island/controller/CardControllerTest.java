@@ -1,5 +1,14 @@
 package com.island.controller;
 
+import com.island.controller.factory.CardFactory;
+import com.island.controller.factory.StandardCardFactory;
+import com.island.models.adventurers.Player;
+import com.island.models.card.Card;
+import com.island.models.card.CardType;
+import com.island.models.island.Island;
+import com.island.models.island.Position;
+import com.island.models.island.Tile;
+import com.island.models.treasure.TreasureType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -49,7 +58,7 @@ public class CardControllerTest {
         for (int i = 0; i < 10; i++) {
             tiles.put(new Position(i, i), mock(Tile.class));
         }
-        when(island.getGameMap()).thenReturn(tiles);
+        when(island.getTiles()).thenReturn(tiles);
         cardController.initCards(123L);
         assertFalse(cardController.getTreasureDeck().isEmpty());
         assertFalse(cardController.getFloodDeck().isEmpty());

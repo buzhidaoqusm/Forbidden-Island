@@ -1,14 +1,9 @@
 module com.island {
     requires javafx.controls;
     requires javafx.fxml;
-    requires javafx.graphics;
-    requires com.fasterxml.jackson.databind;
-    requires com.fasterxml.jackson.core;
-    requires com.fasterxml.jackson.annotation;
+    requires transitive javafx.graphics;
 
-    opens com.island.network to com.fasterxml.jackson.databind;
-    opens com.island.models to com.fasterxml.jackson.databind;
-    
+    opens com.island.launcher to javafx.fxml;
     exports com.island.controller;
     exports com.island.models;
     exports com.island.network;

@@ -1,7 +1,7 @@
 package com.island.controller;
 
-import com.island.models.Player;
 import com.island.models.Room;
+import com.island.models.adventurers.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -132,9 +132,12 @@ public class ActionBarControllerTest {
      */
     @Test
     void testSetHasDrawnTreasureCards() {
-        when(gameController.getPlayerController()).thenReturn(mock(PlayerController.class));
-        doNothing().when(gameController.getPlayerController()).setHasDrawnTreasureCards(true);
+        PlayerController playerController = mock(PlayerController.class);
+        when(gameController.getPlayerController()).thenReturn(playerController);
+        doNothing().when(playerController).setHasDrawnTreasureCards(true);
+        
         actionBarController.setHasDrawnTreasureCards(true);
-        verify(gameController.getPlayerController()).setHasDrawnTreasureCards(true);
+        
+        verify(playerController).setHasDrawnTreasureCards(true);
     }
 }

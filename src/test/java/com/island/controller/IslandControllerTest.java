@@ -1,6 +1,16 @@
 package com.island.controller;
 
-import com.island.models.*;
+
+import com.island.models.Room;
+import com.island.models.adventurers.Engineer;
+import com.island.models.adventurers.Navigator;
+import com.island.models.adventurers.Player;
+import com.island.models.card.Card;
+import com.island.models.card.CardType;
+import com.island.models.island.Island;
+import com.island.models.island.Position;
+import com.island.models.island.Tile;
+import com.island.models.treasure.TreasureType;
 import com.island.network.RoomController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -150,7 +160,6 @@ public class IslandControllerTest {
         when(card.getType()).thenReturn(CardType.TREASURE);
         when(card.getTreasureType()).thenReturn(TreasureType.EARTH_STONE);
         when(player.removeCard(anyString())).thenReturn(null);
-        doNothing().when(player).captureTreasure(any());
         doNothing().when(gameController).decreaseRemainingActions();
 
         // 修复：为 gameController.getCurrentPlayer() 设置返回值

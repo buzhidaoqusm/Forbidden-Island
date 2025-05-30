@@ -1,16 +1,23 @@
 package com.island.controller;
 
-import com.island.models.*;
+
+import com.island.models.Room;
+import com.island.models.adventurers.Diver;
+import com.island.models.adventurers.Player;
+import com.island.models.adventurers.PlayerRole;
+import com.island.models.card.Card;
+import com.island.models.card.CardType;
+import com.island.models.island.Island;
+import com.island.models.island.Position;
+import com.island.models.island.Tile;
+import com.island.models.treasure.TreasureType;
 import com.island.network.RoomController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -67,21 +74,42 @@ public class PlayerControllerTest {
     @Test
     void testDealCards() {
         Deque<Card> deck = new ArrayDeque<>();
-        Card c = mock(Card.class); // 使用 mock 确保 c 不为 null
-        when(c.getType()).thenReturn(CardType.TREASURE);
-        deck.add(c);
+        Card treasureCard1 = mock(Card.class);
+        Card treasureCard2 = mock(Card.class);
+        Card waterRiseCard = mock(Card.class);
+        
+        // Setup treasure cards
+        when(treasureCard1.getType()).thenReturn(CardType.TREASURE);
+        when(treasureCard2.getType()).thenReturn(CardType.TREASURE);
+        deck.add(treasureCard1);
+        deck.add(treasureCard2);
+        
+        // Setup water rise card
+        when(waterRiseCard.getType()).thenReturn(CardType.WATER_RISE);
+        deck.add(waterRiseCard);
 
         List<Player> players = new ArrayList<>();
         players.add(player);
 
+        // Create a list to track player's cards
+        List<Card> playerCards = new ArrayList<>();
         when(room.getPlayers()).thenReturn(players);
-        when(player.getCards()).thenReturn(new ArrayList<>());
-        doNothing().when(player).addCard(any());
+        when(player.getCards()).thenReturn(playerCards);
+        doAnswer(invocation -> {
+            Card card = invocation.getArgument(0);
+            playerCards.add(card);
+            return null;
+        }).when(player).addCard(any());
 
         playerController.dealCards(deck);
 
-        // 验证 player.addCard 被调用
-        verify(player).addCard(c);
+        // Verify treasure cards were added to player's hand
+        verify(player).addCard(treasureCard1);
+        verify(player).addCard(treasureCard2);
+        // Verify water rise card was not added to player's hand
+        verify(player, never()).addCard(waterRiseCard);
+        // Verify player has correct number of cards
+        assertEquals(2, playerCards.size());
     }
 
     /**
@@ -101,6 +129,10 @@ public class PlayerControllerTest {
      */
     @Test
     void testCanShoreUpTile() {
+        Map<Position, Tile> tiles = new HashMap<>();
+        tiles.put(new Position(0, 0), mock(Tile.class));
+        when(island.getTiles()).thenReturn(tiles);
+        when(gameController.getIsland()).thenReturn(island);
         when(player.getShorePositions(any())).thenReturn(List.of(new Position(0,0)));
         assertTrue(playerController.canShoreUpTile(player));
     }
@@ -139,7 +171,7 @@ public class PlayerControllerTest {
     @Test
     void testHasDrawnTreasureCards() {
         when(room.getCurrentProgramPlayer()).thenReturn(player);
-        when(player.hasDrawnTreasureCards()).thenReturn(true);
+        when(player.isHasDrawnTreasureCards()).thenReturn(true);
         assertTrue(playerController.hasDrawnTreasureCards());
     }
 
@@ -149,7 +181,7 @@ public class PlayerControllerTest {
     @Test
     void testGetDrawnFloodCards() {
         when(room.getCurrentProgramPlayer()).thenReturn(player);
-        when(player.getDrawFloodCards()).thenReturn(2);
+        when(player.getDrawnFloodCards()).thenReturn(2);
         assertEquals(2, playerController.getDrawnFloodCards());
     }
 
