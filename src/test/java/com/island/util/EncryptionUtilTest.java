@@ -1,5 +1,6 @@
-package com.forbiddenisland.utils;
+package com.island.util;
 
+import com.island.util.EncryptionUtil;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import java.util.Base64;

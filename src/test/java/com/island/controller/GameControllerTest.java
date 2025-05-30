@@ -8,7 +8,7 @@ import com.island.models.island.Island;
 import com.island.models.island.Tile;
 import com.island.network.Message;
 import com.island.network.RoomController;
-import com.island.views.GameView;
+import com.island.views.game.GameView;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;

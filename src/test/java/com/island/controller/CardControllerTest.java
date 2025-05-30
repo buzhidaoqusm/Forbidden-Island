@@ -54,7 +54,6 @@ public class CardControllerTest {
     @Test
     void testInitCards() {
         Map<Position, Tile> tiles = new HashMap<>();
-        // mock 10 个 tile，保证 floodDeck 足够
         for (int i = 0; i < 10; i++) {
             tiles.put(new Position(i, i), mock(Tile.class));
         }
