@@ -5,17 +5,24 @@ import com.island.views.ui.MenuView;
 
 import javafx.application.Application;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import java.io.InputStream;
 
 public class GameStart extends Application {
-
     @Override
     public void start(Stage primaryStage) {
+        // Load application icon once
+        InputStream iconStream = getClass().getResourceAsStream("/icon/icon.png");
+        Image applicationIcon = new Image(iconStream);
+        primaryStage.getIcons().add(applicationIcon);
 
         // Create text input dialog
         TextInputDialog dialog = new TextInputDialog("Username");
         dialog.setTitle("Enter your name");
         dialog.setHeaderText("Please enter your name.");
+
+        ((Stage) dialog.getDialogPane().getScene().getWindow()).getIcons().add(applicationIcon);
 
         // Process username when dialog is hidden
         dialog.setOnHiding(evt -> {
