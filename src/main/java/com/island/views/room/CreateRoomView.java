@@ -9,73 +9,121 @@ import com.island.views.game.GameView;
 import com.island.views.ui.MenuView;
 
 import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.effect.BoxBlur;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
+import javafx.scene.shape.Rectangle;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CreateRoomView {
     private Scene scene;
     private RoomController roomController;
-    private Label playerListLabel; // 用于显示玩家列表
+    private Label playerListLabel;
     private Room room;
+    private static final double WINDOW_WIDTH = 800;
+    private static final double WINDOW_HEIGHT = 600;
+    private Thread updateThread;
 
     public CreateRoomView(Stage primaryStage, Player player) {
-        // 产生随机3位数房间号
+        // Generate random room number
         int roomNumber = (int) (Math.random() * 900 + 100);
         room = new Room(roomNumber, player);
         room.setHostPlayer(player);
 
-        // 创建房间控制器
+        // Create room controller
         roomController = new RoomController(room);
 
-        // 设置定时更新玩家列表
-        Thread updateThread = new Thread(() -> {
+        // Set up background
+        StackPane root = new StackPane();
+        String imagePath = "/background/CreateRoom.png";
+        Image backgroundImage = new Image(getClass().getResourceAsStream(imagePath));
+        ImageView backgroundView = new ImageView(backgroundImage);
+        backgroundView.setFitWidth(WINDOW_WIDTH);
+        backgroundView.setFitHeight(WINDOW_HEIGHT);
+        backgroundView.setPreserveRatio(false);
+
+        // Create glass effect pane
+        VBox glassCard = new VBox(20);
+        glassCard.setStyle(
+            "-fx-background-color: rgba(255, 255, 255, 0.85);" +
+            "-fx-background-radius: 15;" +
+            "-fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 10, 0, 0, 0);"
+        );
+        glassCard.setPadding(new Insets(20));
+        glassCard.setMaxWidth(450);
+        glassCard.setMaxHeight(500);
+        glassCard.setAlignment(Pos.TOP_CENTER);
+
+        // Set up update thread for player list
+        updateThread = new Thread(() -> {
             while (true) {
                 try {
-                    Thread.sleep(1000); // 每秒更新一次
+                    Thread.sleep(1000);
                     Platform.runLater(this::updatePlayerList);
                 } catch (InterruptedException e) {
                     break;
                 }
             }
         });
-        updateThread.setDaemon(true); // 设置为守护线程
+        updateThread.setDaemon(true);
         updateThread.start();
 
-        // 创建主布局
-        VBox root = new VBox(10); // 10是各组件之间的间距
-        root.setAlignment(javafx.geometry.Pos.TOP_CENTER);
-
-        // 创建顶部工具栏
-        HBox topBar = new HBox(10);
-        topBar.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
-
-        // 创建返回按钮
-        Button backButton = new Button("Back");
+        // Back button
+        Button backButton = createStyledButton("Back");
+        backButton.setStyle(
+            "-fx-background-color: transparent;" +
+            "-fx-text-fill: #2C3E50;" +
+            "-fx-font-size: 14px;" +
+            "-fx-padding: 8 16;" +
+            "-fx-background-radius: 20;" +
+            "-fx-border-color: #2C3E50;" +
+            "-fx-border-radius: 20;" +
+            "-fx-cursor: hand;"
+        );
         backButton.setOnAction(e -> {
             updateThread.interrupt();
-            // 返回到主界面
             primaryStage.setScene(new MenuView().getMenuScene(primaryStage, player));
         });
 
-        // 显示房间号
-        Label roomNumberLabel = new Label("Room ID: " + roomNumber);
+        // Create header with back button and room ID
+        HBox header = new HBox(10);
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.setPadding(new Insets(0, 0, 10, 0));
+        header.getChildren().add(backButton);
 
-        // 将按钮和房间号添加到顶部工具栏
-        topBar.getChildren().addAll(backButton, roomNumberLabel);
+        // Create title
+        Label titleLabel = new Label("Create Game Room");
+        titleLabel.setFont(Font.font("System", FontWeight.BOLD, 32));
+        titleLabel.setStyle("-fx-text-fill: #2C3E50;");
 
-        // 创建玩家列表标签
+        // Room ID display
+        Label roomIdLabel = new Label("Room ID: " + roomNumber);
+        roomIdLabel.setFont(Font.font("System", FontWeight.MEDIUM, 18));
+        roomIdLabel.setStyle("-fx-text-fill: #34495E;");
+
+        // Player list section
         playerListLabel = new Label();
-        playerListLabel.setStyle("-fx-font-size: 14px;");
+        playerListLabel.setFont(Font.font("System", 16));
+        playerListLabel.setStyle("-fx-text-fill: #2C3E50;");
         updatePlayerList();
+
+        // Difficulty selection
+        AtomicInteger waterLevel = new AtomicInteger(1);
+        VBox difficultyBox = createDifficultyBox(waterLevel);
 
         GameController gameController = new GameController(roomController);
         GameView gameView = new GameView(primaryStage);
@@ -84,72 +132,111 @@ public class CreateRoomView {
         MessageHandler messageHandler = new MessageHandler(gameController);
         roomController.setMessageHandler(messageHandler);
 
-        // 创建checkbox，选择难度
-        AtomicInteger waterLevel = new AtomicInteger(1);
-        HBox difficultyBox = getDifficultyBox(waterLevel);
-
-        // 创建开始游戏按钮
-        Button startGameButton = new Button("Game Start");
-        startGameButton.setStyle("-fx-font-size: 16px;");
+        // Game start button
+        Button startGameButton = createStyledButton("Game Start");
         startGameButton.setOnAction(e -> {
             updateThread.interrupt();
             roomController.sendStartGameMessage(player, waterLevel);
-
-            // 使用RoomController发送开始回合消息
             roomController.sendStartTurnMessage(player);
-
-            // 跳转到游戏界面
             primaryStage.setScene(gameView.getScene());
         });
 
-        // 将所有组件添加到主布局
-        root.getChildren().addAll(topBar, playerListLabel, startGameButton, difficultyBox);
+        // Add all elements to glass card
+        glassCard.getChildren().addAll(
+            header,
+            roomIdLabel,
+            titleLabel,
+            playerListLabel,
+            difficultyBox,
+            startGameButton
+        );
 
-        // 创建场景
-        scene = new Scene(root, 800, 500);
+        // Center the glass card in the window
+        StackPane.setAlignment(glassCard, Pos.CENTER);
+
+        // Add all components to root
+        root.getChildren().addAll(backgroundView, glassCard);
+
+        // Create scene
+        scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
     }
 
-    private static HBox getDifficultyBox(AtomicInteger waterLevel) {
-        Label difficultyLabel = new Label("Choose Difficulty:");
-        difficultyLabel.setStyle("-fx-font-size: 16px;");
+    private VBox createDifficultyBox(AtomicInteger waterLevel) {
+        VBox difficultyBox = new VBox(15);
+        difficultyBox.setAlignment(Pos.CENTER);
+
+        Label difficultyLabel = new Label("Choose Difficulty");
+        difficultyLabel.setFont(Font.font("System", FontWeight.MEDIUM, 18));
+        difficultyLabel.setStyle("-fx-text-fill: #2C3E50;");
+
+        HBox radioBox = new HBox(20);
+        radioBox.setAlignment(Pos.CENTER);
 
         ToggleGroup difficultyGroup = new ToggleGroup();
 
-        RadioButton noviceButton = new RadioButton("NOVICE");
-        noviceButton.setToggleGroup(difficultyGroup);
+        RadioButton noviceButton = createStyledRadioButton("NOVICE", difficultyGroup);
         noviceButton.setSelected(true);
-        noviceButton.setOnAction(e -> {
-            waterLevel.set(1);
-        });
+        noviceButton.setOnAction(e -> waterLevel.set(1));
 
-        RadioButton normalButton = new RadioButton("NORMAL");
-        normalButton.setToggleGroup(difficultyGroup);
-        normalButton.setOnAction(e -> {
-            waterLevel.set(2);
-        });
+        RadioButton normalButton = createStyledRadioButton("NORMAL", difficultyGroup);
+        normalButton.setOnAction(e -> waterLevel.set(2));
 
-        RadioButton eliteButton = new RadioButton("ELITE");
-        eliteButton.setToggleGroup(difficultyGroup);
-        eliteButton.setOnAction(e -> {
-            waterLevel.set(3);
-        });
+        RadioButton eliteButton = createStyledRadioButton("ELITE", difficultyGroup);
+        normalButton.setOnAction(e -> waterLevel.set(3));
 
-        RadioButton legendaryButton = new RadioButton("LEGENDARY");
-        legendaryButton.setToggleGroup(difficultyGroup);
-        legendaryButton.setOnAction(e -> {
-            waterLevel.set(4);
-        });
+        RadioButton legendaryButton = createStyledRadioButton("LEGENDARY", difficultyGroup);
+        legendaryButton.setOnAction(e -> waterLevel.set(4));
 
-        HBox difficultyBox = new HBox(10, difficultyLabel, noviceButton, normalButton, eliteButton, legendaryButton);
-        difficultyBox.setAlignment(Pos.CENTER);
+        radioBox.getChildren().addAll(noviceButton, normalButton, eliteButton, legendaryButton);
+        difficultyBox.getChildren().addAll(difficultyLabel, radioBox);
+
         return difficultyBox;
     }
 
-    /**
-     * 更新玩家列表显示
-     */
+    private RadioButton createStyledRadioButton(String text, ToggleGroup group) {
+        RadioButton radio = new RadioButton(text);
+        radio.setToggleGroup(group);
+        radio.setFont(Font.font("System", 14));
+        radio.setStyle("-fx-text-fill: #2C3E50;");
+        return radio;
+    }
+
+    private Button createStyledButton(String text) {
+        Button button = new Button(text);
+        if (text.equals("Game Start")) {
+            button.setStyle(
+                "-fx-background-color: #2C3E50;" +
+                "-fx-text-fill: white;" +
+                "-fx-font-size: 16px;" +
+                "-fx-padding: 12 30;" +
+                "-fx-background-radius: 25;" +
+                "-fx-cursor: hand;"
+            );
+            
+            // Hover effect
+            button.setOnMouseEntered(e -> button.setStyle(
+                "-fx-background-color: #34495E;" +
+                "-fx-text-fill: white;" +
+                "-fx-font-size: 16px;" +
+                "-fx-padding: 12 30;" +
+                "-fx-background-radius: 25;" +
+                "-fx-cursor: hand;"
+            ));
+            
+            button.setOnMouseExited(e -> button.setStyle(
+                "-fx-background-color: #2C3E50;" +
+                "-fx-text-fill: white;" +
+                "-fx-font-size: 16px;" +
+                "-fx-padding: 12 30;" +
+                "-fx-background-radius: 25;" +
+                "-fx-cursor: hand;"
+            ));
+        }
+        return button;
+    }
+
     private void updatePlayerList() {
-        StringBuilder playerList = new StringBuilder("Players：\n");
+        StringBuilder playerList = new StringBuilder("Players:\n");
         for (Player p : room.getPlayers()) {
             playerList.append("• ").append(p.getName());
             if (p == room.getPlayers().get(0)) {
