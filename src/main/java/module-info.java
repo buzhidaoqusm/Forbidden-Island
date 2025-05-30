@@ -17,4 +17,5 @@ module com.island {
     exports com.island.util.ui;
     exports com.island.view;
     exports com.island.launcher;
+    exports com.island.controller.factory;
 }
