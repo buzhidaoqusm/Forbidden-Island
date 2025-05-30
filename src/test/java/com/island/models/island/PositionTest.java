@@ -1,4 +1,4 @@
-package com.forbiddenisland.models.island;
+package com.island.models.island;
 
 import org.junit.jupiter.api.Test;
 

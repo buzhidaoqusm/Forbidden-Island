@@ -1,6 +1,6 @@
-package com.forbiddenisland.models.island;
+package com.island.models.island;
 
-import com.forbiddenisland.models.treasure.TreasureType;
+import com.island.models.treasure.TreasureType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

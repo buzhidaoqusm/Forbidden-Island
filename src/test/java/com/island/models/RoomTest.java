@@ -1,6 +1,6 @@
-package com.forbiddenisland.models;
+package com.island.models;
 
-import com.forbiddenisland.models.adventurers.Player;
+import com.island.models.adventurers.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

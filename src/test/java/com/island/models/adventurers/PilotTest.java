@@ -1,4 +1,4 @@
-package com.forbiddenisland.models.adventurers;
+package com.island.models.adventurers;
 
 import com.forbiddenisland.models.island.Position;
 import com.forbiddenisland.models.island.Tile;

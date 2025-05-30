@@ -1,10 +1,10 @@
-package com.forbiddenisland.models.adventurers;
+package com.island.models.adventurers;
 
-import com.forbiddenisland.models.card.Card;
-import com.forbiddenisland.models.card.CardType;
-import com.forbiddenisland.models.island.Position;
-import com.forbiddenisland.models.island.Tile;
-import com.forbiddenisland.models.treasure.TreasureType;
+import com.island.models.card.Card;
+import com.island.models.card.CardType;
+import com.island.models.island.Position;
+import com.island.models.island.Tile;
+import com.island.models.treasure.TreasureType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
