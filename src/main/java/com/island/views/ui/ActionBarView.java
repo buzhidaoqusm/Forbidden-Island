@@ -48,16 +48,15 @@ public class ActionBarView {
         actionButtons.setAlignment(Pos.CENTER_RIGHT);
 
         // Initialize buttons
-        moveButton = createActionButton("Move");
-        shoreUpButton = createActionButton("Shore Up");
-        giveCardButton = createActionButton("Give Card");
-        moveOtherPlayerButton = createActionButton("Move Other");
-        captureTreasureButton = createActionButton("Capture Treasure");
-        endTurnButton = createActionButton("End Turn");
-        playSpecialButton = createActionButton("Play Special");
-        drawFloodButton = createActionButton("Draw Flood");
-        discardButton = createActionButton("Discard");
-        discardButton.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold;");
+        moveButton = createMoveButton("Move");
+        shoreUpButton = createShoreUpButton("Shore Up");
+        giveCardButton = createGiveCardButton("Give Card");
+        moveOtherPlayerButton = createMoveOtherButton("Move Other");
+        captureTreasureButton = createCaptureTreasureButton("Capture Treasure");
+        endTurnButton = createEndTurnButton("End Turn");
+        playSpecialButton = createPlaySpecialButton("Play Special");
+        drawFloodButton = createDrawFloodButton("Draw Flood");
+        discardButton = createDiscardButton("Discard");
 
         // Set button events
         moveButton.setOnAction(e -> actionBarController.handleMoveAction());
@@ -75,6 +74,69 @@ public class ActionBarView {
         HBox.setHgrow(actionBar.getChildren().get(1), Priority.ALWAYS);
 
         updateActionBar();
+    }
+
+    private Button createMoveButton(String text) {
+        Button button = new Button(text);
+        button.setStyle("-fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold;");
+        button.setPrefWidth(60);
+        return button;
+    }
+
+    private Button createShoreUpButton(String text) {
+        Button button = new Button(text);
+        button.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold;");
+        button.setPrefWidth(80);
+        return button;
+    }
+
+    private Button createGiveCardButton(String text) {
+        Button button = new Button(text);
+        button.setStyle("-fx-background-color: #FF5722; -fx-text-fill: white; -fx-font-weight: bold;");
+        button.setPrefWidth(80);
+        return button;
+    }
+
+    private Button createMoveOtherButton(String text) {
+        Button button = new Button(text);
+        button.setStyle("-fx-background-color: #9C27B0; -fx-text-fill: white; -fx-font-weight: bold;");
+        button.setPrefWidth(100);
+        return button;
+    }
+
+    private Button createCaptureTreasureButton(String text) {
+        Button button = new Button(text);
+        button.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;");
+        button.setPrefWidth(120);
+        return button;
+    }
+
+    private Button createEndTurnButton(String text) {
+        Button button = new Button(text);
+        button.setStyle("-fx-background-color: #ffffff; -fx-text-fill: black; -fx-font-weight: bold;");
+        button.setPrefWidth(80);
+        return button;
+    }
+
+    private Button createPlaySpecialButton(String text) {
+        Button button = new Button(text);
+        button.setStyle("-fx-background-color: #ff1744; -fx-text-fill: black; -fx-font-weight: bold;");
+        button.setPrefWidth(100);
+        return button;
+    }
+
+    private Button createDrawFloodButton(String text) {
+        Button button = new Button(text);
+        button.setStyle("-fx-background-color: #3F51B5; -fx-text-fill: white; -fx-font-weight: bold;");
+        button.setPrefWidth(100);
+        return button;
+    }
+
+    private Button createDiscardButton(String text) {
+        Button button = new Button(text);
+        button.setStyle("-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold;");
+        button.setPrefWidth(80);
+        return button;
     }
 
     /**
