@@ -1,7 +1,7 @@
-package com.island.launcher;
+package com.forbiddenisland.launcher;
 
-import com.island.models.adventurers.Player;
-import com.island.views.ui.MenuView;
+import com.forbiddenisland.models.adventurers.Player;
+import com.forbiddenisland.views.ui.MenuView;
 
 import javafx.application.Application;
 import javafx.scene.control.TextInputDialog;
@@ -12,33 +12,33 @@ public class GameStart extends Application {
     @Override
     public void start(Stage primaryStage) {
 
-        // 创建文本输入对话框
+        // Create text input dialog
         TextInputDialog dialog = new TextInputDialog("Username");
         dialog.setTitle("Enter your name");
         dialog.setHeaderText("Please enter your name.");
 
-        // 在对话框隐藏时处理用户名
+        // Process username when dialog is hidden
         dialog.setOnHiding(evt -> {
             String result = dialog.getResult();
             if (result != null && !result.trim().isEmpty()) {
                 Player player = new Player(result);
-                // 用户名输入完成后，加载主界面
+                // After username input is complete, load the main menu
                 loadMainMenu(primaryStage, player);
             } else {
-                // 如果没有输入用户名，仍然要求输入
+                // If no username is entered, still require input
                 dialog.show();
             }
         });
 
-        // 显示输入对话框
+        // Show input dialog
         dialog.show();
     }
 
-    // 加载主界面的方法
+    // Method to load the main menu
     private void loadMainMenu(Stage primaryStage, Player player) {
-        // 初始化视图
+        // Initialize view
         MenuView mainView = new MenuView();
-        // 设置场景并显示
+        // Set scene and display
         primaryStage.setScene(mainView.getMenuScene(primaryStage, player));
         primaryStage.setTitle("Forbidden Island");
         primaryStage.show();
