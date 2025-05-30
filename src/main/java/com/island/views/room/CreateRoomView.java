@@ -132,9 +132,13 @@ public class CreateRoomView {
         Button startGameButton = createStyledButton("Game Start");
         startGameButton.setOnAction(e -> {
             updateThread.interrupt();
-            roomController.sendStartGameMessage(player, waterLevel);
-            roomController.sendStartTurnMessage(player);
-            primaryStage.setScene(gameView.getScene());
+            if (room.getPlayers().size() > 1 && room.getPlayers().size() <= 4) {
+                roomController.sendStartGameMessage(player, waterLevel);
+                roomController.sendStartTurnMessage(player);
+                primaryStage.setScene(gameView.getScene());
+            } else {
+                gameController.showErrorToast("Number of players must be between 2 and 4 to start the game.");
+            }
         });
 
         // Add all elements to glass card

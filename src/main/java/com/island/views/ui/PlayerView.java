@@ -70,7 +70,7 @@ public class PlayerView {
 
                 roleBox.getChildren().addAll(roleView);
             } catch (Exception e) {
-                playerController.getGameController().showErrorToast("Failed to load role image for " + player.getName() + ": " + e.getMessage());
+
             }
 
             // Player cards
