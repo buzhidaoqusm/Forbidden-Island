@@ -11,7 +11,7 @@ import com.island.network.MessageHandler;
 import com.island.network.RoomController;
 import com.island.util.observer.GameSubjectImpl;
 import com.island.util.ui.Dialog;
-import com.island.view.GameView;
+import com.island.views.game.GameView;
 import javafx.geometry.Insets;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;

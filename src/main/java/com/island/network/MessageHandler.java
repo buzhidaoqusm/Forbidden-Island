@@ -11,7 +11,7 @@ import com.island.models.island.Position;
 import com.island.models.island.Tile;
 import com.island.models.treasure.TreasureType;
 import com.island.util.Constant;
-import com.island.view.ActionLogView;
+import com.island.views.ui.ActionLogView;
 
 import static com.island.util.ui.Dialog.showMessage;
 

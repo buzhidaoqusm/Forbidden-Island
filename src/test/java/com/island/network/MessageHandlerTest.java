@@ -8,7 +8,7 @@ import com.island.models.adventurers.Player;
 import com.island.models.card.Card;
 import com.island.models.card.CardType;
 import com.island.util.observer.GameSubjectImpl;
-import com.island.view.ActionLogView;
+import com.island.views.ActionLogView;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;

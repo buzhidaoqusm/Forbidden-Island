@@ -10,7 +10,9 @@ module com.island {
     exports com.island.util;
     exports com.island.util.observer;
     exports com.island.util.ui;
-    exports com.island.view;
+    exports com.island.views.game;
+    exports com.island.views.ui;
+    exports com.island.views.room;
     exports com.island.launcher;
     exports com.island.controller.factory;
 }

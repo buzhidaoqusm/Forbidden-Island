@@ -1,6 +1,11 @@
 package com.island.controller.factory;
 
 import com.island.controller.CardController;
+import com.island.models.card.Card;
+import com.island.models.card.CardType;
+import com.island.models.island.Position;
+import com.island.models.island.Tile;
+import com.island.models.treasure.TreasureType;
 
 import java.util.*;
 
@@ -27,7 +32,7 @@ public class StandardCardFactory implements CardFactory {
         cardController.getTreasureDeck().add(Card.createSpecialCard(CardType.WATER_RISE));
 
         // Initialize the flood deck
-        for (Map.Entry<Position, Tile> entry : cardController.getIsland().getGameMap().entrySet()) {
+        for (Map.Entry<Position, Tile> entry : cardController.getIsland().getTiles().entrySet()) {
             cardController.getFloodDeck().add(Card.createFloodCard(entry.getValue().getName(), entry.getKey(), ""));
         }
 

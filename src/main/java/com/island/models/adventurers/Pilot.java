@@ -3,8 +3,8 @@ package com.island.models.adventurers;
 import java.util.List;
 import java.util.Map;
 
-import com.forbiddenisland.models.island.Position;
-import com.forbiddenisland.models.island.Tile;
+import com.island.models.island.Position;
+import com.island.models.island.Tile;
 
 /**
  * The Pilot class represents a player with the Pilot role in the Forbidden Island game.
