@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * CardController 的单元测试，覆盖所有方法，使用 Mockito 进行依赖mock。
+ * The unit tests for the CardController class.
  */
 public class CardControllerTest {
     @Mock
@@ -49,7 +49,7 @@ public class CardControllerTest {
     }
 
     /**
-     * 测试初始化卡牌方法，包含岛屿板块
+     * Test initialization of cards using the card factory
      */
     @Test
     void testInitCards() {
@@ -66,7 +66,7 @@ public class CardControllerTest {
     }
 
     /**
-     * 测试抽取洪水卡，正常流程
+     * Test drawing flood cards from the flood deck
      */
     @Test
     void testDrawFloodCards() {
@@ -80,7 +80,7 @@ public class CardControllerTest {
     }
 
     /**
-     * 测试抽取洪水卡，floodDeck为空但floodDiscardPile有卡
+     * Test drawing flood cards when the flood deck is empty but the discard pile has cards
      */
     @Test
     void testDrawFloodCardsWithReshuffle() {
@@ -93,7 +93,7 @@ public class CardControllerTest {
     }
 
     /**
-     * 测试抽取宝藏卡，正常流程
+     * Test drawing a flood card when both floodDeck and floodDiscardPile are empty
      */
     @Test
     void testDrawTreasureCard() {
@@ -107,7 +107,7 @@ public class CardControllerTest {
     }
 
     /**
-     * 测试抽取宝藏卡，treasureDeck为空但treasureDiscardPile有卡
+     * Test drawing a treasure card when the treasure deck is empty but the discard pile has cards
      */
     @Test
     void testDrawTreasureCardWithReshuffle() {
@@ -119,7 +119,7 @@ public class CardControllerTest {
     }
 
     /**
-     * 测试抽取宝藏卡遇到WATER_RISE
+     * Test drawing a treasure card that is a water rise card
      */
     @Test
     void testDrawTreasureCardWithWaterRise() {
@@ -131,7 +131,7 @@ public class CardControllerTest {
     }
 
     /**
-     * 测试 get/set 方法
+     * Test getters and adders for various card collections
      */
     @Test
     void testGettersAndAdders() {
@@ -144,7 +144,7 @@ public class CardControllerTest {
     }
 
     /**
-     * 测试水位上升处理
+     * Test handleWaterRise method to move a flood card to the treasure discard pile
      */
     @Test
     void testHandleWaterRise() {
@@ -155,7 +155,7 @@ public class CardControllerTest {
     }
 
     /**
-     * 测试资源清理
+     * Test shutdown method to clear all decks and discard piles
      */
     @Test
     void testShutdown() {

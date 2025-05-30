@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * IslandController 的单元测试，覆盖所有方法，使用 Mockito 进行依赖mock。
+ * Unit test class for IslandController.
  */
 public class IslandControllerTest {
     @Mock
@@ -48,7 +48,6 @@ public class IslandControllerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        // 先 mock RoomController 并设置好依赖
         RoomController mockRoomController = mock(RoomController.class);
         when(gameController.getRoomController()).thenReturn(mockRoomController);
         when(mockRoomController.getRoom()).thenReturn(room);
@@ -57,16 +56,16 @@ public class IslandControllerTest {
     }
 
     /**
-     * 测试 initIsland
+     * Test the constructor and initial state of IslandController.
      */
     @Test
     void testInitIsland() {
         islandController.initIsland(123L);
-        // 只要不抛异常即可
+        // As long as no exceptions are thrown, the test passes
     }
 
     /**
-     * 测试 get/set
+     * Test getters and setters of IslandController.
      */
     @Test
     void testGettersAndSetters() {
@@ -78,7 +77,7 @@ public class IslandControllerTest {
     }
 
     /**
-     * 测试 increaseWaterLevel
+     * Test increaseWaterLevel
      */
     @Test
     void testIncreaseWaterLevel() {
@@ -88,7 +87,7 @@ public class IslandControllerTest {
     }
 
     /**
-     * 测试 handleTileClick
+     * Test handleTileClick
      */
     @Test
     void testHandleTileClick() {
@@ -101,11 +100,11 @@ public class IslandControllerTest {
         when(tile.isSunk()).thenReturn(false);
         when(island.getTile(any())).thenReturn(tile);
         islandController.handleTileClick(tile);
-        // 只要不抛异常即可
+        // As long as no exceptions are thrown, the test passes
     }
 
     /**
-     * 测试 removeTreasure
+     * Test removeTreasure
      */
     @Test
     void testRemoveTreasure() {
@@ -116,7 +115,7 @@ public class IslandControllerTest {
     }
 
     /**
-     * 测试 checkTreasureTiles
+     * Test checkTreasureTiles
      */
     @Test
     void testCheckTreasureTiles() {
@@ -124,7 +123,7 @@ public class IslandControllerTest {
     }
 
     /**
-     * 测试 checkFoolsLanding
+     * Test checkFoolsLanding
      */
     @Test
     void testCheckFoolsLanding() {
@@ -132,7 +131,7 @@ public class IslandControllerTest {
     }
 
     /**
-     * 测试 shoreUpTile
+     * Test movePlayer
      */
     @Test
     void testShoreUpTile() {
@@ -144,11 +143,11 @@ public class IslandControllerTest {
         doNothing().when(gameController).decreaseRemainingActions();
         doNothing().when(gameController).updateBoard();
         islandController.shoreUpTile(player, pos);
-        // 只要不抛异常即可
+        // As long as no exceptions are thrown, the test passes
     }
 
     /**
-     * 测试 captureTreasure
+     * Test movePlayer
      */
     @Test
     void testCaptureTreasure() {
@@ -162,10 +161,9 @@ public class IslandControllerTest {
         when(player.removeCard(anyString())).thenReturn(null);
         doNothing().when(gameController).decreaseRemainingActions();
 
-        // 修复：为 gameController.getCurrentPlayer() 设置返回值
         when(gameController.getCurrentPlayer()).thenReturn(player);
 
         islandController.captureTreasure(player, TreasureType.EARTH_STONE);
-        // 只要不抛异常即可
+        // As long as no exceptions are thrown, the test passes
     }
 }

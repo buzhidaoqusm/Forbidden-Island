@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 /**
- * PlayerController 的单元测试，覆盖所有方法，使用 Mockito 进行依赖mock。
+ * Unit tests for PlayerController class.
  */
 public class PlayerControllerTest {
     @Mock
@@ -54,7 +54,7 @@ public class PlayerControllerTest {
     }
 
     /**
-     * 测试 initPlayers
+     * Test initPlayers method.
      */
     @Test
     void testInitPlayers() {
@@ -65,11 +65,11 @@ public class PlayerControllerTest {
         when(gameController.getCurrentPlayer()).thenReturn(players.get(0));
         when(room.isHost(anyString())).thenReturn(true);
         playerController.initPlayers(123L);
-        // 只要不抛异常即可
+        // As long as no exceptions are thrown, the test passes
     }
 
     /**
-     * 测试 dealCards
+     * Test dealCards method.
      */
     @Test
     void testDealCards() {
@@ -113,7 +113,7 @@ public class PlayerControllerTest {
     }
 
     /**
-     * 测试 canPlaySpecialCard
+     * Test canMovePlayer method.
      */
     @Test
     void testCanPlaySpecialCard() {
@@ -125,7 +125,7 @@ public class PlayerControllerTest {
     }
 
     /**
-     * 测试 canShoreUpTile
+     * Test canMovePlayer method.
      */
     @Test
     void testCanShoreUpTile() {
@@ -138,7 +138,7 @@ public class PlayerControllerTest {
     }
 
     /**
-     * 测试 canGiveCard
+     * Test canMovePlayer method.
      */
     @Test
     void testCanGiveCard() {
@@ -148,7 +148,7 @@ public class PlayerControllerTest {
     }
 
     /**
-     * 测试 canCaptureTreasure
+     * Test canCaptureTreasure method.
      */
     @Test
     void testCanCaptureTreasure() {
@@ -166,7 +166,7 @@ public class PlayerControllerTest {
     }
 
     /**
-     * 测试 hasDrawnTreasureCards
+     * Test hasDrawnTreasureCards method.
      */
     @Test
     void testHasDrawnTreasureCards() {
@@ -176,7 +176,7 @@ public class PlayerControllerTest {
     }
 
     /**
-     * 测试 getDrawnFloodCards
+     * Test getDrawnFloodCards method.
      */
     @Test
     void testGetDrawnFloodCards() {
@@ -186,7 +186,7 @@ public class PlayerControllerTest {
     }
 
     /**
-     * 测试 setHasDrawnTreasureCards
+     * Test setHasDrawnTreasureCards method.
      */
     @Test
     void testSetHasDrawnTreasureCards() {
@@ -197,7 +197,7 @@ public class PlayerControllerTest {
     }
 
     /**
-     * 测试 addDrawnFloodCards
+     * Test addDrawnFloodCards method.
      */
     @Test
     void testAddDrawnFloodCards() {
@@ -208,7 +208,7 @@ public class PlayerControllerTest {
     }
 
     /**
-     * 测试 resetPlayerState
+     * Test resetPlayerState method.
      */
     @Test
     void testResetPlayerState() {

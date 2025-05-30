@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 /**
- * GameController 的单元测试，覆盖所有方法，使用 Mockito 进行依赖mock。
+ * Test class for GameController
  */
 public class GameControllerTest {
     @Mock
@@ -67,7 +67,7 @@ public class GameControllerTest {
         setField(gameController, "actionBarController", actionBarController);
     }
 
-    // 反射工具方法
+    // This method uses reflection to set a private field in the GameController class.
     private void setField(Object target, String fieldName, Object value) throws Exception {
         Field field = target.getClass().getDeclaredField(fieldName);
         field.setAccessible(true);
@@ -75,7 +75,7 @@ public class GameControllerTest {
     }
 
     /**
-     * 测试 handlePlayerJoin
+     * Test handlePlayerJoin
      */
     @Test
     void testHandlePlayerJoin() throws Exception {
@@ -85,7 +85,7 @@ public class GameControllerTest {
     }
 
     /**
-     * 测试 startGame
+     * Test handlePlayerLeave
      */
     @Test
     void testStartGame() {
@@ -100,7 +100,7 @@ public class GameControllerTest {
     }
 
     /**
-     * 测试 startTurn
+     * Test startTurn
      */
     @Test
     void testStartTurn() {
@@ -112,7 +112,7 @@ public class GameControllerTest {
     }
 
     /**
-     * 测试 handleWaterRise
+     * Test handlePlayerAction
      */
     @Test
     void testHandleWaterRise() {
@@ -124,7 +124,7 @@ public class GameControllerTest {
     }
 
     /**
-     * 测试 handleDrawTreasureCard
+     * Test handleDrawFloodCard
      */
     @Test
     void testHandleDrawTreasureCard() {
@@ -134,7 +134,7 @@ public class GameControllerTest {
     }
 
     /**
-     * 测试 updateBoard
+     * Test handleDrawFloodCard
      */
     @Test
     void testUpdateBoard() {
@@ -143,7 +143,7 @@ public class GameControllerTest {
     }
 
     /**
-     * 测试 giveCard
+     * Test handlePlayerAction
      */
     @Test
     void testGiveCard() {
@@ -156,7 +156,7 @@ public class GameControllerTest {
     }
 
     /**
-     * 测试 updatePlayersInfo
+     * Test updatePlayersInfo
      */
     @Test
     void testUpdatePlayersInfo() {
@@ -164,7 +164,7 @@ public class GameControllerTest {
     }
 
     /**
-     * 测试 updateCardView
+     * Test updateCardView
      */
     @Test
     void testUpdateCardView() {
@@ -172,7 +172,7 @@ public class GameControllerTest {
     }
 
     /**
-     * 测试 set/get
+     * Test setters and getters
      */
     @Test
     void testSettersAndGetters() {

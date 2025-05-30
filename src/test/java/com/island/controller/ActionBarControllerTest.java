@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 /**
- * ActionBarController 的单元测试，覆盖所有方法，使用 Mockito 进行依赖mock。
+ * The ActionBarControllerTest class tests the functionality of the ActionBarController
  */
 public class ActionBarControllerTest {
     @Mock
@@ -34,7 +34,7 @@ public class ActionBarControllerTest {
     }
 
     /**
-     * 测试 set/getCurrentPlayer
+     * Test set/getCurrentPlayer
      */
     @Test
     void testSetGetCurrentPlayer() {
@@ -43,7 +43,7 @@ public class ActionBarControllerTest {
     }
 
     /**
-     * 测试 getRemainingActions
+     * Test getRemainingActions
      */
     @Test
     void testGetRemainingActions() {
@@ -52,7 +52,7 @@ public class ActionBarControllerTest {
     }
 
     /**
-     * 测试 getRoom
+     * Test getRoom
      */
     @Test
     void testGetRoom() {
@@ -60,7 +60,7 @@ public class ActionBarControllerTest {
     }
 
     /**
-     * 测试 getGameController
+     * Test getGameController
      */
     @Test
     void testGetGameController() {
@@ -68,7 +68,7 @@ public class ActionBarControllerTest {
     }
 
     /**
-     * 测试 canPlaySpecialCard
+     * Test canPlaySpecialCard
      */
     @Test
     void testCanPlaySpecialCard() {
@@ -78,7 +78,7 @@ public class ActionBarControllerTest {
     }
 
     /**
-     * 测试 canShoreUpTile
+     * Test canShoreUpTile
      */
     @Test
     void testCanShoreUpTile() {
@@ -88,7 +88,7 @@ public class ActionBarControllerTest {
     }
 
     /**
-     * 测试 canGiveCard
+     * Test canGiveCard
      */
     @Test
     void testCanGiveCard() {
@@ -98,7 +98,7 @@ public class ActionBarControllerTest {
     }
 
     /**
-     * 测试 canCaptureTreasure
+     * Test canCaptureTreasure
      */
     @Test
     void testCanCaptureTreasure() {
@@ -108,7 +108,7 @@ public class ActionBarControllerTest {
     }
 
     /**
-     * 测试 hasDrawnTreasureCards
+     * Test hasDrawnTreasureCards
      */
     @Test
     void testHasDrawnTreasureCards() {
@@ -118,7 +118,7 @@ public class ActionBarControllerTest {
     }
 
     /**
-     * 测试 getDrawnFloodCards
+     * Test getDrawnFloodCards
      */
     @Test
     void testGetDrawnFloodCards() {
@@ -128,7 +128,7 @@ public class ActionBarControllerTest {
     }
 
     /**
-     * 测试 setHasDrawnTreasureCards
+     * Test setHasDrawnTreasureCards
      */
     @Test
     void testSetHasDrawnTreasureCards() {
