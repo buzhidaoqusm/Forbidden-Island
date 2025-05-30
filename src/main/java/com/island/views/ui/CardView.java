@@ -1,8 +1,8 @@
-package com.forbiddenisland.views.ui;
+package com.island.views.ui;
 
-import com.forbiddenisland.controllers.card.CardController;
-import com.forbiddenisland.models.card.Card;
-import com.forbiddenisland.models.card.CardType;
+import com.island.controller.CardController;
+import com.island.models.card.Card;
+import com.island.models.card.CardType;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -15,7 +15,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
-import static com.forbiddenisland.views.ui.IslandView.SCALE;
+import static com.island.views.ui.IslandView.SCALE;
 
 import java.util.Deque;
 import java.util.List;

@@ -1,16 +1,16 @@
-package com.forbiddenisland.views.game;
+package com.island.views.game;
 
-import com.forbiddenisland.controllers.game.GameController;
-import com.forbiddenisland.models.adventurers.Player;
-import com.forbiddenisland.models.game.GameState;
-import com.forbiddenisland.models.island.Position;
-import com.forbiddenisland.utils.observer.GameObserver;
-import com.forbiddenisland.views.ui.ActionBarView;
-import com.forbiddenisland.views.ui.ActionLogView;
-import com.forbiddenisland.views.ui.CardView;
-import com.forbiddenisland.views.ui.IslandView;
-import com.forbiddenisland.views.ui.MenuView;
-import com.forbiddenisland.views.ui.PlayerView;
+import com.island.controller.GameController;
+import com.island.models.adventurers.Player;
+import com.island.models.game.GameState;
+import com.island.models.island.Position;
+import com.island.util.observer.GameObserver;
+import com.island.views.ui.ActionBarView;
+import com.island.views.ui.ActionLogView;
+import com.island.views.ui.CardView;
+import com.island.views.ui.IslandView;
+import com.island.views.ui.MenuView;
+import com.island.views.ui.PlayerView;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;

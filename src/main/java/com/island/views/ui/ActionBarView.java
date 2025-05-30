@@ -1,10 +1,10 @@
-package com.forbiddenisland.views.ui;
+package com.island.views.ui;
 
-import com.forbiddenisland.controllers.ui.ActionBarController;
-import com.forbiddenisland.models.Room;
-import com.forbiddenisland.models.adventurers.Player;
-import com.forbiddenisland.models.adventurers.PlayerRole;
-import com.forbiddenisland.models.island.Tile;
+import com.island.controller.ActionBarController;
+import com.island.models.Room;
+import com.island.models.adventurers.Player;
+import com.island.models.adventurers.PlayerRole;
+import com.island.models.island.Tile;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

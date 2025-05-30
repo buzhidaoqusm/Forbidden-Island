@@ -1,7 +1,7 @@
-package com.forbiddenisland.launcher;
+package com.island.launcher;
 
-import com.forbiddenisland.models.adventurers.Player;
-import com.forbiddenisland.views.ui.MenuView;
+import com.island.models.adventurers.Player;
+import com.island.views.ui.MenuView;
 
 import javafx.application.Application;
 import javafx.scene.control.TextInputDialog;

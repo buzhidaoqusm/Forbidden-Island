@@ -1,11 +1,11 @@
-package com.forbiddenisland.views.ui;
+package com.island.views.ui;
 
-import com.forbiddenisland.controllers.player.PlayerController;
-import com.forbiddenisland.models.Room;
-import com.forbiddenisland.models.adventurers.Player;
-import com.forbiddenisland.models.adventurers.PlayerRole;
-import com.forbiddenisland.models.card.Card;
-import com.forbiddenisland.models.treasure.TreasureType;
+import com.island.controller.PlayerController;
+import com.island.models.Room;
+import com.island.models.adventurers.Player;
+import com.island.models.adventurers.PlayerRole;
+import com.island.models.card.Card;
+import com.island.models.treasure.TreasureType;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -19,7 +19,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
-import static com.forbiddenisland.views.ui.IslandView.SCALE;
+import static com.island.views.ui.IslandView.SCALE;
 
 import java.util.List;
 

@@ -1,5 +1,4 @@
-package com.forbiddenisland.views.ui;
-
+package com.island.views.ui;
 
 import javafx.geometry.Insets;
 import javafx.scene.control.ListView;

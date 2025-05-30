@@ -1,8 +1,8 @@
-package com.forbiddenisland.views.ui;
+package com.island.views.ui;
 
-import com.forbiddenisland.models.adventurers.Player;
-import com.forbiddenisland.views.room.CreateRoomView;
-import com.forbiddenisland.views.room.JoinRoomView;
+import com.island.models.adventurers.Player;
+import com.island.views.room.CreateRoomView;
+import com.island.views.room.JoinRoomView;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
