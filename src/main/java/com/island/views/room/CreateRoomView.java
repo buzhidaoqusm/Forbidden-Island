@@ -16,16 +16,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.effect.BoxBlur;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
-import javafx.scene.shape.Rectangle;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -49,7 +45,7 @@ public class CreateRoomView {
 
         // Set up background
         StackPane root = new StackPane();
-        String imagePath = "/background/CreateRoom.png";
+        String imagePath = "/background/Room.png";
         Image backgroundImage = new Image(getClass().getResourceAsStream(imagePath));
         ImageView backgroundView = new ImageView(backgroundImage);
         backgroundView.setFitWidth(WINDOW_WIDTH);
