@@ -88,7 +88,11 @@ public class BroadcastReceiver implements Runnable {
                 if (gameMessage.getRoomId() != roomController.getRoomId()) {
                     return;
                 }
-                if (gameMessage.getTo() != null && !gameMessage.getTo().equals(roomController.getRoom().getCurrentProgramPlayer().getName())) {
+                if (gameMessage.getTo() != null
+                        && !gameMessage.getTo().equals(roomController.getRoom().getCurrentProgramPlayer().getName())
+                        && !gameMessage.getTo().equals("system") // When draw flood cards in a turn end, the message is from a system, but it's actually for the host player
+                        && !gameMessage.getType().equals(MessageType.TURN_START) // Turn start message is sent to all players
+                ) {
                     return;
                 }
                 // Notify game manager to process message
