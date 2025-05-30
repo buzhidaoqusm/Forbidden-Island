@@ -229,5 +229,9 @@ public class PlayerController {
         chosenCard = null;
         resetPlayerState();
     }
+
+    public GameController getGameController() {
+        return gameController;
+    }
 }
 

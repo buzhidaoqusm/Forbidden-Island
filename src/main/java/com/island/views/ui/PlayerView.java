@@ -52,13 +52,13 @@ public class PlayerView {
             Label nameLabel = new Label(player.getName());
             nameLabel.setMinWidth(100);
             nameLabel.setFont(Font.font("System", FontWeight.BOLD, 14));
+            nameLabel.setStyle("-fx-text-fill: black;");
 
             // Player role
             HBox roleBox = new HBox(25);
             roleBox.setAlignment(Pos.CENTER_LEFT);
 
             PlayerRole role = player.getRole();
-//            String roleName = role != null ? role.getDisplayName() : "Not selected";
 
             try {
                 // Load role image
@@ -69,12 +69,8 @@ public class PlayerView {
                 roleView.setFitWidth(147 * SCALE);
 
                 roleBox.getChildren().addAll(roleView);
-//                Label roleLabel = new Label(roleName);
-//
-//                roleBox.getChildren().addAll(roleView, roleLabel);
             } catch (Exception e) {
-                // If image loading fails, show text only
-//                roleBox.getChildren().add(new Label(roleName));
+                playerController.getGameController().showErrorToast("Failed to load role image for " + player.getName() + ": " + e.getMessage());
             }
 
             // Player cards
@@ -129,7 +125,7 @@ public class PlayerView {
                     }
                 }
             } else {
-//                cardsPane.getChildren().add(new Label("No cards"));
+                cardsPane.getChildren().add(new Label("No cards"));
             }
 
             // Add all elements to the player row

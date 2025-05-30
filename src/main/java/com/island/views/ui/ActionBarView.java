@@ -251,16 +251,6 @@ public class ActionBarView {
 
     }
 
-    /**
-     * Create action button with unified style
-     */
-    private Button createActionButton(String text) {
-        Button button = new Button(text);
-        button.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold;");
-        button.setPrefWidth(100);
-        return button;
-    }
-
     public void setActionBarController(ActionBarController actionBarController) {
         this.actionBarController = actionBarController;
     }
