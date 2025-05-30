@@ -8,7 +8,7 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
 import com.island.controller.GameController;
-import com.island.model.Room;
+import com.island.models.Room;
 import com.island.network.RoomController;
 import com.island.view.GameStart;
 

@@ -1,4 +1,4 @@
-package com.forbiddenisland.models.adventurers;
+package com.island.models.adventurers;
 
 /**
  * The Engineer class represents a player with the Engineer role in the Forbidden Island game.

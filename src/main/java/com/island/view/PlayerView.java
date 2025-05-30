@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.island.model.Player;
-import com.island.model.PlayerRole;
+import com.island.models.Player;
+import com.island.models.PlayerRole;
 import com.island.controller.GameController;
 import com.island.controller.PlayerController;
 

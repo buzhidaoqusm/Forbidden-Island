@@ -1,6 +1,5 @@
 package com.island.view;
 
-import com.island.model.Room;
 import com.island.network.RoomController;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -19,9 +18,8 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
 import com.island.controller.GameController;
-import com.island.model.Player;
-import com.island.model.Explorer;
-import com.island.view.GameView;
+import com.island.models.Player;
+import com.island.models.Explorer;
 
 import java.util.List;
 import java.util.UUID;

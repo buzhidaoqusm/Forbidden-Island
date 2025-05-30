@@ -7,7 +7,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.control.ListView;
 import javafx.application.Platform;
@@ -23,8 +22,7 @@ import java.util.Map;
 
 import com.island.controller.GameController;
 import com.island.controller.ActionBarController;
-import com.island.model.Player;
-import com.island.view.ActionType;
+import com.island.models.Player;
 
 public class ActionBarView {
 

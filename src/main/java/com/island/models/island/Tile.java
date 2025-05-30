@@ -1,6 +1,6 @@
-package com.forbiddenisland.models.island;
+package com.island.models.island;
 
-import com.forbiddenisland.models.treasure.TreasureType;
+import com.island.models.treasure.TreasureType;
 
 /**
  * Represents a tile on the game board.

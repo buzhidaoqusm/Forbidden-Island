@@ -1,4 +1,4 @@
-package com.forbiddenisland.models.island;
+package com.island.models.island;
 
 import java.util.*;
 

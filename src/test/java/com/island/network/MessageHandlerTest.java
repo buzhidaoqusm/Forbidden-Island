@@ -3,10 +3,10 @@ package com.island.network;
 // -Dnet.bytebuddy.experimental=true
 
 import com.island.controller.GameController;
-import com.island.model.Room;
-import com.island.model.adventurers.Player;
-import com.island.model.card.Card;
-import com.island.model.card.CardType;
+import com.island.models.Room;
+import com.island.models.adventurers.Player;
+import com.island.models.card.Card;
+import com.island.models.card.CardType;
 import com.island.util.observer.GameSubjectImpl;
 import com.island.view.ActionLogView;
 import org.junit.jupiter.api.BeforeEach;

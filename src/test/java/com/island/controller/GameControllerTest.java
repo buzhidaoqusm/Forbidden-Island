@@ -1,6 +1,6 @@
 package com.island.controller;
 
-import com.island.model.*;
+import com.island.models.*;
 import com.island.network.Message;
 import com.island.network.RoomController;
 import com.island.view.GameView;

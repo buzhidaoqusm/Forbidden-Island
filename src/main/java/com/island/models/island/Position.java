@@ -1,4 +1,4 @@
-package com.forbiddenisland.models.island;
+package com.island.models.island;
 
 /**
  * Represents a position on the game board using x and y coordinates.

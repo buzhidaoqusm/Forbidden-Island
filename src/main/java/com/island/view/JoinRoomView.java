@@ -1,6 +1,6 @@
 package com.island.view;
 
-import com.island.model.Player;
+import com.island.models.Player;
 import com.island.network.RoomController;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -21,7 +21,6 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.island.controller.GameController;
-import com.island.model.Room;
 import com.island.network.Message;
 import com.island.network.MessageType;
 

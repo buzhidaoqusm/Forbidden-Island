@@ -6,8 +6,8 @@ package com.island.network;
  * --add-opens javafx.graphics/com.sun.glass.ui=ALL-UNNAMED
  */
 
-import com.island.model.Room;
-import com.island.model.adventurers.Player;
+import com.island.models.Room;
+import com.island.models.adventurers.Player;
 import com.island.util.EncryptionUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;

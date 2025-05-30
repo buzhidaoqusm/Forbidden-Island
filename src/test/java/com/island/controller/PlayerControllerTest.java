@@ -1,6 +1,6 @@
 package com.island.controller;
 
-import com.island.model.*;
+import com.island.models.*;
 import com.island.network.RoomController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

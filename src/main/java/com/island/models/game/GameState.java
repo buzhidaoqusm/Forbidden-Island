@@ -1,4 +1,4 @@
-package com.forbiddenisland.models.game;
+package com.island.models.game;
 
 /**
  * Represents the different states of the game.

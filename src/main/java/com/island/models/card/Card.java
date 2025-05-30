@@ -1,7 +1,7 @@
-package com.forbiddenisland.models.card;
+package com.island.models.card;
 
-import com.forbiddenisland.models.island.Position;
-import com.forbiddenisland.models.treasure.TreasureType;
+import com.island.models.island.Position;
+import com.island.models.treasure.TreasureType;
 
 /**
  * Represents a card in the Forbidden Island game.

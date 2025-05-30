@@ -1,4 +1,4 @@
-package com.forbiddenisland.models.adventurers;
+package com.island.models.adventurers;
 
 /**
  * Represents the different roles that players can take in the game.

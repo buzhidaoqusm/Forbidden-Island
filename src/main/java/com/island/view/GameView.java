@@ -1,6 +1,6 @@
 package com.island.view;
 
-import com.island.model.GameState;
+import com.island.models.GameState;
 import com.island.util.observer.GameObserver;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
@@ -22,14 +22,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 
-import com.island.view.IslandView;
-import com.island.view.PlayerView;
-import com.island.view.CardView;
-import com.island.view.ActionBarView;
-import com.island.view.ActionLogView;
 import com.island.controller.GameController;
-import com.island.model.Player;
-import com.island.model.Position;
+import com.island.models.Player;
+import com.island.models.Position;
 
 public class GameView implements GameObserver {
 

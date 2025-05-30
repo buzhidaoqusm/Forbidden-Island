@@ -1,6 +1,6 @@
 package com.island.controller;
 
-import com.island.model.*;
+import com.island.models.*;
 import com.island.network.RoomController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,7 +42,7 @@ public class IslandControllerTest {
         RoomController mockRoomController = mock(RoomController.class);
         when(gameController.getRoomController()).thenReturn(mockRoomController);
         when(mockRoomController.getRoom()).thenReturn(room);
-        islandController = new IslandController(island);
+        islandController = new IslandController();
         islandController.setGameController(gameController);
     }
 

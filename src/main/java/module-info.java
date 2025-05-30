@@ -7,10 +7,10 @@ module com.island {
     requires com.fasterxml.jackson.annotation;
 
     opens com.island.network to com.fasterxml.jackson.databind;
-    opens com.island.model to com.fasterxml.jackson.databind;
+    opens com.island.models to com.fasterxml.jackson.databind;
     
     exports com.island.controller;
-    exports com.island.model;
+    exports com.island.models;
     exports com.island.network;
     exports com.island.util;
     exports com.island.util.observer;

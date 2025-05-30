@@ -1,6 +1,6 @@
-package com.island.model;
+package com.island.models;
 
-import com.forbiddenisland.models.adventurers.Player;
+import com.island.models.adventurers.Player;
 
 import java.util.ArrayList;
 import java.util.List;

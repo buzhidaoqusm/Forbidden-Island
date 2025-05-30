@@ -1,16 +1,15 @@
 package com.island.network;
 
 import com.island.controller.GameController;
-import com.island.model.*;
-import com.island.model.Room;
-import com.island.model.adventurers.Navigator;
-import com.island.model.adventurers.Pilot;
-import com.island.model.adventurers.Player;
-import com.island.model.card.Card;
-import com.island.model.game.GameState;
-import com.island.model.island.Position;
-import com.island.model.island.Tile;
-import com.island.model.treasure.TreasureType;
+import com.island.models.Room;
+import com.island.models.adventurers.Navigator;
+import com.island.models.adventurers.Pilot;
+import com.island.models.adventurers.Player;
+import com.island.models.card.Card;
+import com.island.models.game.GameState;
+import com.island.models.island.Position;
+import com.island.models.island.Tile;
+import com.island.models.treasure.TreasureType;
 import com.island.util.Constant;
 import com.island.view.ActionLogView;
 

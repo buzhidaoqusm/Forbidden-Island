@@ -1,4 +1,4 @@
-package com.forbiddenisland.models.adventurers;
+package com.island.models.adventurers;
 
 /**
  * The Navigator class represents a player with the Navigator role in the Forbidden Island game.

@@ -15,7 +15,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.control.Label;
 
-import com.island.model.Player;
+import com.island.models.Player;
 import com.island.controller.GameController;
 
 import java.util.Objects;

@@ -13,7 +13,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
-import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.application.Platform;
@@ -23,8 +22,8 @@ import java.util.Map;
 
 import com.island.controller.GameController;
 import com.island.controller.CardController;
-import com.island.model.Card;
-import com.island.model.CardType;
+import com.island.models.Card;
+import com.island.models.CardType;
 // Note: Actual card class is needed here, if not exists, use Object instead
 
 public class CardView {

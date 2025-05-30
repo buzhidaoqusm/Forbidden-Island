@@ -1,11 +1,11 @@
-package com.forbiddenisland.models.adventurers;
+package com.island.models.adventurers;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.forbiddenisland.models.island.Position;
-import com.forbiddenisland.models.island.Tile;
+import com.island.models.island.Position;
+import com.island.models.island.Tile;
 
 /**
  * The Explorer class represents a player with the Explorer role in the Forbidden Island game.

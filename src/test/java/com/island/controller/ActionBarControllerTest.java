@@ -1,8 +1,7 @@
 package com.island.controller;
 
-import com.island.controller.GameController;
-import com.island.model.Player;
-import com.island.model.Room;
+import com.island.models.Player;
+import com.island.models.Room;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;

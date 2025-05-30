@@ -1,4 +1,4 @@
-package com.forbiddenisland.models.treasure;
+package com.island.models.treasure;
 
 /**
  * Represents the different types of treasures in the game.

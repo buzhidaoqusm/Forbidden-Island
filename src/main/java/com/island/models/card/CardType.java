@@ -1,4 +1,4 @@
-package com.forbiddenisland.models.card;
+package com.island.models.card;
 
 /**
  * Represents the different types of cards in the Forbidden Island game.

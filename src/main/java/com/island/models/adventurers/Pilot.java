@@ -1,4 +1,4 @@
-package com.forbiddenisland.models.adventurers;
+package com.island.models.adventurers;
 
 import java.util.List;
 import java.util.Map;

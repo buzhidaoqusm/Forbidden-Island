@@ -12,9 +12,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 
@@ -22,13 +19,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Collections;
 
-import com.island.model.Island;
-import com.island.model.Tile;
-import com.island.model.TileState;
-import com.island.model.Position;
-import com.island.model.TreasureType;
+import com.island.models.Island;
+import com.island.models.Tile;
+import com.island.models.TileState;
+import com.island.models.Position;
+import com.island.models.TreasureType;
 
 public class IslandViewTest extends Application {
 

@@ -2,7 +2,6 @@ package com.island.view;
 
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.paint.Color;
@@ -23,16 +22,14 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ArrayList;
-import java.util.Random;
-import java.util.Arrays;
+
 import com.island.controller.*;
 import com.island.controller.PlayerController;
 import com.island.controller.IslandController;
-import com.island.model.*;
-import com.island.model.Player;
-import com.island.model.Position;
-import com.island.model.Island;
-import com.island.model.PlayerRole;
+import com.island.models.Player;
+import com.island.models.Position;
+import com.island.models.Island;
+import com.island.models.PlayerRole;
 
 public class IslandView {
 

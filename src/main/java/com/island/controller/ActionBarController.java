@@ -1,6 +1,10 @@
 package com.island.controller;
 
-import com.island.model.*;
+import com.island.models.Room;
+import com.island.models.adventurers.*;
+import com.island.models.island.*;
+import com.island.models.treasure.TreasureType;
+import com.island.models.card.*;
 import javafx.geometry.Insets;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -10,6 +14,8 @@ import javafx.scene.layout.VBox;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.island.util.ui.Dialog.showMessage;
 
 /**
  * Controller class responsible for managing the action bar UI and game actions.

@@ -1,9 +1,9 @@
-package com.forbiddenisland.models.adventurers;
+package com.island.models.adventurers;
 
 import java.util.*;
 
-import com.forbiddenisland.models.island.Position;
-import com.forbiddenisland.models.island.Tile;
+import com.island.models.island.Position;
+import com.island.models.island.Tile;
 
 /**
  * The Diver class represents a player with the Diver role in the Forbidden Island game.

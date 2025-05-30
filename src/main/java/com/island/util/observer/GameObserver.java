@@ -1,8 +1,8 @@
 package com.island.util.observer;
 
-import com.island.model.Player;
-import com.island.model.Position;
-import com.island.model.GameState;
+import com.island.models.Player;
+import com.island.models.Position;
+import com.island.models.GameState;
 
 public interface GameObserver {
     void onGameStateChanged(GameState state);
