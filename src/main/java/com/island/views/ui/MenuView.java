@@ -11,12 +11,14 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,18 +28,30 @@ public class MenuView {
     /** The current index of the displayed rule image */
     private int currentImageIndex = 0;
 
+    private static final double WINDOW_WIDTH = 436;
+    private static final double WINDOW_HEIGHT = 600;
+
     public Scene getMenuScene(Stage primaryStage, Player player) {
+        // Create background
+        String imagePath = "/background/MenuBG.png";
+        InputStream imageStream = MenuView.class.getResourceAsStream(imagePath);
+        Image backgroundImage = new Image(imageStream);
+        ImageView backgroundView = new ImageView(backgroundImage);
+        backgroundView.setFitWidth(WINDOW_WIDTH);
+        backgroundView.setFitHeight(WINDOW_HEIGHT);
+        backgroundView.setPreserveRatio(false);
+
         // Create welcome message label
         Label welcomeLabel = new Label("Welcome, " + player.getName() + "!");
 
-        // Set font size
-        welcomeLabel.setFont(new Font("Arial", 46));  // Set font to Arial, size 46
-        // Set font color
-        welcomeLabel.setStyle("-fx-text-fill: #000000;");  // Set font color to black
+        // Set font size and style for the welcome label
+        welcomeLabel.setFont(new Font("Arial", 36));  // Set font to Arial, size 46
+        welcomeLabel.setStyle("-fx-text-fill: #FFFFFF; -fx-effect: dropshadow(gaussian, black, 2, 1, 0, 0);");
 
-        Button createRoomButton = new Button("Create Room");
-        Button joinRoomButton = new Button("Join Room");
-        Button rulesButton = new Button("Rules");
+        // Style the buttons
+        Button createRoomButton = createStyledButton("Create Room");
+        Button joinRoomButton = createStyledButton("Join Room");
+        Button rulesButton = createStyledButton("Rules");
 
         // Button click events (navigate to corresponding scenes)
         createRoomButton.setOnAction(e -> {
@@ -56,14 +70,48 @@ public class MenuView {
         });
 
         // Create VBox layout, set button spacing to 20 pixels
-        VBox layout = new VBox(20);
-        layout.setStyle("-fx-alignment: center;");  // Set horizontal alignment to center
+        VBox layout = new VBox(40);
+        layout.setAlignment(Pos.CENTER);
 
         // Add buttons to VBox
         layout.getChildren().addAll(welcomeLabel, createRoomButton, joinRoomButton, rulesButton);
 
-        // Create and return the scene
-        return new Scene(layout, 800, 500);
+        // Create StackPane to layer background and content
+        StackPane root = new StackPane();
+        root.getChildren().addAll(backgroundView, layout);
+
+        // Create and return scene
+        Scene scene = new Scene(root, WINDOW_WIDTH, WINDOW_HEIGHT);
+        return scene;
+    }
+
+    private Button createStyledButton(String text) {
+        Button button = new Button(text);
+        button.setStyle(
+                "-fx-background-color: rgba(255, 255, 255, 0.8);" +
+                        "-fx-text-fill: #000000;" +
+                        "-fx-font-size: 16px;" +
+                        "-fx-padding: 10 20;" +
+                        "-fx-min-width: 150px;" +
+                        "-fx-background-radius: 12px;"
+        );
+        button.setOnMouseEntered(e -> button.setStyle(
+                "-fx-background-color: rgba(255, 255, 255, 1.0);" +
+                        "-fx-text-fill: #000000;" +
+                        "-fx-font-size: 16px;" +
+                        "-fx-padding: 10 20;" +
+                        "-fx-min-width: 150px;" +
+                        "-fx-background-radius: 12px;"
+        ));
+        button.setOnMouseExited(e -> button.setStyle(
+                "-fx-background-color: rgba(255, 255, 255, 0.8);" +
+                        "-fx-text-fill: #000000;" +
+                        "-fx-font-size: 16px;" +
+                        "-fx-padding: 10 20;" +
+                        "-fx-min-width: 150px;" +
+                        "-fx-background-radius: 12px;"
+        ));
+        return button;
     }
 
     private void loadRuleImages() {
