@@ -158,7 +158,6 @@ public class MessageHandler {
                     return;
                 }
                 messageId = messageQueue.poll();
-                System.out.println("Processing message ID: " + messageId);
             }
 
             // Process the message
