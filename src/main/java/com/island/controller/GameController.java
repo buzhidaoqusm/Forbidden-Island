@@ -12,6 +12,13 @@ import com.island.network.RoomController;
 import com.island.util.observer.GameSubjectImpl;
 import com.island.util.ui.Dialog;
 import com.island.view.GameView;
+import javafx.geometry.Insets;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.util.*;
@@ -257,7 +264,36 @@ public class GameController {
      * Shows appropriate dialog based on card type.
      */
     public void handlePlaySpecialAction() {
+        Card chosenCard = playerController.getChosenCard();
+        if (chosenCard.getType() != CardType.TREASURE) {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Use Special Card");
+            alert.setHeaderText("Do you want to use " + chosenCard.getName() + "?");
 
+            switch (chosenCard.getType()) {
+                case HELICOPTER:
+                    alert.setContentText("The helicopter can move one or more players from any tile to another non-sunk tile.");
+                    break;
+                case SANDBAGS:
+                    alert.setContentText("Sandbags can shore up any flooded tile.");
+                    break;
+                default:
+                    return;
+            }
+
+            alert.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.OK) {
+                    switch (chosenCard.getType()) {
+                        case HELICOPTER:
+                            handleHelicopterCard(chosenCard);
+                            break;
+                        case SANDBAGS:
+                            handleSandbagsCard(chosenCard);
+                            break;
+                    }
+                }
+            });
+        }
     }
 
     /**
@@ -265,7 +301,8 @@ public class GameController {
      * @param chosenCard The sandbags card being used
      */
     private void handleSandbagsCard(Card chosenCard) {
-
+        showToast("Please click on the tile you want to shore up");
+        activeSpecialCard = chosenCard;
     }
 
     /**
@@ -274,7 +311,63 @@ public class GameController {
      * @param chosenCard The helicopter card being used
      */
     private void handleHelicopterCard(Card chosenCard) {
+        // If all treasures are collected and all players are on Fool's Landing, win the game
+        if (islandController.getTreasures().length == 0) {
+            for (Player player : room.getPlayers()) {
+                if (!island.getTile(player.getPosition()).getName().equals("Blue")) {
+                    break;
+                }
+            }
+            gameOver = true;
+            roomController.sendGameOverMessage("All treasures have been captured!");
+        }
 
+        VBox dialogContent = new VBox(10);
+        dialogContent.setPadding(new Insets(20));
+
+        // Select players to move
+        Label selectPlayersLabel = new Label("Select players to move:");
+        FlowPane playerCheckBoxes = new FlowPane(10, 10);
+        Map<String, CheckBox> playerSelections = new HashMap<>();
+
+        for (Player player : room.getPlayers()) {
+            javafx.scene.control.CheckBox checkBox = new javafx.scene.control.CheckBox(player.getName());
+            playerCheckBoxes.getChildren().add(checkBox);
+            playerSelections.put(player.getName(), checkBox);
+        }
+
+        // Instructions for selecting target position
+        Label instructionLabel = new Label("After selecting, click OK, then click on the target tile");
+
+        dialogContent.getChildren().addAll(selectPlayersLabel, playerCheckBoxes, instructionLabel);
+
+        Alert dialog = new Alert(Alert.AlertType.CONFIRMATION);
+        dialog.setTitle("Use Helicopter");
+        dialog.setHeaderText("Select Players to Move");
+        dialog.getDialogPane().setContent(dialogContent);
+
+        dialog.showAndWait().ifPresent(result -> {
+            if (result == ButtonType.OK) {
+                List<Player> selectedPlayers = new ArrayList<>();
+                for (Map.Entry<String, javafx.scene.control.CheckBox> entry : playerSelections.entrySet()) {
+                    if (entry.getValue().isSelected()) {
+                        for (Player player : room.getPlayers()) {
+                            if (player.getName().equals(entry.getKey())) {
+                                selectedPlayers.add(player);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (!selectedPlayers.isEmpty()) {
+                    // Wait for user to click target tile
+                    showToast("Please click on the tile you want to move to");
+                    helicopterPlayers = selectedPlayers;
+                    activeSpecialCard = chosenCard;
+                }
+            }
+        });
     }
 
     /**
@@ -282,7 +375,20 @@ public class GameController {
      * @param position The target position for the special card effect
      */
     public void handleUseSpecialCard(Position position) {
-
+        // If using a special card
+        if (activeSpecialCard != null) {
+            switch (activeSpecialCard.getType()) {
+                case HELICOPTER:
+                    if (helicopterPlayers != null && !helicopterPlayers.isEmpty()) {
+                        executeHelicopterMove(position);
+                    }
+                    break;
+                case SANDBAGS:
+                    executeSandbagsUse(position);
+                    break;
+            }
+            return;
+        }
     }
 
     /**
@@ -290,7 +396,21 @@ public class GameController {
      * @param position Position of the tile to shore up
      */
     private void executeSandbagsUse(Position position) {
+        Tile tile = island.getTile(position);
+        if (tile == null || !tile.isFlooded()) {
+            showWarningToast("Can only shore up flooded tiles");
+            return;
+        }
+        Player user = room.getCurrentProgramPlayer();
 
+        // Add sandbags card to discard pile
+        int cardIndex = user.getCards().indexOf(activeSpecialCard);
+
+        // Use RoomController
+        roomController.sendSandbagsMessage(user, position, cardIndex);
+
+        // Reset state
+        activeSpecialCard = null;
     }
 
     /**
@@ -298,7 +418,32 @@ public class GameController {
      * @param position Destination position for the helicopter move
      */
     private void executeHelicopterMove(Position position) {
+        Player user = room.getCurrentProgramPlayer();
+        if (helicopterPlayers == null || helicopterPlayers.isEmpty()) return;
 
+        // Check if target position is valid
+        Tile targetTile = island.getTile(position);
+        if (targetTile == null || targetTile.isSunk()) {
+            showWarningToast("Cannot move to a sunk tile");
+            return;
+        }
+
+        // Selected players must be on the same tile
+        for (Player player : helicopterPlayers) {
+            if (!player.getPosition().equals(user.getPosition())) {
+                showErrorToast("All players must be on the same tile");
+                return;
+            }
+        }
+
+        int cardIndex = user.getCards().indexOf(activeSpecialCard);
+
+        // Use RoomController
+        roomController.sendHelicopterMoveMessage(helicopterPlayers, user, position, cardIndex);
+
+        // Reset state
+        helicopterPlayers = null;
+        activeSpecialCard = null;
     }
 
     /**
