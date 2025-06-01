@@ -1,6 +1,8 @@
 package com.island.views.room;
 
 import com.island.controller.GameController;
+import com.island.network.Message;
+import com.island.network.MessageType;
 import com.island.network.RoomController;
 import com.island.models.adventurers.Player;
 import com.island.models.Room;
@@ -92,6 +94,12 @@ public class CreateRoomView {
         );
         backButton.setOnAction(e -> {
             updateThread.interrupt();
+            Message leaveMessage = new Message(
+                    MessageType.LEAVE_ROOM,
+                    room.getId(),
+                    player.getName()
+            );
+            roomController.broadcast(leaveMessage);
             primaryStage.setScene(new MenuView().getMenuScene(primaryStage, player));
         });
 
