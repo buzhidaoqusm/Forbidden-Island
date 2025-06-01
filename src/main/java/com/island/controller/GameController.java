@@ -93,38 +93,6 @@ public class GameController {
     }
 
     /**
-     * Gets the game subject for observer pattern implementation.
-     * @return The game subject instance
-     */
-    public GameSubjectImpl getGameSubject() {
-        return gameSubject;
-    }
-
-    /**
-     * Handles a player joining the game.
-     * @param message The join request message
-     * @throws Exception If join request fails
-     */
-    public void handlePlayerJoin(Message message) throws Exception {
-        roomController.handleJoinRequest(message);
-    }
-
-    /**
-     * Gets the room controller instance.
-     * @return The room controller
-     */
-    public RoomController getRoomController() {
-        return roomController;
-    }
-
-    /**
-     * Cleans up resources and shuts down the game.
-     */
-    public void shutdown() {
-        roomController.shutdown();
-    }
-
-    /**
      * Starts a new game with the given random seed.
      * Initializes the island, players, cards and game state.
      * @param seed Random seed for game initialization
@@ -212,28 +180,6 @@ public class GameController {
     }
 
     /**
-     * Gets the currently selected tile.
-     * @return The chosen tile
-     */
-    public Tile getChosenTile() {
-        return islandController.getChosenTile();
-    }
-
-    /**
-     * Updates the game board view.
-     */
-    public void updateBoard() {
-        gameSubject.notifyBoardChanged();
-    }
-
-    /**
-     * Updates the action bar view.
-     */
-    public void updateActionBar() {
-        gameSubject.notifyActionBarChanged();
-    }
-
-    /**
      * Transfers a card from one player to another.
      * @param fromPlayer Player giving the card
      * @param toPlayer Player receiving the card
@@ -243,20 +189,6 @@ public class GameController {
         Card removedCard = fromPlayer.removeCard(card);
         toPlayer.addCard(removedCard);
         decreaseRemainingActions();
-    }
-
-    /**
-     * Updates the players info view.
-     */
-    public void updatePlayersInfo() {
-        gameSubject.notifyPlayerInfoChanged();
-    }
-
-    /**
-     * Updates the card view.
-     */
-    public void updateCardView() {
-        gameSubject.notifyCardChanged();
     }
 
     /**
@@ -617,10 +549,46 @@ public class GameController {
     public void setWaterLevel(int waterLevel) { islandController.setWaterLevel(waterLevel); }
 
     /**
+     * Gets the currently selected tile.
+     * @return The chosen tile
+     */
+    public Tile getChosenTile() {
+        return islandController.getChosenTile();
+    }
+
+    /**
+     * Updates the game board view.
+     */
+    public void updateBoard() {
+        gameSubject.notifyBoardChanged();
+    }
+
+    /**
+     * Updates the action bar view.
+     */
+    public void updateActionBar() {
+        gameSubject.notifyActionBarChanged();
+    }
+
+    /**
      * Updates the water level display.
      */
     public void updateWaterLevel() {
         gameSubject.notifyWaterLevelChanged(islandController.getWaterLevel());
+    }
+
+    /**
+     * Updates the players info view.
+     */
+    public void updatePlayersInfo() {
+        gameSubject.notifyPlayerInfoChanged();
+    }
+
+    /**
+     * Updates the card view.
+     */
+    public void updateCardView() {
+        gameSubject.notifyCardChanged();
     }
 
     /**
@@ -643,5 +611,38 @@ public class GameController {
      */
     public boolean isGameStart() {
         return gameStart;
+    }
+
+
+    /**
+     * Gets the game subject for observer pattern implementation.
+     * @return The game subject instance
+     */
+    public GameSubjectImpl getGameSubject() {
+        return gameSubject;
+    }
+
+    /**
+     * Handles a player joining the game.
+     * @param message The join request message
+     * @throws Exception If join request fails
+     */
+    public void handlePlayerJoin(Message message) throws Exception {
+        roomController.handleJoinRequest(message);
+    }
+
+    /**
+     * Gets the room controller instance.
+     * @return The room controller
+     */
+    public RoomController getRoomController() {
+        return roomController;
+    }
+
+    /**
+     * Cleans up resources and shuts down the game.
+     */
+    public void shutdown() {
+        roomController.shutdown();
     }
 }

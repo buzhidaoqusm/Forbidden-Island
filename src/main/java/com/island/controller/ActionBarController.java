@@ -36,42 +36,6 @@ public class ActionBarController {
     }
 
     /**
-     * Sets the game controller reference and initializes current player.
-     * @param gameController The main game controller
-     */
-    public void setGameController(GameController gameController) {
-        this.gameController = gameController;
-        currentPlayer = gameController.getCurrentPlayer();
-    }
-
-    /**
-     * Gets the current active player.
-     * @return The current player
-     */
-    public Player getCurrentPlayer() {
-        return currentPlayer;
-    }
-
-    /**
-     * Sets the current active player and updates the UI.
-     * @param currentPlayer The new current player
-     */
-    public void setCurrentPlayer(Player currentPlayer) {
-        this.currentPlayer = currentPlayer;
-
-        // Notify observers when current player changes
-        if (gameController != null) {
-            gameController.updateActionBar();
-        }
-    }
-
-    // Getters and utility methods
-    public int getRemainingActions() { return gameController.getRemainingActions(); }
-    public Room getRoom() { return gameController.getRoom(); }
-    public GameController getGameController() { return gameController; }
-    public Island getIsland() { return gameController.getIsland(); }
-
-    /**
      * Checks if a player can play a special action card.
      * @param player Player to check
      * @return true if the player has any playable special cards
@@ -491,4 +455,42 @@ public class ActionBarController {
             gameController.updateActionBar();
         }
     }
+
+
+    /**
+     * Sets the game controller reference and initializes current player.
+     * @param gameController The main game controller
+     */
+    public void setGameController(GameController gameController) {
+        this.gameController = gameController;
+        currentPlayer = gameController.getCurrentPlayer();
+    }
+
+    /**
+     * Gets the current active player.
+     * @return The current player
+     */
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
+
+    /**
+     * Sets the current active player and updates the UI.
+     * @param currentPlayer The new current player
+     */
+    public void setCurrentPlayer(Player currentPlayer) {
+        this.currentPlayer = currentPlayer;
+
+        // Notify observers when current player changes
+        if (gameController != null) {
+            gameController.updateActionBar();
+        }
+    }
+
+    // Getters and utility methods
+    public int getRemainingActions() { return gameController.getRemainingActions(); }
+    public Room getRoom() { return gameController.getRoom(); }
+    public GameController getGameController() { return gameController; }
+    public Island getIsland() { return gameController.getIsland(); }
+
 }

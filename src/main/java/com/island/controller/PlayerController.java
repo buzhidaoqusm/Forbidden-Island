@@ -100,11 +100,6 @@ public class PlayerController {
         }
     }
 
-    // Getters and setters
-    public Room getRoom() { return room; }
-    public void setChosenCard(Card chosenCard) { this.chosenCard = chosenCard; }
-    public Card getChosenCard() { return chosenCard; }
-
     /**
      * Checks if a player can play a special action card.
      * Valid special cards are Helicopter and Sandbags.
@@ -233,5 +228,10 @@ public class PlayerController {
     public GameController getGameController() {
         return gameController;
     }
+
+    // Getters and setters
+    public Room getRoom() { return room; }
+    public void setChosenCard(Card chosenCard) { this.chosenCard = chosenCard; }
+    public Card getChosenCard() { return chosenCard; }
 }
 

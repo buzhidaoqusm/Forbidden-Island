@@ -43,15 +43,6 @@ public class CardController {
     }
 
     /**
-     * Sets the game controller reference and initializes island reference.
-     * @param gameController The main game controller
-     */
-    public void setGameController(GameController gameController) {
-        this.gameController = gameController;
-        island = gameController.getIslandController().getIsland();
-    }
-
-    /**
      * Initializes all card decks using the provided random seed.
      * @param seed Random seed for card initialization and shuffling
      */
@@ -147,11 +138,6 @@ public class CardController {
         floodDeck.addAll(tempFlood);
     }
 
-    // Getters and setters
-    public Deque<Card> getTreasureDeck() { return treasureDeck; }
-    public Deque<Card> getFloodDeck() { return floodDeck; }
-    public List<Card> getFloodDiscardPile() { return floodDiscardPile; }
-    public List<Card> getTreasureDiscardPile() { return treasureDiscardPile; }
 
     /**
      * Adds a card to the treasure discard pile.
@@ -180,6 +166,16 @@ public class CardController {
     }
 
     /**
+     * Sets the game controller reference and initializes island reference.
+     * @param gameController The main game controller
+     */
+    public void setGameController(GameController gameController) {
+        this.gameController = gameController;
+        island = gameController.getIslandController().getIsland();
+    }
+
+
+    /**
      * Cleans up card resources.
      * Called when shutting down the game.
      */
@@ -199,9 +195,16 @@ public class CardController {
         }
     }
 
+    // Getters and setters
+    public Deque<Card> getTreasureDeck() { return treasureDeck; }
+    public Deque<Card> getFloodDeck() { return floodDeck; }
+    public List<Card> getFloodDiscardPile() { return floodDiscardPile; }
+    public List<Card> getTreasureDiscardPile() { return treasureDiscardPile; }
+
     // Additional getters and setters
     public void setSeed(long seed) { this.seed = seed; }
     public Island getIsland() { return island; }
     public GameController getGameController() { return gameController; }
+
 }
 

@@ -93,28 +93,6 @@ public class IslandController {
         island.getTiles().put(position, new Tile(name, position, type));
     }
 
-    // Getters and setters
-    public Island getIsland() { return island; }
-
-    public void setGameController(GameController gameController) {
-        this.gameController = gameController;
-        this.room = gameController.getRoomController().getRoom();
-    }
-
-    public Room getRoom() { return room; }
-    public int getWaterLevel() { return waterLevel; }
-
-    /**
-     * Increases the water level by one step.
-     * Updates the game state and notifies observers.
-     */
-    public void increaseWaterLevel() {
-        waterLevel++;
-        if (gameController != null) {
-            gameController.updateWaterLevel();
-        }
-    }
-
     /**
      * Handles tile click events.
      * Manages tile selection, navigator movement, and special card actions.
@@ -260,5 +238,27 @@ public class IslandController {
         player.addCapturedTreasure(treasureType);
         removeTreasure(treasureType.getDisplayName());
         gameController.decreaseRemainingActions();
+    }
+
+    // Getters and setters
+    public Island getIsland() { return island; }
+
+    public void setGameController(GameController gameController) {
+        this.gameController = gameController;
+        this.room = gameController.getRoomController().getRoom();
+    }
+
+    public Room getRoom() { return room; }
+    public int getWaterLevel() { return waterLevel; }
+
+    /**
+     * Increases the water level by one step.
+     * Updates the game state and notifies observers.
+     */
+    public void increaseWaterLevel() {
+        waterLevel++;
+        if (gameController != null) {
+            gameController.updateWaterLevel();
+        }
     }
 }
