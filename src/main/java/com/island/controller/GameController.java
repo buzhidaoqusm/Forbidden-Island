@@ -248,7 +248,7 @@ public class GameController {
      */
     private void handleHelicopterCard(Card chosenCard) {
         // If all treasures are collected and all players are on Fool's Landing, win the game
-        if (islandController.getTreasures().length == 0) {
+        if (islandController.checkIfAllTreasuresCaptured()) {
             for (Player player : room.getPlayers()) {
                 if (!island.getTile(player.getPosition()).getName().equals("Blue")) {
                     break;

@@ -154,6 +154,21 @@ public class IslandController {
     }
 
     /**
+     * Checks if all treasures have been captured.
+     * @return true if all treasures are captured, false otherwise
+     */
+    public boolean checkIfAllTreasuresCaptured() {
+        boolean allCaptured = true;
+        for (String treasure : treasures) {
+            if (treasure != null) {
+                allCaptured = false;
+                break;
+            }
+        }
+        return allCaptured;
+    }
+
+    /**
      * Checks if all treasure tiles are still accessible.
      * A treasure becomes inaccessible if both tiles containing it are sunk.
      * @return false if any treasure is no longer obtainable (both tiles sunk)
