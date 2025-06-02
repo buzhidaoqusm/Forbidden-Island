@@ -111,8 +111,7 @@ public class ActionBarController {
             } else {
                 gameController.showErrorToast("Invalid Tile!");
             }
-        }
-        if (getRemainingActions() > 0) {
+        } else if (getRemainingActions() > 0) {
             List<Position> validPositions = currentPlayer.getMovePositions(getIsland().getTiles());
             if (chosenTile != null && validPositions.contains(chosenTile.getPosition())) {
                 gameController.getRoomController().sendMoveMessage(currentPlayer, chosenTile.getPosition());
