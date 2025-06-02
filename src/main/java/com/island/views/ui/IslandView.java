@@ -141,23 +141,55 @@ public class IslandView {
     }
 
     private void checkPlayersOnTile(Room room, Position pos, StackPane tileStack) {
-        for (Player player : room.getPlayers()) {
-            if (player.getPosition() != null && player.getPosition().equals(pos)) {
-                try {
-                    // Load player piece image
-                    String playerImagePath = "/players/" + PlayerRole.getColor(player.getRole()) + ".png";
-                    Image playerImage = new Image(getClass().getResourceAsStream(playerImagePath));
-                    ImageView playerView = new ImageView(playerImage);
+        // Get all players on this tile
+        List<Player> playersOnTile = room.getPlayers().stream()
+                .filter(player -> player.getPosition() != null && player.getPosition().equals(pos))
+                .toList();
 
-                    // Set piece size (smaller than tile)
-                    playerView.setFitWidth(73 * 0.4);
-                    playerView.setFitHeight(131 * 0.4);
+        // If there are no players on this tile, return early
+        if (playersOnTile.isEmpty()) {
+            return;
+        }
 
-                    // Add player piece to StackPane
-                    tileStack.getChildren().add(playerView);
-                } catch (Exception e) {
-                    System.err.println("Unable to load player piece image: " + e.getMessage());
-                }
+        // Calculate offsets based on number of players
+        double[][] offsets = {
+                {0, 0},                    // 1 player - center
+                {-10, -10, 10, 10},       // 2 players - diagonal
+                {-15, -15, 0, 0, 15, 15}, // 3 players - triangle
+                {-15, -15, -15, 15, 15, -15, 15, 15} // 4 players - corners
+        };
+
+        // Get the appropriate offset array based on number of players (capped at 4)
+        int playerCount = Math.min(playersOnTile.size(), 4);
+        double[] currentOffsets = offsets[playerCount - 1];
+
+        // Add each player with their calculated offset
+        for (int i = 0; i < playersOnTile.size() && i < 4; i++) {
+            Player player = playersOnTile.get(i);
+            try {
+                // Load player token image
+                String playerImagePath = "/players/" + PlayerRole.getColor(player.getRole()) + ".png";
+                Image playerImage = new Image(getClass().getResourceAsStream(playerImagePath));
+                ImageView playerView = new ImageView(playerImage);
+
+                // Set token size
+                double tokenWidth = 73 * 0.4;
+                double tokenHeight = 131 * 0.4;
+                playerView.setFitWidth(tokenWidth);
+                playerView.setFitHeight(tokenHeight);
+
+                // Apply offset
+                StackPane.setMargin(playerView, new Insets(
+                        currentOffsets[i * 2],     // top offset
+                        0,                         // right offset
+                        0,                         // bottom offset
+                        currentOffsets[i * 2 + 1]  // left offset
+                ));
+
+                // Add player token to the tile
+                tileStack.getChildren().add(playerView);
+            } catch (Exception e) {
+                System.err.println("Failed to load player token image: " + e.getMessage());
             }
         }
     }
