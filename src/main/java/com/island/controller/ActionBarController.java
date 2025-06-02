@@ -103,11 +103,12 @@ public class ActionBarController {
      */
     public void handleMoveAction() {
         Tile chosenTile = gameController.getChosenTile();
-        Tile playerTile = getIsland().getTile(currentPlayer.getPosition());
+        Player currentProgramPlayer = getRoom().getCurrentProgramPlayer();
+        Tile playerTile = getIsland().getTile(currentProgramPlayer.getPosition());
         if (playerTile.isSunk()) {
-            List<Tile> validTilesOnSunk = gameController.getValidTilesOnSunk(currentPlayer);
+            List<Tile> validTilesOnSunk = gameController.getValidTilesOnSunk(currentProgramPlayer);
             if (chosenTile != null && validTilesOnSunk.contains(chosenTile)) {
-                gameController.getRoomController().sendMoveMessage(currentPlayer, chosenTile.getPosition());
+                gameController.getRoomController().sendMoveMessage(currentProgramPlayer, chosenTile.getPosition());
             } else {
                 gameController.showErrorToast("Invalid Tile!");
             }
