@@ -111,6 +111,23 @@ public class Message {
     }
 
     /**
+     * Constructor for creating a message with a specific message ID and acknowledgment flag
+     * @param messageType The type of the message
+     * @param id Room identifier
+     * @param from Sender's username
+     * @param to Recipient's username
+     * @param isAck Whether this is an acknowledgment message
+     */
+    public Message(MessageType messageType, int id, String from, String to, boolean isAck) {
+        this.messageId = System.nanoTime();
+        this.type = messageType;
+        this.roomId = id;
+        this.from = from;
+        this.to = to;
+        this.isAck = isAck;
+    }
+
+    /**
      * Adds extra data to the message
      * @param key The key for the data
      * @param value The value to store

@@ -601,6 +601,7 @@ public class RoomController {
     public void sendStartTurnMessage(Player nextPlayer) {
         Message message = new Message(MessageType.TURN_START,
                 room.getId(),
+                room.getCurrentProgramPlayer().getName(),
                 nextPlayer.getName(),
                 true
         );

@@ -481,7 +481,7 @@ public class MessageHandler {
      * @param message The turn start message
      */
     private void handleTurnStart(Message message) {
-        Player player = room.getPlayerByUsername(message.getFrom());
+        Player player = room.getPlayerByUsername(message.getTo());
         gameController.startTurn(player);
     }
 
