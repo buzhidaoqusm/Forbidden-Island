@@ -27,6 +27,8 @@ public class MenuView {
     private List<Image> ruleImages;
     /** The current index of the displayed rule image */
     private int currentImageIndex = 0;
+    private CreateRoomView createRoomView = null;
+    private JoinRoomView joinRoomView = null;
 
     private static final double WINDOW_WIDTH = 436;
     private static final double WINDOW_HEIGHT = 600;
@@ -56,12 +58,14 @@ public class MenuView {
         // Button click events (navigate to corresponding scenes)
         createRoomButton.setOnAction(e -> {
             // Create room interface
-            primaryStage.setScene(new CreateRoomView(primaryStage, player).getScene());
+            createRoomView = new CreateRoomView(primaryStage, player);
+            primaryStage.setScene(createRoomView.getScene());
         });
 
         joinRoomButton.setOnAction(e -> {
             // Join room interface
-            primaryStage.setScene(new JoinRoomView(primaryStage, player).getScene());
+            joinRoomView = new JoinRoomView(primaryStage, player);
+            primaryStage.setScene(joinRoomView.getScene());
         });
 
         rulesButton.setOnAction(evt -> {
@@ -186,6 +190,15 @@ public class MenuView {
         if (!ruleImages.isEmpty()) {
             imageView.setImage(ruleImages.get(currentImageIndex));
             pageLabel.setText(String.format("Page %d of %d", currentImageIndex + 1, ruleImages.size()));
+        }
+    }
+
+    public void shutdown() {
+        if (createRoomView != null) {
+            createRoomView.shutdown();
+        }
+        if (joinRoomView != null) {
+            joinRoomView.shutdown();
         }
     }
 }

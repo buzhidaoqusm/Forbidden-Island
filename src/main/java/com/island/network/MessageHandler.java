@@ -560,4 +560,27 @@ public class MessageHandler {
     public Map<Long, UnconfirmedMessage> getUnconfirmedMessages() {
         return unconfirmedMessages;
     }
+
+    /**
+     * Shuts down the message handler
+     * Stops the scheduler and cleans up resources
+     */
+    public void shutdown() {
+        if (scheduler != null) {
+            scheduler.shutdownNow();
+            try {
+                scheduler.awaitTermination(2, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        
+        // Clear all pending messages
+        unconfirmedMessages.clear();
+        receivedMessages.clear();
+        synchronized (queueLock) {
+            messageQueue.clear();
+            isProcessingQueue = false;
+        }
+    }
 }

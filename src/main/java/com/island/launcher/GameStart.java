@@ -4,12 +4,14 @@ import com.island.models.adventurers.Player;
 import com.island.views.ui.MenuView;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import java.io.InputStream;
 
 public class GameStart extends Application {
+    private MenuView menuView;
     @Override
     public void start(Stage primaryStage) {
         // Load application icon once
@@ -37,6 +39,16 @@ public class GameStart extends Application {
             }
         });
 
+        // Add window close handler
+        primaryStage.setOnCloseRequest(event -> {
+            // Ensure clean shutdown
+            System.out.println("Application closed by user.");
+            if (menuView != null) {
+                menuView.shutdown();
+            }
+            Platform.exit();
+        });
+
         // Show input dialog
         dialog.show();
     }
@@ -44,9 +56,9 @@ public class GameStart extends Application {
     // Method to load the main menu
     private void loadMainMenu(Stage primaryStage, Player player) {
         // Initialize view
-        MenuView mainView = new MenuView();
+        menuView = new MenuView();
         // Set scene and display
-        primaryStage.setScene(mainView.getMenuScene(primaryStage, player));
+        primaryStage.setScene(menuView.getMenuScene(primaryStage, player));
         primaryStage.setTitle("Forbidden Island");
         primaryStage.show();
     }

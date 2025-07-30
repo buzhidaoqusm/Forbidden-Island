@@ -155,6 +155,11 @@ public class RoomController {
      * Stops all scheduled tasks and closes network connections
      */
     public void shutdown() {
+        // Stop the message handler scheduler first
+        if (messageHandler != null) {
+            messageHandler.shutdown();
+        }
+        
         // Stop the scheduler
         if (scheduler != null) {
             scheduler.shutdownNow();  // Immediately stop all tasks
@@ -165,14 +170,14 @@ public class RoomController {
             }
         }
 
-        // Stop the receiver
-        if (receiver != null) {
-            receiver.stop();
-        }
-
         // Turn off the transmitter
         if (sender != null) {
             sender.close();
+        }
+
+        // Stop the receiver
+        if (receiver != null) {
+            receiver.stop();
         }
 
         // Clean up resources

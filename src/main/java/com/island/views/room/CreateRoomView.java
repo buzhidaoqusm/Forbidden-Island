@@ -258,4 +258,13 @@ public class CreateRoomView {
     public Scene getScene() {
         return scene;
     }
+
+    public void shutdown() {
+        if (updateThread != null && updateThread.isAlive()) {
+            updateThread.interrupt();
+        }
+        if (roomController != null) {
+            roomController.shutdown();
+        }
+    }
 }

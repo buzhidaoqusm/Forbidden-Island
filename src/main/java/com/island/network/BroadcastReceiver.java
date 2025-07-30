@@ -57,7 +57,10 @@ public class BroadcastReceiver implements Runnable {
                 
                 handleMessage(message, packet.getAddress());
             } catch (IOException e) {
-                if (running) {
+                if (!running) {
+                    // Socket was intentionally closed, exit gracefully
+                    break;
+                } else {
                     e.printStackTrace();
                 }
             }
@@ -126,9 +129,8 @@ public class BroadcastReceiver implements Runnable {
      */
     public void stop() {
         running = false;
-        if (socket != null) {
-            socket.disconnect();  // Disconnect first
-            socket.close();       // Then close the socket
+        if (socket != null && !socket.isClosed()) {
+            socket.close();
         }
     }
 }
