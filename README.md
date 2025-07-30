@@ -1,4 +1,4 @@
-# UCDGroup5-Forbidden Island Game
+# Forbidden Island Game
 
 A multiplayer implementation of the classic Forbidden Island board game using JavaFX. This digital adaptation brings the exciting cooperative game experience to your computer, featuring modern UI design and network play capabilities.
 
@@ -64,10 +64,6 @@ src/
    - Collect treasures
    - Use special abilities
 4. Work together to collect all treasures and escape before the island sinks!
-
-## Contributors
-
-- UCDGroup5 Team Members
 
 ## License
 
